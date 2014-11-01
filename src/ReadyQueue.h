@@ -9,13 +9,13 @@
 #define READYQUEUE_H_
 #include <queue>
 #include <mutex>
-#include <condition_variable>
 #include "uThread.h"
 
 
 class ReadyQueue {
 private:
 	std::priority_queue<uThread, std::vector<uThread>, CompareuThread> priorityQueue;
+	std::mutex mtx;
 public:
 	ReadyQueue();
 	virtual ~ReadyQueue();

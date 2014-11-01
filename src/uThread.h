@@ -8,19 +8,40 @@
 #ifndef UTHREAD_H_
 #define UTHREAD_H_
 
-#define DEFAULT_UTHREAD_PRIORITY 20
-
-typedef unsigned short priority_t;		//Thread priority type
+#include <cstdint>
+#include <cstddef>
+#include "global.h"
 
 class uThread {
 private:
-	priority_t priority;				//Threads priority, lower number means higher priority
+
+	/*
+	 * Thread variables
+	 */
+	size_t		stackSize;
+	priority_t 	priority;				//Threads priority, lower number means higher priority
+	ptr_t		func;					//Pointer to the function that is being run by thread
+
+	/*
+	 * general functions
+	 */
+
+	vaddr createStack(size_t);			//Create a stack with given size
+
 public:
-	uThread();
+
+	vaddr 		stackPointer;			// holds stack pointer while thread inactive
+
+	uThread(ptr_t, void*);				//Constructor accepts a function and it's arguments
 	virtual ~uThread();
 
 	void setPriority(priority_t);
 	priority_t getPriority() const;
+
+	/*
+	 * Thread management functions
+	 */
+	int create(ptr_t, void*);
 };
 
 /*

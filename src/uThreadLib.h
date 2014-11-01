@@ -8,16 +8,18 @@
 #ifndef UTHREADLIB_H_
 #define UTHREADLIB_H_
 #include <stdio.h>
-#include <vector>
+#include <list>
 #include "Cluster.h"
-
 
 class uThreadLib {
 private:
-	std::vector<Cluster> clusters;
+	std::list<Cluster> clusters;
 public:
 	uThreadLib();
 	virtual ~uThreadLib();
+
+	static void run(void*) __noreturn;
+	static void postFunc(vaddr*, vaddr) __noreturn;
 };
 
 

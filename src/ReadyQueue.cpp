@@ -7,17 +7,21 @@
 
 #include "ReadyQueue.h"
 
-
+using namespace std;
 ReadyQueue::ReadyQueue() {
-
 }
 
 ReadyQueue::~ReadyQueue() {
-	delete priorityQueue;				//Delete the main queue
+//	delete mtx;
+	//mtx = nullptr;
 }
 
 uThread ReadyQueue::pop() {
-	return priorityQueue.pop();
+	mtx.lock();
+	uThread ut = priorityQueue.top();
+	priorityQueue.pop();
+	mtx.unlock();
+	return ut;
 }
 
 void ReadyQueue::push(const uThread& ut) {
