@@ -6,27 +6,34 @@
  */
 
 #include "uThread.h"
-#include <iostream>
+#include "Cluster.h"
+#include "kThread.h"
+#include <iostream>		//TODO: remove this, add debug object
+extern thread_local kThread* currentKT;			//current kt
 
-using namespace std;
+uThread::uThread(funcvoid1_t func, void* args) {
+	/*
+	 * IMPORTANT: ALL INSTANCES OF UTHREAD SHOULD BE CREATED THROUGH CREATE
+	 * CAUSE STACK SHOULD BE ALLOCATED ON HEAP
+	 */
+	priority 	= default_uthread_priority;				//If no priority is set, set to the default priority
+	stackSize	= default_stack_size;					//Set the stack size to default
+	stackPointer= createStack(stackSize);				//Allocating stack for the thread
 
-uThread::uThread(ptr_t func,  void* args) {
-
-	this->create(func, args);
+	stackPointer = stackInit(stackPointer, (ptr_t)Cluster::invoke, func, args, nullptr, nullptr);			//Initialize the thread context
 }
 
 uThread::~uThread() {
-	// TODO Auto-generated destructor stub
+	free(stackPointer);									//Free the allocated memory for stack
+	//This should never been called directly!
 }
 
 vaddr uThread::createStack(size_t ssize) {
-	vaddr stack = malloc(ssize);
-	if(stack == nullptr)
-		exit(-1);
-
-	cout << "Stack just got created: " << stack << endl;
-	printf("%p\n", stack);
-	return stack;
+	stackTop = malloc(ssize);
+	if(stackTop == nullptr)
+		exit(-1);										//TODO: Proper exception
+	stackBottom = (char*) stackTop + ssize;
+	return (vaddr)stackBottom;
 }
 
 priority_t uThread::getPriority() const {
@@ -37,12 +44,10 @@ void uThread::setPriority(priority_t priority) {
 	this->priority = priority;
 }
 
-int uThread::create(ptr_t func, void* args) {
+uThread* uThread::create(funcvoid1_t func, void* args) {
 	//TODO: add a function that accepts priority value
-	priority 	= default_uthread_priority;				//If no priority is set, set to the default priority
-	stackSize	= default_stack_size;					//Set the stack size to default
-	stackPointer= createStack(stackSize);				//Create a stack with the default stack size
-
-
-	stackInit(stackPointer, func, args, nullptr, nullptr, nullptr);			//Initialize the thread context
+	uThread* ut = new uThread(func, args);
+	//TODO:	This should go to the currentKT, figure out the problem
+	Cluster::defaultCluster.uThreadStart(ut);			//schedule current ut
+	return ut;
 }

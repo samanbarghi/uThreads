@@ -12,15 +12,23 @@
 #include <cstddef>
 #include "global.h"
 
+
 class uThread {
+	friend class kThread;
 private:
 
+	uThread(funcvoid1_t, void*);							//To create a new uThread, create function should be called
 	/*
 	 * Thread variables
 	 */
 	size_t		stackSize;
 	priority_t 	priority;				//Threads priority, lower number means higher priority
-	ptr_t		func;					//Pointer to the function that is being run by thread
+
+	/*
+	 * Stack Boundary
+	 */
+	vaddr		stackTop;				//Top of the stack
+	vaddr		stackBottom;			//Bottom of the stack
 
 	/*
 	 * general functions
@@ -32,8 +40,10 @@ public:
 
 	vaddr 		stackPointer;			// holds stack pointer while thread inactive
 
-	uThread(ptr_t, void*);				//Constructor accepts a function and it's arguments
 	virtual ~uThread();
+
+	uThread(const uThread&) = delete;
+	const uThread& operator=(const uThread&) = delete;
 
 	void setPriority(priority_t);
 	priority_t getPriority() const;
@@ -41,7 +51,7 @@ public:
 	/*
 	 * Thread management functions
 	 */
-	int create(ptr_t, void*);
+	static uThread* create(funcvoid1_t, void*);
 };
 
 /*
@@ -51,9 +61,9 @@ public:
  */
 class CompareuThread{
 public:
-	bool operator()(uThread& ut1, uThread& ut2){
-		int p1 = ut1.getPriority();
-		int p2 = ut2.getPriority();
+	bool operator()(uThread* ut1, uThread* ut2){
+		int p1 = ut1->getPriority();
+		int p2 = ut2->getPriority();
 		if(p1 < p2 || p1 == p2){
 			return true;
 		}else{

@@ -7,25 +7,36 @@
 
 #include "ReadyQueue.h"
 
-using namespace std;
 ReadyQueue::ReadyQueue() {
 }
 
 ReadyQueue::~ReadyQueue() {
-//	delete mtx;
-	//mtx = nullptr;
 }
 
-uThread ReadyQueue::pop() {
-	mtx.lock();
-	uThread ut = priorityQueue.top();
+uThread* ReadyQueue::pop() {
+	std::lock_guard<std::mutex> lock(mtx);
+	if(priorityQueue.empty())
+		return nullptr;
+	uThread* ut = priorityQueue.top();
 	priorityQueue.pop();
-	mtx.unlock();
 	return ut;
 }
 
-void ReadyQueue::push(const uThread& ut) {
+uThread* ReadyQueue::cvPop() {
+	std::unique_lock<std::mutex> mlock(mtx);
+	while(priorityQueue.empty()){
+		cv.wait(mlock);
+	}
+	uThread* ut = priorityQueue.top();
+	priorityQueue.pop();
+	return ut;
+}
+
+void ReadyQueue::push(uThread* ut) {
+	std::unique_lock<std::mutex> mlock(mtx);
 	priorityQueue.push(ut);
+	mlock.unlock();
+	cv.notify_one();
 }
 
 size_t ReadyQueue::size() const {

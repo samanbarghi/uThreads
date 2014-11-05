@@ -58,15 +58,15 @@ stackSwitch:        # (&currSP, nextSP, post-fun)
 
 .globl stackInit
 .align 8
-stackInit:                   # stack, func, arg1, arg2, arg3, arg4 -> new stack
+stackInit:                     # stack, func, arg1, arg2, arg3, arg4 -> new stack
 	movq $0,   -64(%rdi)       # indirectly set rbp to 0
 	movq %rsi, -56(%rdi)       # store 'func' for stub function (via rbx)
 	movq %rdx, -48(%rdi)       # store 'arg1' for stub function (via r12)
 	movq %rcx, -40(%rdi)       # store 'arg2' for stub function (via r13)
 	movq %r8,  -32(%rdi)       # store 'arg3' for stub function (via r14)
 	movq %r9,  -24(%rdi)       # store 'arg4' for stub function (via r15)
-	leaq stackStub(%rip), %rax # load the address of stackStub relative to IP
-	movq %rax, -16(%rdi)	   # push stub function as return address
+	lea stackStub(%rip), %rax  # load the address of stackStub relative to IP
+	mov %rax, -16(%rdi)	       # push stub function as return address
 	leaq -64(%rdi), %rax       # return stack address, size 64: cf. REGSAVE
 	retq
 
@@ -79,4 +79,4 @@ stackStub:                   # stub needed to pass arguments to 'func'
 	pushq %rbp                 # previous %rip = 0 (fake stack frame)
 	pushq %rbp                 # previous %rbp = 0
 	movq %rsp, %rbp
-	jmpq  *%rbx                 # jump to 'func' function
+	jmp  *%rbx                 # jump to 'func' function

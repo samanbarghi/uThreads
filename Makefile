@@ -6,7 +6,7 @@ SPIKE_DIR=spike
 INCLUDE_IDR=include
 
 CXX		 := g++ -std=c++1y
-CXXFLAGS := -g -ggdb -m64
+CXXFLAGS := -g -ggdb -m64 -fpermissive
 
 SRCEXT 	:= cpp
 ASMEXT 	:= S
@@ -18,7 +18,7 @@ OBJECTS := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 SOBJECTS:= $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SSOURCES:.$(ASMEXT)=.o))
 
 LIB 	:= -pthread
-INC		:= -I include
+INC		:= -I include -I src
 TARGET	:= $(LIB_DIR)/libuThread.so
 
 all:	$(TARGET) spike

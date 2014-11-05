@@ -2,4 +2,6 @@ build
 lib/*
 
 bin/*
-
+tags
+src/tags
+.settings

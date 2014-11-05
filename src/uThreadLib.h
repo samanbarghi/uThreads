@@ -11,9 +11,8 @@
 #include <list>
 #include "Cluster.h"
 
+
 class uThreadLib {
-private:
-	std::list<Cluster> clusters;
 public:
 	uThreadLib();
 	virtual ~uThreadLib();
