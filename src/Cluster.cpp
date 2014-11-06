@@ -8,12 +8,13 @@
 #include "Cluster.h"
 #include "kThread.h"
 #include <iostream>
-extern thread_local kThread* currentKT;
 
 Cluster	Cluster::defaultCluster;						//Default cluster
 std::vector<Cluster*> Cluster::clusters;
+uThread* uThread::initUT = new uThread();
 
 Cluster::Cluster() {
+	std::cout << "Starting the cluster" << std::endl;
 	clusters.push_back(this);
 }
 
@@ -28,15 +29,20 @@ Cluster::~Cluster() {
 void Cluster::invoke(funcvoid1_t func, void* args) {
 	std::cout << "We are going to invoke the thread" << std::endl;
 	func(args);
-	//TODO: terminate uThread
-	currentKT->switchContext();
+	kThread::currentKT->currentUT->status	= TERMINATED;
+	kThread::currentKT->switchContext();
+	//Context will be switched in kThread
 }
 
 void Cluster::uThreadStart(uThread* ut){
-	readyQueue.push(ut);														//Scheduling uThread
+	ut->status	= READY;								//Change status to ready, before pushing it to ready queue just in case context switch occurred before we get to this part
+	readyQueue.push(ut);								//Scheduling uThread
 }
 
 uThread* Cluster::getWork(){
-	uThread* ut = readyQueue.pop();
-	return ut;
+	return readyQueue.pop();
+}
+
+uThread* Cluster::getWorkOrWait() {
+	return readyQueue.cvPop();
 }

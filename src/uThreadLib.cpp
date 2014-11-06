@@ -11,6 +11,9 @@
 #include <iostream>
 #include <unistd.h>
 
+/*
+ * Only works for GCC
+ */
 using namespace std;
 uThreadLib::uThreadLib() {
 //	int value = 1000;
@@ -23,10 +26,20 @@ uThreadLib::uThreadLib() {
 //	stackSwitch(&mainStackPointer, mainStackPointer, postFunc);
 //  Cluster* cluster = &clusters.front();
 	kThread kt;
-	int value = 100000;
-	uThread* ut = uThread::create((funcvoid1_t)run, &value);
-//	kThread kt1;
+	kThread kt1;
+	uThread* ut;
+	int value[1000];
+	for (int i=1; i< 5; i++){
+		value[i] = i;
+		ut = uThread::create((funcvoid1_t)run, &value[i], i);
+	}
 
+	while(true){
+
+		cout << "END OF MAIN, JUST YIELD!" << endl;
+		uThread::yield();
+	}
+	sleep(10);
 	cout << "Here we go!" << endl;
 }
 
@@ -35,11 +48,8 @@ uThreadLib::~uThreadLib() {
 }
 
 void uThreadLib::run(void* args){
+	sleep(1);
 	//assume args is an int
 	int value = *(int*)args;
 	cout << "This is run " <<  value << endl;
-}
-
-void uThreadLib::postFunc(vaddr* current, vaddr next) {
-	cout << "This is the after function! : " << endl;
 }

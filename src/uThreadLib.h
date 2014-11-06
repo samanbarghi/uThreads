@@ -18,7 +18,7 @@ public:
 	virtual ~uThreadLib();
 
 	static void run(void*) __noreturn;
-	static void postFunc(vaddr*, vaddr) __noreturn;
+
 };
 
 

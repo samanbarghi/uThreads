@@ -15,18 +15,29 @@
 
 class uThread {
 	friend class kThread;
+	friend class Cluster;
 private:
 
-	uThread(funcvoid1_t, void*);							//To create a new uThread, create function should be called
+	uThread();										//This will be called by default uThread
+	uThread(funcvoid1_t, ptr_t, priority_t);		//To create a new uThread, create function should be called
+
+	static uThread*	initUT;				//initial uT that is associated with main
+
+	/*
+	 * Statistics variables
+	 */
+	static uint64_t totalNumberofUTs;	//Total number of existing uThreads
 	/*
 	 * Thread variables
 	 */
 	size_t		stackSize;
 	priority_t 	priority;				//Threads priority, lower number means higher priority
+	uThreadStatus status;				//Current status of the uThread, should be private only friend classes can change this
 
 	/*
 	 * Stack Boundary
 	 */
+	vaddr 		stackPointer;			// holds stack pointer while thread inactive
 	vaddr		stackTop;				//Top of the stack
 	vaddr		stackBottom;			//Bottom of the stack
 
@@ -37,8 +48,6 @@ private:
 	vaddr createStack(size_t);			//Create a stack with given size
 
 public:
-
-	vaddr 		stackPointer;			// holds stack pointer while thread inactive
 
 	virtual ~uThread();
 
@@ -52,6 +61,11 @@ public:
 	 * Thread management functions
 	 */
 	static uThread* create(funcvoid1_t, void*);
+	static uThread* create(funcvoid1_t, void*, priority_t);
+
+	static void yield();
+	void terminate();
+
 };
 
 /*
