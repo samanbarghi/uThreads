@@ -27,7 +27,7 @@ public:
 	static std::vector<Cluster*> clusters;				//List of all clusters
 
 	static void invoke(funcvoid1_t, void*) __noreturn;	//Function to invoke the run function of a uThread
-	void uThreadStart(uThread*);						//Put ut in the ready queue for the first time to be picked up by kThread later
+	void uThreadSchedule(uThread*);						//Put ut in the ready queue to be picked up by kThread
 	uThread* getWork();									//Get a unit of work from the ready queue
 	uThread* getWorkOrWait();							//Get a unit of work or if not available sleep till there is one
 

@@ -9,6 +9,7 @@
 #include "Cluster.h"
 #include "kThread.h"
 #include <iostream>		//TODO: remove this, add debug object
+#include <cassert>
 uint64_t uThread::totalNumberofUTs = 0;
 /*
  * This will only be called by the default uThread.
@@ -55,7 +56,7 @@ uThread* uThread::create(funcvoid1_t func, void* args) {
 	 * if it is the main thread it goes to the the defaultCluster,
 	 * Otherwise to the related cluster
 	 */
-	kThread::currentKT->localCluster->uThreadStart(ut);			//schedule current ut
+	kThread::currentKT->localCluster->uThreadSchedule(ut);			//schedule current ut
 	return ut;
 }
 
@@ -65,17 +66,26 @@ uThread* uThread::create(funcvoid1_t func, void* args, priority_t pr) {
 	 * if it is the main thread it goes to the the defaultCluster,
 	 * Otherwise to the related cluster
 	 */
-	kThread::currentKT->localCluster->uThreadStart(ut);			//schedule current ut
+	kThread::currentKT->localCluster->uThreadSchedule(ut);			//schedule current ut
 	return ut;
 }
 
 void uThread::yield(){
 	std::cout << "YEIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIILD" << std::endl;
-	kThread::currentKT->currentUT->status = YIELD;
+	kThread::currentUT->status = YIELD;
+	kThread::currentKT->switchContext();
+}
+
+void uThread::migrate(Cluster* cluster){
+	assert(cluster != nullptr);
+	std::cout << "MIGRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATE" << std::endl;
+	kThread::currentUT->destinationCluster = cluster;
+	kThread::currentUT->status = MIGRATE;
 	kThread::currentKT->switchContext();
 }
 
 void uThread::terminate(){
+	//TODO: free all data structures
 	totalNumberofUTs--;
 }
 /*

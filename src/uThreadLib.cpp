@@ -14,6 +14,7 @@
 /*
  * Only works for GCC
  */
+Cluster* uThreadLib::cluster =  new Cluster();
 using namespace std;
 uThreadLib::uThreadLib() {
 //	int value = 1000;
@@ -24,19 +25,16 @@ uThreadLib::uThreadLib() {
 //
 //	vaddr mainStackPointer;
 //	stackSwitch(&mainStackPointer, mainStackPointer, postFunc);
-//  Cluster* cluster = &clusters.front();
-	kThread kt;
-	kThread kt1;
+//	kThread kt;
+	kThread kt1(cluster);
 	uThread* ut;
 	int value[1000];
-	for (int i=1; i< 5; i++){
+	for (int i=1; i< 2; i++){
 		value[i] = i;
 		ut = uThread::create((funcvoid1_t)run, &value[i], i);
 	}
 
 	while(true){
-
-		cout << "END OF MAIN, JUST YIELD!" << endl;
 		uThread::yield();
 	}
 	sleep(10);
@@ -52,4 +50,6 @@ void uThreadLib::run(void* args){
 	//assume args is an int
 	int value = *(int*)args;
 	cout << "This is run " <<  value << endl;
+	kThread::currentKT->currentUT->migrate(cluster);
+	kThread::currentKT->printThreadId();
 }

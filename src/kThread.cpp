@@ -10,6 +10,7 @@
 #include <iostream>
 #include <unistd.h>
 __thread kThread* kThread::currentKT = nullptr;
+__thread uThread* kThread::currentUT = nullptr;
 kThread* kThread::defaultKT = new kThread(true);
 
 kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster){		//This is only for initial kThread
@@ -43,7 +44,10 @@ void kThread::switchContext(uThread* ut) {
 
 void kThread::switchContext(){
 	uThread* ut = localCluster->getWork();
-	if(ut == nullptr){ut = mainUT;}												//If no work is available, Switch to defaultUt
+	if(ut == nullptr){															//If no work is available, Switch to defaultUt
+		if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
+		ut = mainUT;															//otherwise, pick the mainUT and run it
+	}
 	else{std::cout << "Got WORK" << std::endl;}
 	//TODO: if yeild, it should continue with the current thread !
 	switchContext(ut);
@@ -78,6 +82,9 @@ void kThread::postSwitchFunc(uThread* nextuThread) {
 				break;
 			case YIELD:
 				kThread::currentKT->localCluster->readyQueue.push(kThread::currentKT->currentUT);
+				break;
+			case MIGRATE:
+				kThread::currentKT->currentUT->destinationCluster->uThreadSchedule(kThread::currentKT->currentUT);
 				break;
 			//TODO: if status is waiting or blocked or ..., should be put back on the appropriate ready queue
 			default:

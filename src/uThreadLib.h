@@ -14,6 +14,7 @@
 
 class uThreadLib {
 public:
+	static Cluster* cluster;
 	uThreadLib();
 	virtual ~uThreadLib();
 

@@ -36,6 +36,7 @@ enum uThreadStatus {
 	READY,															//uThread is in a ReadyQueue
 	RUNNING,														//uThread is Running
 	YIELD,															//uThread Yields
+	MIGRATE,														//Migrate to another cluster
 	WAITING,														//uThread is in waiting mode
 	TERMINATED														//uThread is done and should be terminated
 };

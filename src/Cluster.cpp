@@ -34,7 +34,7 @@ void Cluster::invoke(funcvoid1_t func, void* args) {
 	//Context will be switched in kThread
 }
 
-void Cluster::uThreadStart(uThread* ut){
+void Cluster::uThreadSchedule(uThread* ut) {
 	ut->status	= READY;								//Change status to ready, before pushing it to ready queue just in case context switch occurred before we get to this part
 	readyQueue.push(ut);								//Scheduling uThread
 }

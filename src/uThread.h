@@ -12,6 +12,7 @@
 #include <cstddef>
 #include "global.h"
 
+class Cluster;
 
 class uThread {
 	friend class kThread;
@@ -33,6 +34,7 @@ private:
 	size_t		stackSize;
 	priority_t 	priority;				//Threads priority, lower number means higher priority
 	uThreadStatus status;				//Current status of the uThread, should be private only friend classes can change this
+	Cluster*	destinationCluster;		//This will be used for migrating to a new Cluster
 
 	/*
 	 * Stack Boundary
@@ -64,6 +66,7 @@ public:
 	static uThread* create(funcvoid1_t, void*, priority_t);
 
 	static void yield();
+	void migrate(Cluster*);		//Migrate the thread to a new Cluster
 	void terminate();
 
 };

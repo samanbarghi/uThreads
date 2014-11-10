@@ -16,13 +16,13 @@ class kThread {
 	friend class uThread;
 	friend class Cluster;
 private:
-	std::thread *threadSelf;					//pthread related to the current thread
+	kThread(bool);							//This is only for the initial kThread
+	std::thread *threadSelf;				//pthread related to the current thread
 	uThread* mainUT;						//Each kThread has a default uThread that is used when there is no work available
 
 	static kThread* defaultKT;				//default main thread of the application
 
 
-	uThread* currentUT;						//Pointer to the current running ut
 	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread
 
 	void run();						//The run function for the thread.
@@ -31,10 +31,10 @@ private:
 
 public:
 	kThread();
-	kThread(bool);
 	kThread(Cluster*);
 	virtual ~kThread();
 
+	static __thread uThread* currentUT;						//Pointer to the current running ut
 	static __thread kThread* currentKT;
 
 	void switchContext(uThread*);			//Put current uThread in ready Queue and run the passed uThread
