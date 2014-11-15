@@ -27,18 +27,20 @@ private:
 
 	void run();						//The run function for the thread.
 	void initialize();				//Initialization function for kThread
-	static void postSwitchFunc(uThread*) __noreturn;
+	static void postSwitchFunc(uThread*, void*) __noreturn;
 
 public:
 	kThread();
 	kThread(Cluster*);
 	virtual ~kThread();
 
-	static __thread uThread* currentUT;						//Pointer to the current running ut
+	uThread* currentUT;						//Pointer to the current running ut
 	static __thread kThread* currentKT;
 
-	void switchContext(uThread*);			//Put current uThread in ready Queue and run the passed uThread
-	void switchContext();					//Put current uThread in readyQueue and pop a new uThread to run
+	static mword totalNumberofKTs;
+
+	void switchContext(uThread*,void* args = nullptr);			//Put current uThread in ready Queue and run the passed uThread
+	void switchContext(void* args = nullptr);					//Put current uThread in readyQueue and pop a new uThread to run
 	static void defaultRun(void*) __noreturn;
 
 

@@ -27,9 +27,10 @@ Cluster::~Cluster() {
 }
 
 void Cluster::invoke(funcvoid1_t func, void* args) {
-	std::cout << "We are going to invoke the thread" << std::endl;
+//	std::cout << "We are going to invoke the thread" << std::endl;
 	func(args);
 	kThread::currentKT->currentUT->status	= TERMINATED;
+//	std::cout << "After run function: " << kThread::currentKT->currentUT << std::endl;
 	kThread::currentKT->switchContext();
 	//Context will be switched in kThread
 }

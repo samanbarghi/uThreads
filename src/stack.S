@@ -49,12 +49,12 @@
 
 .globl stackSwitch
 .align 8
-stackSwitch:					# (uThread* nextuThread, &currSP, nextSP, post-fun)
+stackSwitch:					# (uThread* nextuThread, void* args, &currSP, nextSP, post-fun)
 	REGSAVE
-	movq %rsp, (%rsi)  # save current stack
-	movq %rdx, %rsp    # load next stack
+	movq %rsp, (%rdx)  # save current stack
+	movq %rcx, %rsp    # load next stack
 	REGRESTORE
-	jmpq *%rcx          # post-func in %rcx, arg in %rdi
+	jmpq *%r8          # post-func in %r8, arg in %rdi and %rsi
 
 .globl stackInit
 .align 8

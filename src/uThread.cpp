@@ -8,6 +8,7 @@
 #include "uThread.h"
 #include "Cluster.h"
 #include "kThread.h"
+#include "BlockingSync.h"
 #include <iostream>		//TODO: remove this, add debug object
 #include <cassert>
 uint64_t uThread::totalNumberofUTs = 0;
@@ -21,16 +22,20 @@ uThread::uThread(){
 	stackSize	= 0;									//Stack size depends on kernel thread's stack
 	stackPointer= nullptr;								//We don't know where on stack we are yet
 	status 		= RUNNING;
+	currentCluster = &Cluster::defaultCluster;
 	totalNumberofUTs++;
 
 	//defaultStackInit(&this->stackPointer);
-	std::cout << "Default uThread" << std::endl;
+//	std::cout << "Default uThread" << std::endl;
 }
-uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr) : priority(pr) {
+uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr, Cluster* cluster = nullptr) : priority(pr) {
 
 	stackSize	= default_stack_size;					//Set the stack size to default
 	stackPointer= createStack(stackSize);				//Allocating stack for the thread
 	status		= INITIALIZED;
+	if(cluster) currentCluster = cluster;
+	else currentCluster = kThread::currentKT->localCluster;
+
 	totalNumberofUTs++;
 
 	stackPointer = stackInit(stackPointer, (ptr_t)Cluster::invoke, func, args, nullptr, nullptr);			//Initialize the thread context
@@ -56,7 +61,7 @@ uThread* uThread::create(funcvoid1_t func, void* args) {
 	 * if it is the main thread it goes to the the defaultCluster,
 	 * Otherwise to the related cluster
 	 */
-	kThread::currentKT->localCluster->uThreadSchedule(ut);			//schedule current ut
+	ut->currentCluster->uThreadSchedule(ut);			//schedule current ut
 	return ut;
 }
 
@@ -66,27 +71,63 @@ uThread* uThread::create(funcvoid1_t func, void* args, priority_t pr) {
 	 * if it is the main thread it goes to the the defaultCluster,
 	 * Otherwise to the related cluster
 	 */
-	kThread::currentKT->localCluster->uThreadSchedule(ut);			//schedule current ut
+	ut->currentCluster->uThreadSchedule(ut);			//schedule current ut
+	return ut;
+}
+
+uThread* uThread::create(funcvoid1_t func, void* args, Cluster* cluster) {
+	uThread* ut = new uThread(func, args, default_uthread_priority, cluster);
+//	std::cerr << "CREATED: " << ut->id << " ADRESS:" << ut  << " STACKBOTTOM: " << ut->stackBottom  << " Pointer: " << ut->stackPointer << std::endl;
+	/*
+	 * if it is the main thread it goes to the the defaultCluster,
+	 * Otherwise to the related cluster
+	 */
+	ut->currentCluster->uThreadSchedule(ut);			//schedule current ut
 	return ut;
 }
 
 void uThread::yield(){
-	std::cout << "YEIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIILD" << std::endl;
-	kThread::currentUT->status = YIELD;
+//	std::cout << "YEIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIILD" << std::endl;
+	kThread::currentKT->currentUT->status = YIELD;
 	kThread::currentKT->switchContext();
 }
 
 void uThread::migrate(Cluster* cluster){
 	assert(cluster != nullptr);
-	std::cout << "MIGRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATE" << std::endl;
-	kThread::currentUT->destinationCluster = cluster;
-	kThread::currentUT->status = MIGRATE;
+	if(kThread::currentKT->localCluster == cluster)				//no need to migrate
+		return;
+//	std::cout << "MIGRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATE" << std::endl;
+	kThread::currentKT->currentUT->currentCluster= cluster;
+	kThread::currentKT->currentUT->status = MIGRATE;
 	kThread::currentKT->switchContext();
+}
+
+void uThread::suspend(BlockingQueue* bqueue, std::mutex& lock) {
+	this->status = WAITING;
+	QueueAndLock* qal = new QueueAndLock();
+	qal->list = &bqueue->queue;
+	qal->mutex= &lock;
+	qal->umutex= nullptr;
+
+	kThread::currentKT->switchContext(qal);
+}
+void uThread::suspend(BlockingQueue* bqueue, Mutex& mutex) {
+	this->status = WAITING;
+	QueueAndLock* qal = new QueueAndLock();
+	qal->list = &bqueue->queue;
+	qal->mutex= nullptr;
+	qal->umutex= &mutex;
+
+	kThread::currentKT->switchContext(qal);
+}
+void uThread::resume(){
+	this->currentCluster->uThreadSchedule(this);		//Put thread back to readyqueue
 }
 
 void uThread::terminate(){
 	//TODO: free all data structures
 	totalNumberofUTs--;
+//	std::cout << "TERMINATED:" << this->id << std::endl;
 }
 /*
  * Setters and Getters

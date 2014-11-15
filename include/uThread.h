@@ -10,31 +10,43 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <mutex>
 #include "global.h"
+#include "EmbeddedList.h"
 
+class BlockingQueue;
+class Mutex;
 class Cluster;
 
-class uThread {
+class QueueAndLock {
+	friend class uThread;
+	friend class kThread;
+	EmbeddedList<uThread>* list;
+	std::mutex* mutex;
+	Mutex* umutex;
+};
+class uThread : public EmbeddedList<uThread>::Element{
 	friend class kThread;
 	friend class Cluster;
 private:
 
+	//TODO: Add a function to check uThread's stack for overflow ! What happens when overflow happens?
 	uThread();										//This will be called by default uThread
-	uThread(funcvoid1_t, ptr_t, priority_t);		//To create a new uThread, create function should be called
+	uThread(funcvoid1_t, ptr_t, priority_t, Cluster* cluster = nullptr);		//To create a new uThread, create function should be called
 
 	static uThread*	initUT;				//initial uT that is associated with main
 
 	/*
 	 * Statistics variables
 	 */
-	static uint64_t totalNumberofUTs;	//Total number of existing uThreads
+	//TODO: Add more variables, number of suspended, number of running ...
 	/*
 	 * Thread variables
 	 */
 	size_t		stackSize;
 	priority_t 	priority;				//Threads priority, lower number means higher priority
 	uThreadStatus status;				//Current status of the uThread, should be private only friend classes can change this
-	Cluster*	destinationCluster;		//This will be used for migrating to a new Cluster
+	Cluster*	currentCluster;			//This will be used for migrating to a new Cluster
 
 	/*
 	 * Stack Boundary
@@ -51,6 +63,7 @@ private:
 
 public:
 
+	static uint64_t totalNumberofUTs;	//Total number of existing uThreads
 	virtual ~uThread();
 
 	uThread(const uThread&) = delete;
@@ -64,10 +77,16 @@ public:
 	 */
 	static uThread* create(funcvoid1_t, void*);
 	static uThread* create(funcvoid1_t, void*, priority_t);
+	static uThread* create(funcvoid1_t, void*, Cluster*);
 
 	static void yield();
 	void migrate(Cluster*);		//Migrate the thread to a new Cluster
 	void terminate();
+	void suspend(BlockingQueue*,std::mutex&);
+	void suspend(BlockingQueue*,Mutex&);
+	void resume();
+
+
 
 };
 

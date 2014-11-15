@@ -14,11 +14,12 @@ ReadyQueue::~ReadyQueue() {
 }
 
 uThread* ReadyQueue::pop() {
-	std::lock_guard<std::mutex> lock(mtx);
+	std::unique_lock<std::mutex> mlock(mtx);
 	if(priorityQueue.empty())
 		return nullptr;
 	uThread* ut = priorityQueue.top();
 	priorityQueue.pop();
+	mlock.unlock();
 	return ut;
 }
 
@@ -29,6 +30,7 @@ uThread* ReadyQueue::cvPop() {
 	}
 	uThread* ut = priorityQueue.top();
 	priorityQueue.pop();
+	mlock.unlock();
 	return ut;
 }
 

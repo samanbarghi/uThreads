@@ -6,6 +6,7 @@ SPIKE_DIR=spike
 INCLUDE_IDR=include
 
 CXX		 := g++ -std=c++1y
+#CXX		 := clang -std=c++1y
 CXXFLAGS := -g -ggdb -m64 -fpermissive
 
 SRCEXT 	:= cpp
@@ -13,32 +14,42 @@ ASMEXT 	:= S
 
 SOURCES := $(shell find $(SRC_DIR) -type f -name *.$(SRCEXT))
 SSOURCES:= $(shell find $(SRC_DIR) -type f -name *.$(ASMEXT))
+SPIKESOURCES := $(shell find $(SPIKE_DIR) -type f -name *.$(SRCEXT))
 
 OBJECTS := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 SOBJECTS:= $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SSOURCES:.$(ASMEXT)=.o))
+SPIKEOBJECTS := $(patsubst $(SPIKE_DIR)/%,$(BIN_DIR)/%,$(SPIKESOURCES:.$(SRCEXT)=))
 
 LIB 	:= -pthread
-INC		:= -I include -I src
+INC		:= -I include
 TARGET	:= $(LIB_DIR)/libuThread.so
 
-all:	$(TARGET) spike
+all:	$(TARGET) $(SPIKEOBJECTS) 
 $(TARGET) :  $(SOBJECTS) $(OBJECTS)
 	@echo " Linking..."
 	$(CXX) -shared -m64 -fPIC $^ -o $(TARGET) $(LIB)
+-include $(OBJECTS:.o=.d)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILD_DIR)
-	$(CXX) $(CXXFLAGS) $(INC) -c -fPIC -o $@ $<
+	$(CXX) $(CXXFLAGS) -MMD $(INC) -c -fPIC -o $@ $<
+	@mv -f $(BUILD_DIR)/$*.d $(BUILD_DIR)/$*.d.tmp
+	@sed -e 's|.*:|$(BUILD_DIR)/$*.o:|' < $(BUILD_DIR)/$*.d.tmp > $(BUILD_DIR)/$*.d
+	@sed -e 's/.*://' -e 's/\\$$//' < $(BUILD_DIR)/$*.d.tmp | fmt -1 | \
+	  sed -e 's/^ *//' -e 's/$$/:/' >> $(BUILD_DIR)/$*.d
+	@rm -f $(BUILD_DIR)/$*.d.tmp
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(ASMEXT)
 	$(CXX) $(INC) -c -m64 -shared -fPIC -o $@ $<
 
 #spikes
-spike: $(SPIKE_DIR)/libTest.cpp
-	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $(BIN_DIR)/libTest $(SPIKE_DIR)/libTest.cpp -luThread $(LIB)
+$(BIN_DIR)/%: $(SPIKE_DIR)/%.$(SRCEXT) 
+	@echo "$@ $<"
+	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $< -luThread $(LIB)
 
 clean:
 	@echo " Cleaning..."
 	rm -rf $(BUILD_DIR)/*
 	rm -rf $(BIN_DIR)/*
 	rm -rf $(LIB_DIR)/*
+# DO NOT DELETE

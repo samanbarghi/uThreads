@@ -5,3 +5,4 @@ bin/*
 tags
 src/tags
 .settings
+Makefile.bak
