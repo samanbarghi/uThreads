@@ -14,6 +14,8 @@
 #include <mutex>
 #include <iostream>
 
+class Mutex;
+
 class BlockingQueue {
 	friend class uThread;
 	friend class Mutex;

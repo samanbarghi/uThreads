@@ -15,6 +15,7 @@ __thread kThread* kThread::currentKT = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
 
 kThread* kThread::defaultKT = new kThread(true);
+kThread* kThread::syscallKT = new kThread(&Cluster::syscallCluster);
 
 kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster){		//This is only for initial kThread
 	//threadSelf does not need to be initialized
@@ -83,7 +84,6 @@ void kThread::defaultRun(void* args) {
 
 void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 //	std::cout << "This is post func for: " << kThread::currentKT->currentUT << " With status: " << kThread::currentKT->currentUT->status << std:: endl;
-	QueueAndLock* qal;
 
 	if(kThread::currentKT->currentUT != kThread::currentKT->mainUT){			//DefaultUThread do not need to be managed here
 		switch (kThread::currentKT->currentUT->status) {
@@ -97,7 +97,8 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 				kThread::currentKT->currentUT->currentCluster->uThreadSchedule(kThread::currentKT->currentUT);
 				break;
 			case WAITING:
-				qal = (QueueAndLock*)args;
+			{
+				QueueAndLock* qal = (QueueAndLock*)args;
 				qal->list->push_back(kThread::currentKT->currentUT);
 				if(qal->mutex)
 					qal->mutex->unlock();
@@ -106,7 +107,7 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 
 				delete(qal);
 				break;
-			//TODO: if status is waiting or blocked or ..., should be put back on the appropriate ready queue
+			}
 			default:
 				break;
 		}

@@ -15,12 +15,14 @@
 class kThread {
 	friend class uThread;
 	friend class Cluster;
+	friend class ReadyQueue;
 private:
 	kThread(bool);							//This is only for the initial kThread
 	std::thread *threadSelf;				//pthread related to the current thread
 	uThread* mainUT;						//Each kThread has a default uThread that is used when there is no work available
 
 	static kThread* defaultKT;				//default main thread of the application
+	static kThread* syscallKT;				//syscall kernel thread for the application
 
 
 	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread

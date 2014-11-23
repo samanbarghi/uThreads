@@ -20,7 +20,7 @@ OBJECTS := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 SOBJECTS:= $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SSOURCES:.$(ASMEXT)=.o))
 SPIKEOBJECTS := $(patsubst $(SPIKE_DIR)/%,$(BIN_DIR)/%,$(SPIKESOURCES:.$(SRCEXT)=))
 
-LIB 	:= -pthread
+LIB 	:= -pthread -ldl
 INC		:= -I include
 TARGET	:= $(LIB_DIR)/libuThread.so
 
@@ -45,7 +45,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(ASMEXT)
 #spikes
 $(BIN_DIR)/%: $(SPIKE_DIR)/%.$(SRCEXT) 
 	@echo "$@ $<"
-	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $< -luThread $(LIB)
+	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $< -luThread 
 
 clean:
 	@echo " Cleaning..."

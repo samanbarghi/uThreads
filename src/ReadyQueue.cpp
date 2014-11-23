@@ -6,6 +6,8 @@
  */
 
 #include "ReadyQueue.h"
+#include "kThread.h"
+#include <iostream>
 
 ReadyQueue::ReadyQueue() {
 }
@@ -14,37 +16,35 @@ ReadyQueue::~ReadyQueue() {
 }
 
 uThread* ReadyQueue::pop() {
-	std::unique_lock<std::mutex> mlock(mtx);
-	if(priorityQueue.empty())
+	if(queue.front() == queue.fence())
 		return nullptr;
-	uThread* ut = priorityQueue.top();
-	priorityQueue.pop();
+	std::unique_lock<std::mutex> mlock(mtx);
+	uThread* ut = queue.front();
+	queue.pop_front();
 	mlock.unlock();
 	return ut;
 }
 
 uThread* ReadyQueue::cvPop() {
 	std::unique_lock<std::mutex> mlock(mtx);
-	while(priorityQueue.empty()){
+//	std::cout << "cvPop:" << kThread::currentKT->localCluster->clusterID << std::endl;
+	while(queue.front() == queue.fence()){
 		cv.wait(mlock);
 	}
-	uThread* ut = priorityQueue.top();
-	priorityQueue.pop();
+	uThread* ut = queue.front();
+	queue.pop_front();
 	mlock.unlock();
 	return ut;
 }
 
 void ReadyQueue::push(uThread* ut) {
 	std::unique_lock<std::mutex> mlock(mtx);
-	priorityQueue.push(ut);
+	queue.push_back(ut);
 	mlock.unlock();
 	cv.notify_one();
 }
 
-size_t ReadyQueue::size() const {
-	return priorityQueue.size();
-}
 
 bool ReadyQueue::empty() const {
-	return priorityQueue.empty();
+	return queue.empty();
 }

@@ -10,11 +10,12 @@
 #include "ReadyQueue.h"
 #include "global.h"
 #include <vector>
+#include <mutex>
 
 class Cluster {
 	friend class kThread;
 private:
-	ReadyQueue readyQueue;								//There is at least one ready queue per cluster
+	ReadyQueue readyQueue;								//There is one ready queue per cluster
 
 public:
 	Cluster();
@@ -24,7 +25,13 @@ public:
 	const Cluster& operator=(const Cluster&) = delete;
 
 	static Cluster	defaultCluster;						//Default cluster
+	static Cluster	syscallCluster;						//Syscall cluster
 	static std::vector<Cluster*> clusters;				//List of all clusters
+	static std::mutex mtx;
+
+	int clusterID; 										//Id of this cluster
+
+
 
 	static void invoke(funcvoid1_t, void*) __noreturn;	//Function to invoke the run function of a uThread
 	void uThreadSchedule(uThread*);						//Put ut in the ready queue to be picked up by kThread

@@ -30,8 +30,13 @@ class uThread : public EmbeddedList<uThread>::Element{
 	friend class Cluster;
 private:
 
-	//TODO: Add a function to check uThread's stack for overflow ! What happens when overflow happens?
-	uThread();										//This will be called by default uThread
+	//TODO: Add a function to check uThread's stack for overflow ! Prevent overflow or throw an exception or error?
+	//TODO: Fix uThread.h includes: if this is the file that is being included to use the library, it should include at least kThread and Cluster headers
+	//TODO: Check for memory leaks, fix terminate function
+	//TODO: Add a debug object to project
+	//TODO: Check all functions and add assertions wherever it is necessary
+
+	uThread();							//This will be called by default uThread
 	uThread(funcvoid1_t, ptr_t, priority_t, Cluster* cluster = nullptr);		//To create a new uThread, create function should be called
 
 	static uThread*	initUT;				//initial uT that is associated with main
@@ -60,6 +65,7 @@ private:
 	 */
 
 	vaddr createStack(size_t);			//Create a stack with given size
+	void terminate();
 
 public:
 
@@ -71,6 +77,7 @@ public:
 
 	void setPriority(priority_t);
 	priority_t getPriority() const;
+	const Cluster* getCurrentCluster() const;
 
 	/*
 	 * Thread management functions
@@ -81,12 +88,10 @@ public:
 
 	static void yield();
 	void migrate(Cluster*);		//Migrate the thread to a new Cluster
-	void terminate();
 	void suspend(BlockingQueue*,std::mutex&);
 	void suspend(BlockingQueue*,Mutex&);
 	void resume();
-
-
+	static void uexit();				//End the thread
 
 };
 

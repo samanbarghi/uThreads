@@ -25,7 +25,6 @@ uThread::uThread(){
 	currentCluster = &Cluster::defaultCluster;
 	totalNumberofUTs++;
 
-	//defaultStackInit(&this->stackPointer);
 //	std::cout << "Default uThread" << std::endl;
 }
 uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr, Cluster* cluster = nullptr) : priority(pr) {
@@ -33,8 +32,9 @@ uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr, Cluster* cluster =
 	stackSize	= default_stack_size;					//Set the stack size to default
 	stackPointer= createStack(stackSize);				//Allocating stack for the thread
 	status		= INITIALIZED;
-	if(cluster) currentCluster = cluster;
-	else currentCluster = kThread::currentKT->localCluster;
+	if(cluster) this->currentCluster = cluster;
+	else this->currentCluster = kThread::currentKT->localCluster;
+
 
 	totalNumberofUTs++;
 
@@ -42,7 +42,7 @@ uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr, Cluster* cluster =
 }
 
 uThread::~uThread() {
-	free(stackPointer);									//Free the allocated memory for stack
+	free(stackTop);									//Free the allocated memory for stack
 	//This should never be called directly! terminate should be called instead
 }
 
@@ -99,6 +99,7 @@ void uThread::migrate(Cluster* cluster){
 //	std::cout << "MIGRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATE" << std::endl;
 	kThread::currentKT->currentUT->currentCluster= cluster;
 	kThread::currentKT->currentUT->status = MIGRATE;
+//	std::cout << "Migrating to Cluster:" << cluster->clusterID << std::endl;
 	kThread::currentKT->switchContext();
 }
 
@@ -125,9 +126,14 @@ void uThread::resume(){
 }
 
 void uThread::terminate(){
-	//TODO: free all data structures
+	//TODO: This should take care of locks as well ?
 	totalNumberofUTs--;
-//	std::cout << "TERMINATED:" << this->id << std::endl;
+	delete this;										//Suicide
+}
+
+void uThread::uexit(){
+	kThread::currentKT->currentUT->status = TERMINATED;
+	kThread::currentKT->switchContext();				//It's scheduler job to switch to another context and terminate this thread
 }
 /*
  * Setters and Getters
@@ -138,4 +144,8 @@ priority_t uThread::getPriority() const {
 
 void uThread::setPriority(priority_t priority) {
 	this->priority = priority;
+}
+
+const Cluster* uThread::getCurrentCluster() const {
+        return this->currentCluster;
 }

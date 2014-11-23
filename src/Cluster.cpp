@@ -7,15 +7,21 @@
 
 #include "Cluster.h"
 #include "kThread.h"
+#include "ReadyQueue.h"
 #include <iostream>
 
-Cluster	Cluster::defaultCluster;						//Default cluster
 std::vector<Cluster*> Cluster::clusters;
+Cluster	Cluster::defaultCluster;						//Default cluster, ID: 1
+Cluster	Cluster::syscallCluster;						//syscall cluster, ID: 2
+std::mutex Cluster::mtx;
 uThread* uThread::initUT = new uThread();
 
 Cluster::Cluster() {
-	std::cout << "Starting the cluster" << std::endl;
+	mtx.lock();
 	clusters.push_back(this);
+	clusterID = clusters.size();
+	mtx.unlock();
+	std::cout << "Starting the cluster:" << clusterID << std::endl;
 }
 
 Cluster::~Cluster() {

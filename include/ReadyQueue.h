@@ -7,15 +7,14 @@
 
 #ifndef READYQUEUE_H_
 #define READYQUEUE_H_
-#include <queue>
 #include <mutex>
 #include <condition_variable>
 #include "uThread.h"
 
-
 class ReadyQueue {
 private:
-	std::priority_queue<uThread*, std::vector<uThread*>, CompareuThread> priorityQueue;
+//	std::priority_queue<uThread*, std::vector<uThread*>, CompareuThread> priorityQueue;
+	EmbeddedList<uThread> queue;
 	std::mutex mtx;
 	std::condition_variable cv;
 public:
@@ -25,7 +24,6 @@ public:
 	uThread* pop();
 	uThread* cvPop();				//Pop with condition variable
 	void push(uThread*);
-	size_t size() const;
 	bool empty() const;
 };
 
