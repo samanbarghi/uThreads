@@ -38,7 +38,7 @@ uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr, Cluster* cluster =
 
 	totalNumberofUTs++;
 
-	stackPointer = stackInit(stackPointer, (ptr_t)Cluster::invoke, func, args, nullptr, nullptr);			//Initialize the thread context
+	stackPointer = stackInit(stackPointer, (funcvoid1_t)Cluster::invoke, func, args, nullptr, nullptr);			//Initialize the thread context
 }
 
 uThread::~uThread() {

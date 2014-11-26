@@ -36,6 +36,7 @@ kThread::kThread() : localCluster(&Cluster::defaultCluster){
 
 kThread::~kThread() {
 	threadSelf->join();															//wait for the thread to terminate properly
+	totalNumberofKTs--;
 }
 
 void kThread::run() {

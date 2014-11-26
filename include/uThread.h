@@ -32,7 +32,6 @@ private:
 
 	//TODO: Add a function to check uThread's stack for overflow ! Prevent overflow or throw an exception or error?
 	//TODO: Fix uThread.h includes: if this is the file that is being included to use the library, it should include at least kThread and Cluster headers
-	//TODO: Check for memory leaks, fix terminate function
 	//TODO: Add a debug object to project
 	//TODO: Check all functions and add assertions wherever it is necessary
 
