@@ -49,6 +49,7 @@ public:
 
 	void printThreadId();
 	std::thread::native_handle_type getThreadNativeHandle();
+	std::thread::id	getThreadID();
 };
 
 #endif /* KTHREAD_H_ */

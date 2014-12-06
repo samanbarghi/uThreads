@@ -127,3 +127,7 @@ void kThread::printThreadId(){
 std::thread::native_handle_type kThread::getThreadNativeHandle() {
 	return this->threadSelf->native_handle();
 }
+
+std::thread::id kThread::getThreadID() {
+	return this->threadSelf->get_id();
+}

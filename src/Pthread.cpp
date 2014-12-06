@@ -38,7 +38,7 @@ extern "C" void uthread_migrate_back_from_syscall(void* cc){
 extern "C" void uthread_create_syscall_kthread(cpu_set_t cset){
 	kThread* kt = new kThread(&Cluster::syscallCluster);
 
-	if(sched_setaffinity((pthread_t)kt->getThreadNativeHandle(), sizeof(cpu_set_t), &cset) < 0){
+	if(pthread_setaffinity_np((pthread_t)kt->getThreadNativeHandle(), sizeof(cpu_set_t), &cset) < 0){
 		perror("Could not set affinity\n");
 	}
 }
