@@ -15,7 +15,7 @@ __thread kThread* kThread::currentKT = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
 
 kThread* kThread::defaultKT = new kThread(true);
-kThread* kThread::syscallKT = new kThread(&Cluster::syscallCluster);
+//kThread* kThread::syscallKT = new kThread(&Cluster::syscallCluster);
 
 kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster){		//This is only for initial kThread
 	//threadSelf does not need to be initialized
@@ -51,7 +51,7 @@ void kThread::switchContext(uThread* ut,void* args = nullptr) {
 }
 
 void kThread::switchContext(void* args = nullptr){
-	uThread* ut = localCluster->getWork();
+	uThread* ut = localCluster->tryGetWork();
 	if(ut == nullptr){															//If no work is available, Switch to defaultUt
 		if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
 		ut = mainUT;															//otherwise, pick the mainUT and run it
@@ -78,7 +78,7 @@ void kThread::defaultRun(void* args) {
 	while(true){
 		//TODO: break this loop when total number of uThreads are less than 1, and end the kThread
 //		std::cout << "Sleep on ReadyQueue" << std::endl;
-		uThread* ut = thisKT->localCluster->getWorkOrWait();
+		uThread* ut = thisKT->localCluster->getWork();
 		thisKT->switchContext(ut);
 	}
 }

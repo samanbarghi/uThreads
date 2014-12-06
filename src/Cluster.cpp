@@ -40,11 +40,11 @@ void Cluster::uThreadSchedule(uThread* ut) {
 	readyQueue.push(ut);								//Scheduling uThread
 }
 
-uThread* Cluster::getWork(){
+uThread* Cluster::tryGetWork(){
 	return readyQueue.pop();
 }
 
-uThread* Cluster::getWorkOrWait() {
+uThread* Cluster::getWork() {
 	return readyQueue.cvPop();
 }
 

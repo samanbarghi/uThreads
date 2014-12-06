@@ -27,6 +27,7 @@ TARGET	:= $(LIB_DIR)/libuThread.so
 all:	$(TARGET) $(SPIKEOBJECTS) 
 $(TARGET) :  $(SOBJECTS) $(OBJECTS)
 	@echo " Linking..."
+	@mkdir -p $(LIB_DIR)
 	$(CXX) -shared -m64 -fPIC $^ -o $(TARGET) $(LIB)
 -include $(OBJECTS:.o=.d)
 
@@ -40,11 +41,13 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(SRCEXT)
 	@rm -f $(BUILD_DIR)/$*.d.tmp
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(ASMEXT)
+	@mkdir -p $(BUILD_DIR)
 	$(CXX) $(INC) -c -m64 -shared -fPIC -o $@ $<
 
 #spikes
 $(BIN_DIR)/%: $(SPIKE_DIR)/%.$(SRCEXT) 
 	@echo "$@ $<"
+	@mkdir -p $(BIN_DIR)
 	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $< -luThread 
 
 clean:

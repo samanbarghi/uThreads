@@ -22,7 +22,8 @@ private:
 	uThread* mainUT;						//Each kThread has a default uThread that is used when there is no work available
 
 	static kThread* defaultKT;				//default main thread of the application
-	static kThread* syscallKT;				//syscall kernel thread for the application
+	/* make user create the kernel thread for ths syscalls as required */
+	//static kThread* syscallKT;				//syscall kernel thread for the application
 
 
 	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread
