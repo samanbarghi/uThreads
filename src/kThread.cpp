@@ -13,6 +13,8 @@ mword kThread::totalNumberofKTs = 0;
 
 __thread kThread* kThread::currentKT = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
+__thread EmbeddedList<uThread>* kThread::ktReadyQueue = nullptr;
+
 
 kThread* kThread::defaultKT = new kThread(true);
 //kThread* kThread::syscallKT = new kThread(&Cluster::syscallCluster);
@@ -20,23 +22,27 @@ kThread* kThread::defaultKT = new kThread(true);
 kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster){		//This is only for initial kThread
 	//threadSelf does not need to be initialized
 	this->initialize();
-	currentUT = uThread::initUT;												//Current running uThread is the inital one
+	currentUT = uThread::initUT;												//Current running uThread is the initial one
 	totalNumberofKTs++;
+	localCluster->numberOfkThreads++;											//Increas the number of kThreads in the cluster
 }
 
 kThread::kThread(Cluster* cluster) : localCluster(cluster){
 	totalNumberofKTs++;
 	threadSelf = new std::thread(&kThread::run, this);
+	localCluster->numberOfkThreads++;
 }
 
 kThread::kThread() : localCluster(&Cluster::defaultCluster){
 	totalNumberofKTs++;
 	threadSelf = new std::thread(&kThread::run, this);
+	localCluster->numberOfkThreads++;
 }
 
 kThread::~kThread() {
 	threadSelf->join();															//wait for the thread to terminate properly
 	totalNumberofKTs--;
+	localCluster->numberOfkThreads--;
 }
 
 void kThread::run() {
@@ -51,10 +57,20 @@ void kThread::switchContext(uThread* ut,void* args = nullptr) {
 }
 
 void kThread::switchContext(void* args = nullptr){
-	uThread* ut = localCluster->tryGetWork();
-	if(ut == nullptr){															//If no work is available, Switch to defaultUt
-		if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
-		ut = mainUT;															//otherwise, pick the mainUT and run it
+	uThread* ut;
+	/*	First check the internal queue */
+	if(!ktReadyQueue->empty()){														//If not empty, grab a uThread and run it
+		ut = ktReadyQueue->front();
+		ktReadyQueue->pop_front();
+	}else{																			//If empty try to fill
+		localCluster->tryGetWorks(ktReadyQueue);									//Try to fill the local queue
+		if(!ktReadyQueue->empty()){													//If there is more work start using it
+			ut = ktReadyQueue->front();
+			ktReadyQueue->pop_front();
+		}else{																		//If no work is available, Switch to defaultUt
+			if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
+			ut = mainUT;															//otherwise, pick the mainUT and run it
+		}
 	}
 //	std::cout << "SwitchContext: " << kThread::currentKT->currentUT<< " Status: " << kThread::currentKT->currentUT->status <<   " IN Thread:" << std::this_thread::get_id()   << std::endl;
 
@@ -64,6 +80,7 @@ void kThread::switchContext(void* args = nullptr){
 
 void kThread::initialize() {
 	kThread::currentKT		=	this;											//Set the thread_locl pointer to this thread, later we can find the executing thread by referring to this
+	kThread::ktReadyQueue = new EmbeddedList<uThread>();
 
 	this->mainUT = new uThread((funcvoid1_t)kThread::defaultRun, this, default_uthread_priority, this->localCluster);			//Default function should not be put back on readyQueue, or be scheduled by cluster
 	uThread::totalNumberofUTs--;												//Default uThreads are not counted as valid work

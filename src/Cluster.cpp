@@ -14,7 +14,8 @@ Cluster	Cluster::defaultCluster;						//Default cluster, ID: 1
 Cluster	Cluster::syscallCluster;						//syscall cluster, ID: 2
 uThread* uThread::initUT = new uThread();
 
-Cluster::Cluster() {
+Cluster::Cluster(): numberOfkThreads(0) {
+
 	clusters.push_back(this);
 }
 
@@ -41,10 +42,14 @@ void Cluster::uThreadSchedule(uThread* ut) {
 }
 
 uThread* Cluster::tryGetWork(){
-	return readyQueue.pop();
+	return readyQueue.tryPop();
+}
+
+void Cluster::tryGetWorks(EmbeddedList<uThread> *queue){						//pop more than one uThread from the ready queue and push into the kthread local ready queue
+	readyQueue.tryPopMany(queue, numberOfkThreads);
 }
 
 uThread* Cluster::getWork() {
-	return readyQueue.cvPop();
+	return readyQueue.pop();
 }
 

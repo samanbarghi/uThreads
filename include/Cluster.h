@@ -9,7 +9,9 @@
 #define CLUSTER_H_
 #include <vector>
 #include <mutex>
+#include <iostream>
 #include <condition_variable>
+#include <thread>
 #include "global.h"
 #include "EmbeddedList.h"
 
@@ -19,31 +21,52 @@ private:
 	EmbeddedList<uThread> queue;
 	std::mutex mtx;
 	std::condition_variable cv;
+	mword	size;
 public:
-	ReadyQueue(){};
+	ReadyQueue(): size(0){};
 	virtual ~ReadyQueue(){};
 
-	uThread* pop(){
+	uThread* tryPop(){								//Try to pop one item, or return null
 		uThread* ut = nullptr;
 		std::unique_lock<std::mutex> mlock(mtx);
 		if(!queue.empty()){
 			ut = queue.front();
 			queue.pop_front();
+			size--;
 		}
 		mlock.unlock();
 		return ut;
 	}
-	uThread* cvPop(){									//Pop with condition variable
+
+	void tryPopMany(EmbeddedList<uThread> *nqueue, mword numkt){//Try to pop ReadyQueueSize/#kThreads in cluster from the ready Queue
+		std::unique_lock<std::mutex> mlock(mtx);
+		//TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
+		int popnum = (size/numkt) ? (size/numkt) : 1; //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
+
+		uThread* ut;
+		for( ; popnum > 0 && !queue.empty(); popnum--){
+			ut = queue.front();
+			queue.pop_front();
+			nqueue->push_back(ut);
+			size--;
+		}
+		mlock.unlock();
+	}
+
+	uThread* pop(){									//Pop with condition variable
 		std::unique_lock<std::mutex> mlock(mtx);
 		while(queue.empty()){cv.wait(mlock);}
 		uThread* ut = queue.front();
 		queue.pop_front();
+		size--;
 		mlock.unlock();
 		return ut;
 	}
+
 	void push(uThread* ut){
 		std::unique_lock<std::mutex> mlock(mtx);
 		queue.push_back(ut);
+		size++;
 		mlock.unlock();
 		cv.notify_one();
 	}
@@ -54,6 +77,7 @@ class Cluster {
 	friend class kThread;
 private:
 	ReadyQueue readyQueue;								//There is one ready queue per cluster
+	mword	numberOfkThreads;							//Number of kThreads in this Cluster
 
 public:
 	Cluster();
@@ -68,8 +92,9 @@ public:
 
 	static void invoke(funcvoid1_t, void*) __noreturn;	//Function to invoke the run function of a uThread
 	void uThreadSchedule(uThread*);						//Put ut in the ready queue to be picked up by kThread
-	uThread* tryGetWork();									//Get a unit of work from the ready queue
-	uThread* getWork();							//Get a unit of work or if not available sleep till there is one
+	uThread* tryGetWork();								//Get a unit of work from the ready queue
+	void tryGetWorks(EmbeddedList<uThread>*);			//Get as many uThreads as possible from the readyQueue and move them to local queue
+	uThread* getWork();									//Get a unit of work or if not available sleep till there is one
 
 
 };
