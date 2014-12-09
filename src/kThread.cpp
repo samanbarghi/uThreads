@@ -78,7 +78,7 @@ void kThread::switchContext(void* args = nullptr){
 					break;
 				}
 				for (int j=1000; j>0; j--)
-					__asm("");
+					__asm("pause");
 			}
 			if(ut == nullptr)
 				ut = mainUT;															//otherwise, pick the mainUT and run it
