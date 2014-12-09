@@ -57,7 +57,7 @@ void kThread::switchContext(uThread* ut,void* args = nullptr) {
 }
 
 void kThread::switchContext(void* args = nullptr){
-	uThread* ut;
+	uThread* ut = nullptr;
 	/*	First check the internal queue */
 	if(!ktReadyQueue->empty()){														//If not empty, grab a uThread and run it
 		ut = ktReadyQueue->front();
@@ -69,7 +69,19 @@ void kThread::switchContext(void* args = nullptr){
 			ktReadyQueue->pop_front();
 		}else{																		//If no work is available, Switch to defaultUt
 			if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
-			ut = mainUT;															//otherwise, pick the mainUT and run it
+			//spin for a while before blocking
+			for(int i=00; i > 0 ; i--){
+				if(localCluster->readyQueue.size > 0){
+					//Get work and break;
+					ut = localCluster->tryGetWork();
+					std::cout << "Got Spin and work" << std::endl;
+					break;
+				}
+				for (int j=1000; j>0; j--)
+					__asm("");
+			}
+			if(ut == nullptr)
+				ut = mainUT;															//otherwise, pick the mainUT and run it
 		}
 	}
 //	std::cout << "SwitchContext: " << kThread::currentKT->currentUT<< " Status: " << kThread::currentKT->currentUT->status <<   " IN Thread:" << std::this_thread::get_id()   << std::endl;

@@ -16,6 +16,8 @@
 #include "EmbeddedList.h"
 
 class ReadyQueue {
+	friend class kThread;
+	friend class Cluster;
 private:
 //	std::priority_queue<uThread*, std::vector<uThread*>, CompareuThread> priorityQueue;
 	EmbeddedList<uThread> queue;
