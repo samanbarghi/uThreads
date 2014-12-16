@@ -49,7 +49,7 @@ void Cluster::tryGetWorks(EmbeddedList<uThread> *queue){						//pop more than on
 	readyQueue.tryPopMany(queue, numberOfkThreads);
 }
 
-uThread* Cluster::getWork() {
-	return readyQueue.pop();
+void Cluster::getWork(EmbeddedList<uThread> *queue) {
+	readyQueue.pop(queue, numberOfkThreads);
 }
 

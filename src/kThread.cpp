@@ -59,29 +59,17 @@ void kThread::switchContext(uThread* ut,void* args = nullptr) {
 void kThread::switchContext(void* args = nullptr){
 	uThread* ut = nullptr;
 	/*	First check the internal queue */
-	if(!ktReadyQueue->empty()){														//If not empty, grab a uThread and run it
+	if(!ktReadyQueue->empty()){										//If not empty, grab a uThread and run it
 		ut = ktReadyQueue->front();
 		ktReadyQueue->pop_front();
-	}else{																			//If empty try to fill
-		localCluster->tryGetWorks(ktReadyQueue);									//Try to fill the local queue
-		if(!ktReadyQueue->empty()){													//If there is more work start using it
+	}else{													//If empty try to fill
+		localCluster->tryGetWorks(ktReadyQueue);							//Try to fill the local queue
+		if(!ktReadyQueue->empty()){									//If there is more work start using it
 			ut = ktReadyQueue->front();
 			ktReadyQueue->pop_front();
-		}else{																		//If no work is available, Switch to defaultUt
+		}else{												//If no work is available, Switch to defaultUt
 			if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
-			//spin for a while before blocking
-			for(int i=00; i > 0 ; i--){
-				if(localCluster->readyQueue.size > 0){
-					//Get work and break;
-					ut = localCluster->tryGetWork();
-					std::cout << "Got Spin and work" << std::endl;
-					break;
-				}
-				for (int j=1000; j>0; j--)
-					__asm("pause");
-			}
-			if(ut == nullptr)
-				ut = mainUT;															//otherwise, pick the mainUT and run it
+			ut = mainUT;
 		}
 	}
 //	std::cout << "SwitchContext: " << kThread::currentKT->currentUT<< " Status: " << kThread::currentKT->currentUT->status <<   " IN Thread:" << std::this_thread::get_id()   << std::endl;
@@ -105,10 +93,41 @@ void kThread::initialize() {
 void kThread::defaultRun(void* args) {
 	kThread* thisKT = (kThread*) args;
 	while(true){
+		uThread* ut = nullptr;
 		//TODO: break this loop when total number of uThreads are less than 1, and end the kThread
 //		std::cout << "Sleep on ReadyQueue" << std::endl;
-		uThread* ut = thisKT->localCluster->getWork();
-		thisKT->switchContext(ut);
+
+		//spin for a while before blocking
+		//std::cout << thisKT->localCluster->readyQueue.size << std::endl;
+
+		if(thisKT->localCluster != &Cluster::syscallCluster)
+			for(int i=5000; i > 0 ; i--){
+				if(thisKT->localCluster->readyQueue.size > 0){
+					//Get work and break;
+					thisKT->localCluster->tryGetWorks(thisKT->ktReadyQueue);							//Try to fill the local queue
+					if(!thisKT->ktReadyQueue->empty()){									//If there is more work start using it
+						ut = thisKT->ktReadyQueue->front();
+						thisKT->ktReadyQueue->pop_front();
+					}
+					//ut = thisKT->localCluster->tryGetWork();
+					//if(thisKT->localCluster == &Cluster::syscallCluster)
+					//	std::cout << "Got Spin and work:" << i <<  " size: " << size << " ut " << ut << std::endl;
+					break;
+				}
+				//std::cout << "Injaaaa" << std::endl;
+				//for (int j=1000; j>0; j--)
+					//if(thisKT->localCluster == &Cluster::syscallCluster)
+					//	std::cout << "Injaaaa" << std::endl;
+				__asm("pause");
+			}
+		if(ut == nullptr){
+			thisKT->localCluster->getWork(thisKT->ktReadyQueue);
+			if(!thisKT->ktReadyQueue->empty()){                                                                     //If there is more work start using it
+                        	ut = thisKT->ktReadyQueue->front();
+                        	thisKT->ktReadyQueue->pop_front();
+			}
+		}
+		thisKT->switchContext(ut, nullptr);
 	}
 }
 
