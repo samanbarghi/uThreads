@@ -23,7 +23,7 @@ private:
 	EmbeddedList<uThread> queue;
 	std::mutex mtx;
 	std::condition_variable cv;
-	mword	size;
+	volatile mword	size;
 public:
 	ReadyQueue(): size(0){};
 	virtual ~ReadyQueue(){};

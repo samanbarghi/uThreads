@@ -92,34 +92,36 @@ void kThread::initialize() {
 
 void kThread::defaultRun(void* args) {
 	kThread* thisKT = (kThread*) args;
+
+    int SPIN_START = 4;
+    int SPIN_END = 4*1024; //exponential delay
+
 	while(true){
 		uThread* ut = nullptr;
 		//TODO: break this loop when total number of uThreads are less than 1, and end the kThread
-//		std::cout << "Sleep on ReadyQueue" << std::endl;
 
-		//spin for a while before blocking
-		//std::cout << thisKT->localCluster->readyQueue.size << std::endl;
+        int spin = SPIN_START;
 
-		if(thisKT->localCluster != &Cluster::syscallCluster)
-			for(int i=5000; i > 0 ; i--){
-				if(thisKT->localCluster->readyQueue.size > 0){
-					//Get work and break;
-					thisKT->localCluster->tryGetWorks(thisKT->ktReadyQueue);							//Try to fill the local queue
-					if(!thisKT->ktReadyQueue->empty()){									//If there is more work start using it
-						ut = thisKT->ktReadyQueue->front();
-						thisKT->ktReadyQueue->pop_front();
-					}
-					//ut = thisKT->localCluster->tryGetWork();
-					//if(thisKT->localCluster == &Cluster::syscallCluster)
-					//	std::cout << "Got Spin and work:" << i <<  " size: " << size << " ut " << ut << std::endl;
-					break;
-				}
-				//std::cout << "Injaaaa" << std::endl;
-				//for (int j=1000; j>0; j--)
-					//if(thisKT->localCluster == &Cluster::syscallCluster)
-					//	std::cout << "Injaaaa" << std::endl;
-				__asm("pause");
-			}
+        //spin for a while before blocking
+        for(int i=240; i > 0 ; i--){
+            if(thisKT->localCluster->readyQueue.size > 0){
+                //Get work and break;
+                thisKT->localCluster->tryGetWorks(thisKT->ktReadyQueue);			//Try to fill the local queue
+                if(!thisKT->ktReadyQueue->empty()){									//If there is more work start using it
+                    ut = thisKT->ktReadyQueue->front();
+                    thisKT->ktReadyQueue->pop_front();
+                }
+                break;
+            }
+
+            for (int j =0; j < spin; j++)
+                asm volatile("pause");
+
+            spin += spin;       //powers of 2
+            if(spin > SPIN_END)
+                spin = SPIN_START;
+
+        }
 		if(ut == nullptr){
 			thisKT->localCluster->getWork(thisKT->ktReadyQueue);
 			if(!thisKT->ktReadyQueue->empty()){                                                                     //If there is more work start using it
