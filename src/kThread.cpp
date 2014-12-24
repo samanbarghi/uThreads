@@ -90,39 +90,37 @@ void kThread::initialize() {
 	char* path;
 }
 
-void kThread::defaultRun(void* args) {
-	kThread* thisKT = (kThread*) args;
-
+void kThread::spin(){
     int SPIN_START = 4;
     int SPIN_END = 4*1024; //exponential delay
+
+    //spin for a while before blocking
+    for(int spin = SPIN_START; spin <= SPIN_END ; spin += spin){
+        if(this->localCluster->readyQueue.size > 0){
+            //Get work and break;
+            this->localCluster->tryGetWorks(this->ktReadyQueue);			//Try to fill the local queue
+            break;
+        }
+
+        for (int j =0; j < spin; j++)
+            asm volatile("pause");
+    }
+
+}
+
+void kThread::defaultRun(void* args) {
+	kThread* thisKT = (kThread*) args;
 
 	while(true){
 		uThread* ut = nullptr;
 		//TODO: break this loop when total number of uThreads are less than 1, and end the kThread
 
-        int spin = SPIN_START;
-
         //spin for a while before blocking
-        for(int i=240; i > 0 ; i--){
-            if(thisKT->localCluster->readyQueue.size > 0){
-                //Get work and break;
-                thisKT->localCluster->tryGetWorks(thisKT->ktReadyQueue);			//Try to fill the local queue
-                if(!thisKT->ktReadyQueue->empty()){									//If there is more work start using it
-                    ut = thisKT->ktReadyQueue->front();
-                    thisKT->ktReadyQueue->pop_front();
-                }
-                break;
-            }
-
-            for (int j =0; j < spin; j++)
-                asm volatile("pause");
-
-            spin += spin;       //powers of 2
-            if(spin > SPIN_END)
-                spin = SPIN_START;
-
-        }
-		if(ut == nullptr){
+        thisKT->spin();
+        if(!thisKT->ktReadyQueue->empty()){									//If there is more work start using it
+            ut = thisKT->ktReadyQueue->front();
+            thisKT->ktReadyQueue->pop_front();
+        }else{
 			thisKT->localCluster->getWork(thisKT->ktReadyQueue);
 			if(!thisKT->ktReadyQueue->empty()){                                                                     //If there is more work start using it
                         	ut = thisKT->ktReadyQueue->front();
