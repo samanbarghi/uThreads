@@ -23,7 +23,7 @@ private:
 	EmbeddedList<uThread> queue;
 	std::mutex mtx;
 	std::condition_variable cv;
-	mword	size;
+	volatile mword	size;
 public:
 	ReadyQueue(): size(0){};
 	virtual ~ReadyQueue(){};
@@ -55,14 +55,21 @@ public:
 		mlock.unlock();
 	}
 
-	uThread* pop(){									//Pop with condition variable
+
+	void pop(EmbeddedList<uThread> *nqueue, mword numkt){									//Pop with condition variable
 		std::unique_lock<std::mutex> mlock(mtx);
 		while(queue.empty()){cv.wait(mlock);}
-		uThread* ut = queue.front();
-		queue.pop_front();
-		size--;
+
+		int popnum = (size/numkt) ? (size/numkt) : 1; //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
+
+		uThread* ut;
+		for( ; popnum > 0 && !queue.empty(); popnum--){
+			ut = queue.front();
+			queue.pop_front();
+			nqueue->push_back(ut);
+			size--;
+		}
 		mlock.unlock();
-		return ut;
 	}
 
 	void push(uThread* ut){
@@ -96,7 +103,7 @@ public:
 	void uThreadSchedule(uThread*);						//Put ut in the ready queue to be picked up by kThread
 	uThread* tryGetWork();								//Get a unit of work from the ready queue
 	void tryGetWorks(EmbeddedList<uThread>*);			//Get as many uThreads as possible from the readyQueue and move them to local queue
-	uThread* getWork();									//Get a unit of work or if not available sleep till there is one
+	void getWork(EmbeddedList<uThread>*);									//Get a unit of work or if not available sleep till there is one
 
 
 };
