@@ -42,6 +42,8 @@ int main(){
 	}
 	cout << "End of Main Function!" << endl;
 
+    exit(1);
 	return 0;
+
 }
 
