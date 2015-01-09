@@ -96,14 +96,15 @@ void kThread::spin(){
 
     //spin for a while before blocking
     for(int spin = SPIN_START; spin <= SPIN_END ; spin += spin){
+        for (int j =0; j < spin; j++)
+            asm volatile("pause");
+
         if(this->localCluster->readyQueue.size > 0){
             //Get work and break;
             this->localCluster->tryGetWorks(this->ktReadyQueue);			//Try to fill the local queue
             break;
         }
 
-        for (int j =0; j < spin; j++)
-            asm volatile("pause");
     }
 
 }

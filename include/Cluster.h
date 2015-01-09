@@ -42,8 +42,14 @@ public:
 
 	void tryPopMany(EmbeddedList<uThread> *nqueue, mword numkt){//Try to pop ReadyQueueSize/#kThreads in cluster from the ready Queue
 		std::unique_lock<std::mutex> mlock(mtx);
+        if(size == 0) // There is no uThreads
+        {
+            mlock.unlock();
+            return;
+        }
 		//TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
 		int popnum = (size/numkt) ? (size/numkt) : 1; //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
+        //std::cout << "Size: " << size << " | numkt: " << numkt << " | PopNum: " << popnum << std::endl;
 
 		uThread* ut;
 		for( ; popnum > 0 && !queue.empty(); popnum--){
