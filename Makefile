@@ -24,7 +24,7 @@ LIB 	:= -pthread -ldl
 INC		:= -I include
 TARGET	:= $(LIB_DIR)/libuThread.so
 
-all:	$(TARGET) $(SPIKEOBJECTS) 
+all:	$(TARGET) $(SPIKEOBJECTS)
 $(TARGET) :  $(SOBJECTS) $(OBJECTS)
 	@echo " Linking..."
 	@mkdir -p $(LIB_DIR)
@@ -45,10 +45,10 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(ASMEXT)
 	$(CXX) $(INC) -c -m64 -shared -fPIC -o $@ $<
 
 #spikes
-$(BIN_DIR)/%: $(SPIKE_DIR)/%.$(SRCEXT) 
+$(BIN_DIR)/%: $(SPIKE_DIR)/%.$(SRCEXT)
 	@echo "$@ $<"
 	@mkdir -p $(BIN_DIR)
-	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $< -luThread 
+	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $< -luThread
 
 clean:
 	@echo " Cleaning..."
@@ -56,3 +56,6 @@ clean:
 	rm -rf $(BIN_DIR)/*
 	rm -rf $(LIB_DIR)/*
 # DO NOT DELETE
+
+install:
+	cp lib/libuThread.so /usr/lib64
