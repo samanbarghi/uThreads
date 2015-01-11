@@ -83,7 +83,8 @@ public:
 		queue.push_back(ut);
 		size++;
 		mlock.unlock();
-		cv.notify_one();
+		if(size == 1) 									//Signal only when the queue was previously empty
+			cv.notify_one();
 	}
 	bool empty() const{return queue.empty();}
 };
