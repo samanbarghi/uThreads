@@ -36,7 +36,6 @@ public:
 			queue.pop_front();
 			size--;
 		}
-		mlock.unlock();
 		return ut;
 	}
 
@@ -44,7 +43,6 @@ public:
 		std::unique_lock<std::mutex> mlock(mtx);
         if(size == 0) // There is no uThreads
         {
-            mlock.unlock();
             return;
         }
 		//TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
@@ -58,7 +56,6 @@ public:
 			nqueue->push_back(ut);
 			size--;
 		}
-		mlock.unlock();
 	}
 
 
@@ -75,14 +72,12 @@ public:
 			nqueue->push_back(ut);
 			size--;
 		}
-		mlock.unlock();
 	}
 
 	void push(uThread* ut){
 		std::unique_lock<std::mutex> mlock(mtx);
 		queue.push_back(ut);
 		size++;
-		mlock.unlock();
 		if(size == 1) 									//Signal only when the queue was previously empty
 			cv.notify_one();
 	}
