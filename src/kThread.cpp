@@ -19,7 +19,7 @@ __thread EmbeddedList<uThread>* kThread::ktReadyQueue = nullptr;
 kThread* kThread::defaultKT = new kThread(true);
 //kThread* kThread::syscallKT = new kThread(&Cluster::syscallCluster);
 
-kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster){		//This is only for initial kThread
+kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster), shouldSpin(true){		//This is only for initial kThread
 	//threadSelf does not need to be initialized
 	this->initialize();
 	currentUT = uThread::initUT;												//Current running uThread is the initial one
@@ -27,13 +27,13 @@ kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster){		//This
 	localCluster->numberOfkThreads++;											//Increas the number of kThreads in the cluster
 }
 
-kThread::kThread(Cluster* cluster) : localCluster(cluster){
+kThread::kThread(Cluster* cluster) : localCluster(cluster), shouldSpin(true){
 	totalNumberofKTs++;
 	threadSelf = new std::thread(&kThread::run, this);
 	localCluster->numberOfkThreads++;
 }
 
-kThread::kThread() : localCluster(&Cluster::defaultCluster){
+kThread::kThread() : localCluster(&Cluster::defaultCluster), shouldSpin(true){
 	totalNumberofKTs++;
 	threadSelf = new std::thread(&kThread::run, this);
 	localCluster->numberOfkThreads++;
@@ -94,10 +94,17 @@ void kThread::spin(){
     int SPIN_START = 4;
     int SPIN_END = 4*1024; //exponential delay
 
-    //spin for a while before blocking
-    for(int spin = SPIN_START; spin <= SPIN_END ; spin += spin){
-        for (int j =0; j < spin; j++)
+#if 1
+    for (int spin = SPIN_START; spin < 22*SPIN_END; spin += 4) {
+            if(this->localCluster->readyQueue.size > 0){
+                    this->localCluster->tryGetWorks(this->ktReadyQueue);
+                    break;
+            }
             asm volatile("pause");
+    }
+#else
+    //spin for a while before blocking
+    for(int spin = SPIN_START;; spin += spin){
 
         if(this->localCluster->readyQueue.size > 0){
             //Get work and break;
@@ -105,8 +112,13 @@ void kThread::spin(){
             break;
         }
 
-    }
+    if (spin > SPIN_END) break;
 
+        for (int j =0; j < spin; j++)
+            asm volatile("pause");
+
+    }
+#endif
 }
 
 void kThread::defaultRun(void* args) {
@@ -117,7 +129,8 @@ void kThread::defaultRun(void* args) {
 		//TODO: break this loop when total number of uThreads are less than 1, and end the kThread
 
         //spin for a while before blocking
-        thisKT->spin();
+        if(thisKT->shouldSpin)
+            thisKT->spin();
         if(!thisKT->ktReadyQueue->empty()){									//If there is more work start using it
             ut = thisKT->ktReadyQueue->front();
             thisKT->ktReadyQueue->pop_front();
@@ -179,4 +192,7 @@ std::thread::native_handle_type kThread::getThreadNativeHandle() {
 
 std::thread::id kThread::getThreadID() {
 	return this->threadSelf->get_id();
+}
+void kThread::setShouldSpin(bool spin){
+    this->shouldSpin = spin;
 }

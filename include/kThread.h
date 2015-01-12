@@ -20,6 +20,7 @@ private:
 	kThread(bool);							//This is only for the initial kThread
 	std::thread *threadSelf;				//pthread related to the current thread
 	uThread* mainUT;						//Each kThread has a default uThread that is used when there is no work available
+    bool shouldSpin;                        //Should kThread spin before blocking
 
 	static kThread* defaultKT;				//default main thread of the application
 	/* make user create the kernel thread for ths syscalls as required */
@@ -53,6 +54,8 @@ public:
 	void printThreadId();
 	std::thread::native_handle_type getThreadNativeHandle();
 	std::thread::id	getThreadID();
+
+    void setShouldSpin(bool);
 };
 
 #endif /* KTHREAD_H_ */
