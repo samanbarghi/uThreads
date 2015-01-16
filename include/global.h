@@ -50,7 +50,7 @@ enum uThreadStatus {
  */
 class uThread;
 // initialize stack for invocation of 'func(arg1,arg2,arg3, arg4)'
-extern "C" mword stackInit(vaddr stack, ptr_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3, ptr_t arg4);
+extern "C" mword stackInit(vaddr stack, funcvoid1_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3, ptr_t arg4);
 extern "C" void stackSwitch(uThread* nextuThread, void* args, vaddr* currSP, vaddr nextSP, void (*func)(uThread*,void*));
 
 #define __noreturn   __attribute__((__noreturn__))
