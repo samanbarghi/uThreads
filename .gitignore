@@ -1,6 +1,6 @@
 build
 lib/*
-
+.cproject
 bin/*
 tags
 src/tags
