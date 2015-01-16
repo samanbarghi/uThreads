@@ -94,59 +94,19 @@ void kThread::initialize() {
 	this->currentUT		= 	this->mainUT;
 }
 
-void kThread::spin(){
-    int SPIN_START = 4;
-    int SPIN_END = 4*1024; //exponential delay
-
-#if 1
-    for (int spin = SPIN_START; spin < 22*SPIN_END; spin += 4) {
-            if(this->localCluster->readyQueue.size > 0){
-                    this->localCluster->tryGetWorks(this->ktReadyQueue);
-                    break;
-            }
-            asm volatile("pause");
-    }
-#else
-    //spin for a while before blocking
-    for(int spin = SPIN_START;; spin += spin){
-
-        if(this->localCluster->readyQueue.size > 0){
-            //Get work and break;
-            this->localCluster->tryGetWorks(this->ktReadyQueue);			//Try to fill the local queue
-            break;
-        }
-
-    if (spin > SPIN_END) break;
-
-        for (int j =0; j < spin; j++)
-            asm volatile("pause");
-
-    }
-#endif
-}
-
 void kThread::defaultRun(void* args) {
-	kThread* thisKT = (kThread*) args;
+    kThread* thisKT = (kThread*) args;
+    uThread* ut = nullptr;
 
-	while(true){
-		uThread* ut = nullptr;
-		//TODO: break this loop when total number of uThreads are less than 1, and end the kThread
+    while (true) {
+        //TODO: break this loop when total number of uThreads are less than 1, and end the kThread
+        thisKT->localCluster->getWork(thisKT->ktReadyQueue);
+        assert(!ktReadyQueue->empty());                         //ktReadyQueue should not be empty at this point
+        ut = thisKT->ktReadyQueue->front();
+        thisKT->ktReadyQueue->pop_front();
 
-        //spin for a while before blocking
-        if(thisKT->shouldSpin)
-            thisKT->spin();
-        if(!thisKT->ktReadyQueue->empty()){									//If there is more work start using it
-            ut = thisKT->ktReadyQueue->front();
-            thisKT->ktReadyQueue->pop_front();
-        }else{
-			thisKT->localCluster->getWork(thisKT->ktReadyQueue);
-			if(!thisKT->ktReadyQueue->empty()){                                                                     //If there is more work start using it
-                        	ut = thisKT->ktReadyQueue->front();
-                        	thisKT->ktReadyQueue->pop_front();
-			}
-		}
-		thisKT->switchContext(ut, nullptr);
-	}
+        thisKT->switchContext(ut, nullptr);                     //Switch to the new uThread
+    }
 }
 
 void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {

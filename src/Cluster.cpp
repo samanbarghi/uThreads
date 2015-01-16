@@ -55,6 +55,6 @@ uThread* Cluster::tryGetWork(){return readyQueue.tryPop();}
 //pop more than one uThread from the ready queue and push into the kthread local ready queue
 void Cluster::tryGetWorks(EmbeddedList<uThread> *queue){readyQueue.tryPopMany(queue, numberOfkThreads);}
 
-void Cluster::getWork(EmbeddedList<uThread> *queue) {readyQueue.pop(queue, numberOfkThreads);}
+void Cluster::getWork(EmbeddedList<uThread> *queue) {readyQueue.popMany(queue, numberOfkThreads);}
 
 uint64_t Cluster::getClusterID() const {return this->clusterID;}
