@@ -8,6 +8,7 @@
 #ifndef KTHREAD_H_
 #define KTHREAD_H_
 #include <thread>
+#include <mutex>
 #include "Cluster.h"
 #include "uThread.h"
 #include "global.h"
@@ -23,6 +24,7 @@ private:
     bool shouldSpin;                        //Should kThread spin before blocking
 
 	static kThread* defaultKT;				//default main thread of the application
+	static std::mutex kThreadSyncLock;		//Global synchronization lock for kThread
 	/* make user create the kernel thread for ths syscalls as required */
 	//static kThread* syscallKT;				//syscall kernel thread for the application
 
@@ -35,6 +37,8 @@ private:
 	void initialize();				//Initialization function for kThread
 	static void postSwitchFunc(uThread*, void*) __noreturn;
     void spin();
+
+    void initialSynchronization();
 
 public:
 	kThread();

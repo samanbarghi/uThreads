@@ -10,13 +10,22 @@
 #include <iostream>
 
 std::vector<Cluster*> Cluster::clusters;
-Cluster	Cluster::defaultCluster;						//Default cluster, ID: 1
-Cluster	Cluster::syscallCluster;						//syscall cluster, ID: 2
+Cluster	Cluster::defaultCluster;						//Default cluster, ID: 0
+Cluster	Cluster::syscallCluster;						//syscall cluster, ID: 1
 uThread* uThread::initUT = new uThread();
+
+std::mutex Cluster::clusterSyncLock;
+uint64_t Cluster::clusterMasterID = 0;
 
 Cluster::Cluster(): numberOfkThreads(0) {
 
 	clusters.push_back(this);
+	initialSynchronization();
+}
+
+void Cluster::initialSynchronization(){
+	std::lock_guard<std::mutex> lock(clusterSyncLock);
+	clusterID = clusterMasterID++;
 }
 
 Cluster::~Cluster() {
@@ -41,15 +50,11 @@ void Cluster::uThreadSchedule(uThread* ut) {
 	readyQueue.push(ut);								//Scheduling uThread
 }
 
-uThread* Cluster::tryGetWork(){
-	return readyQueue.tryPop();
-}
+uThread* Cluster::tryGetWork(){return readyQueue.tryPop();}
 
-void Cluster::tryGetWorks(EmbeddedList<uThread> *queue){						//pop more than one uThread from the ready queue and push into the kthread local ready queue
-	readyQueue.tryPopMany(queue, numberOfkThreads);
-}
+//pop more than one uThread from the ready queue and push into the kthread local ready queue
+void Cluster::tryGetWorks(EmbeddedList<uThread> *queue){readyQueue.tryPopMany(queue, numberOfkThreads);}
 
-void Cluster::getWork(EmbeddedList<uThread> *queue) {
-	readyQueue.pop(queue, numberOfkThreads);
-}
+void Cluster::getWork(EmbeddedList<uThread> *queue) {readyQueue.pop(queue, numberOfkThreads);}
 
+uint64_t Cluster::getClusterID() const {return this->clusterID;}

@@ -12,6 +12,9 @@
 #include <iostream>		//TODO: remove this, add debug object
 #include <cassert>
 uint64_t uThread::totalNumberofUTs = 0;
+uint64_t uThread::uThreadMasterID= 0;
+std::mutex uThread::uThreadSyncLock;
+
 /*
  * This will only be called by the default uThread.
  * Default uThread does not have a stack and rely only on
@@ -23,10 +26,10 @@ uThread::uThread(){
 	stackPointer= nullptr;								//We don't know where on stack we are yet
 	status 		= RUNNING;
 	currentCluster = &Cluster::defaultCluster;
-	totalNumberofUTs++;
-
+	initialSynchronization();
 //	std::cout << "Default uThread" << std::endl;
 }
+
 uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr, Cluster* cluster = nullptr) : priority(pr) {
 
 	stackSize	= default_stack_size;					//Set the stack size to default
@@ -34,16 +37,23 @@ uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr, Cluster* cluster =
 	status		= INITIALIZED;
 	if(cluster) this->currentCluster = cluster;
 	else this->currentCluster = kThread::currentKT->localCluster;
-
-
-	totalNumberofUTs++;
-
-	stackPointer = stackInit(stackPointer, (funcvoid1_t)Cluster::invoke, func, args, nullptr, nullptr);			//Initialize the thread context
+	initialSynchronization();
+	stackPointer = (vaddr)stackInit(stackPointer, (funcvoid1_t)Cluster::invoke, (ptr_t) func, args, nullptr, nullptr);			//Initialize the thread context
 }
 
 uThread::~uThread() {
 	free(stackTop);									//Free the allocated memory for stack
 	//This should never be called directly! terminate should be called instead
+}
+void uThread::decrementTotalNumberofUTs() {
+	std::lock_guard<std::mutex> lock(uThreadSyncLock);
+	totalNumberofUTs--;
+}
+
+void uThread::initialSynchronization() {
+	std::lock_guard<std::mutex> lock(uThreadSyncLock);
+	totalNumberofUTs++;
+	this->uThreadID = uThreadMasterID++;
 }
 
 vaddr uThread::createStack(size_t ssize) {
@@ -127,7 +137,7 @@ void uThread::resume(){
 
 void uThread::terminate(){
 	//TODO: This should take care of locks as well ?
-	totalNumberofUTs--;
+	decrementTotalNumberofUTs();
 	delete this;										//Suicide
 }
 
@@ -138,14 +148,10 @@ void uThread::uexit(){
 /*
  * Setters and Getters
  */
-priority_t uThread::getPriority() const {
-	return priority;
-}
+priority_t uThread::getPriority() const {return priority;}
+void uThread::setPriority(priority_t priority) {this->priority = priority;}
+const Cluster* uThread::getCurrentCluster() const {return this->currentCluster;}
+uint64_t uThread::getTotalNumberofUTs() {return totalNumberofUTs;}
+uint64_t uThread::getUthreadId() const { return this->uThreadID;}
 
-void uThread::setPriority(priority_t priority) {
-	this->priority = priority;
-}
 
-const Cluster* uThread::getCurrentCluster() const {
-        return this->currentCluster;
-}

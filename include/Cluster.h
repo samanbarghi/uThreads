@@ -89,6 +89,13 @@ class Cluster {
 private:
 	ReadyQueue readyQueue;								//There is one ready queue per cluster
 	mword	numberOfkThreads;							//Number of kThreads in this Cluster
+	static std::mutex clusterSyncLock;					//Global cluster synchronization mutex
+
+	static uint64_t clusterMasterID;					//Global cluster ID holder
+	uint64_t clusterID;									//Current Cluster ID
+
+	void initialSynchronization();
+
 
 public:
 	Cluster();
@@ -105,7 +112,9 @@ public:
 	void uThreadSchedule(uThread*);						//Put ut in the ready queue to be picked up by kThread
 	uThread* tryGetWork();								//Get a unit of work from the ready queue
 	void tryGetWorks(EmbeddedList<uThread>*);			//Get as many uThreads as possible from the readyQueue and move them to local queue
-	void getWork(EmbeddedList<uThread>*);									//Get a unit of work or if not available sleep till there is one
+	void getWork(EmbeddedList<uThread>*);				//Get a unit of work or if not available sleep till there is one
+
+	uint64_t getClusterID() const;							//Get the ID of current Cluster
 
 
 };

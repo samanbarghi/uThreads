@@ -10,6 +10,7 @@
 #include <iostream>
 #include <unistd.h>
 mword kThread::totalNumberofKTs = 0;
+std::mutex kThread::kThreadSyncLock;
 
 __thread kThread* kThread::currentKT = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
@@ -23,26 +24,31 @@ kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster), shouldS
 	//threadSelf does not need to be initialized
 	this->initialize();
 	currentUT = uThread::initUT;												//Current running uThread is the initial one
-	totalNumberofKTs++;
-	localCluster->numberOfkThreads++;											//Increas the number of kThreads in the cluster
+	initialSynchronization();
+
 }
 
 kThread::kThread(Cluster* cluster) : localCluster(cluster), shouldSpin(true){
-	totalNumberofKTs++;
 	threadSelf = new std::thread(&kThread::run, this);
-	localCluster->numberOfkThreads++;
+	initialSynchronization();
 }
 
 kThread::kThread() : localCluster(&Cluster::defaultCluster), shouldSpin(true){
-	totalNumberofKTs++;
 	threadSelf = new std::thread(&kThread::run, this);
-	localCluster->numberOfkThreads++;
+	initialSynchronization();
 }
 
 kThread::~kThread() {
 	threadSelf->join();															//wait for the thread to terminate properly
+	std::lock_guard<std::mutex> lock(kThreadSyncLock);
 	totalNumberofKTs--;
 	localCluster->numberOfkThreads--;
+}
+
+void kThread::initialSynchronization(){
+	std::lock_guard<std::mutex> lock(kThreadSyncLock);
+	totalNumberofKTs++;
+	localCluster->numberOfkThreads++;											//Increas the number of kThreads in the cluster
 }
 
 void kThread::run() {
@@ -51,12 +57,12 @@ void kThread::run() {
 	switchContext(mainUT);
 }
 
-void kThread::switchContext(uThread* ut,void* args = nullptr) {
+void kThread::switchContext(uThread* ut,void* args) {
 //	std::cout << "SwitchContext: " << kThread::currentKT->currentUT << " TO: " << ut << " IN: " << std::this_thread::get_id() << std::endl;
 	stackSwitch(ut, args, &kThread::currentKT->currentUT->stackPointer, ut->stackPointer, postSwitchFunc);
 }
 
-void kThread::switchContext(void* args = nullptr){
+void kThread::switchContext(void* args){
 	uThread* ut = nullptr;
 	/*	First check the internal queue */
 	if(!ktReadyQueue->empty()){										//If not empty, grab a uThread and run it
@@ -83,11 +89,9 @@ void kThread::initialize() {
 	kThread::ktReadyQueue = new EmbeddedList<uThread>();
 
 	this->mainUT = new uThread((funcvoid1_t)kThread::defaultRun, this, default_uthread_priority, this->localCluster);			//Default function should not be put back on readyQueue, or be scheduled by cluster
-	uThread::totalNumberofUTs--;												//Default uThreads are not counted as valid work
+	uThread::decrementTotalNumberofUTs();										//Default uThreads are not counted as valid work
 	this->mainUT->status	=	READY;
 	this->currentUT		= 	this->mainUT;
-
-	char* path;
 }
 
 void kThread::spin(){
