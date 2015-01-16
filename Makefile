@@ -58,4 +58,4 @@ clean:
 # DO NOT DELETE
 
 install:
-	cp lib/libuThread.so /usr/lib64
+	cp lib/libuThread.so /usr/lib
