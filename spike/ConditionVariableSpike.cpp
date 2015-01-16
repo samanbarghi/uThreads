@@ -42,7 +42,7 @@ int main(){
 		else	ut = uThread::create((funcvoid1_t)run, &value[i]);
 	}
 
-	while(uThread::totalNumberofUTs > 1){
+	while(uThread::getTotalNumberofUTs() > 1){
 			uThread::yield();
 		}
 	cout << "End of Main Function!" << endl;

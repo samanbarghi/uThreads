@@ -15,7 +15,7 @@ static void run(void* args){
 	int value = *(int*)args;
 
 	mtx.acquire();
-	cout << "This is run #" <<  value << " - counter #" << counter++ << endl;
+	cout << kThread::currentKT->currentUT->getCurrentCluster()->getClusterID() << ":uThreadID: " << kThread::currentKT->currentUT->getUthreadId() << ": This is run #" <<  value << " - counter #" << counter++ << endl;
 	kThread::currentKT->printThreadId();
 	mtx.release();
 }
@@ -35,7 +35,7 @@ int main(){
 		value[i] = i;
 		ut = uThread::create((funcvoid1_t)run, &value[i], cluster);
 	}
-	while(uThread::totalNumberofUTs > 1){
+	while(uThread::getTotalNumberofUTs() > 1){
 		uThread::yield();
 	}
 	cout << "End of Main Function!" << endl;
