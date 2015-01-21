@@ -35,7 +35,7 @@ private:
 	//TODO: Add a debug object to project, or a dtrace or lttng functionality
 	//TODO: Check all functions and add assertions wherever it is necessary
 
-	uThread();							//This will be called by default uThread
+	uThread(Cluster*);							            //This will be called by default uThread
 	uThread(funcvoid1_t, ptr_t, priority_t, Cluster*);		//To create a new uThread, create function should be called
 
 	static uThread*	initUT;				//initial uT that is associated with main

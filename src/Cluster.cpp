@@ -12,7 +12,7 @@
 std::vector<Cluster*> Cluster::clusters;
 Cluster	Cluster::defaultCluster;						//Default cluster, ID: 0
 Cluster	Cluster::syscallCluster;						//syscall cluster, ID: 1
-uThread* uThread::initUT = new uThread();
+uThread* uThread::initUT = new uThread(&Cluster::defaultCluster);
 
 std::mutex Cluster::clusterSyncLock;
 uint64_t Cluster::clusterMasterID = 0;

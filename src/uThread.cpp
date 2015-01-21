@@ -20,12 +20,12 @@ std::mutex uThread::uThreadSyncLock;
  * Default uThread does not have a stack and rely only on
  * The current running pthread's stack
  */
-uThread::uThread(){
+uThread::uThread(Cluster* cluster){
 	priority 	= default_uthread_priority;				//If no priority is set, set to the default priority
 	stackSize	= 0;									//Stack size depends on kernel thread's stack
 	stackPointer= nullptr;								//We don't know where on stack we are yet
 	status 		= RUNNING;
-	currentCluster = &Cluster::defaultCluster;
+	currentCluster = cluster;
 	initialSynchronization();
 //	std::cout << "Default uThread" << std::endl;
 }

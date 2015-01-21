@@ -25,7 +25,6 @@ kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster), shouldS
 	this->initialize();
 	currentUT = uThread::initUT;												//Current running uThread is the initial one
 	initialSynchronization();
-
 }
 
 kThread::kThread(Cluster* cluster) : localCluster(cluster), shouldSpin(true){
@@ -54,7 +53,7 @@ void kThread::initialSynchronization(){
 void kThread::run() {
 	this->initialize();
 //	std::cout << "Started Running! ID: " << std::this_thread::get_id() << std::endl;
-	switchContext(mainUT);
+	defaultRun(this);
 }
 
 void kThread::switchContext(uThread* ut,void* args) {
@@ -88,7 +87,7 @@ void kThread::initialize() {
 	kThread::currentKT		=	this;											//Set the thread_locl pointer to this thread, later we can find the executing thread by referring to this
 	kThread::ktReadyQueue = new EmbeddedList<uThread>();
 
-	this->mainUT = new uThread((funcvoid1_t)kThread::defaultRun, this, default_uthread_priority, this->localCluster);			//Default function should not be put back on readyQueue, or be scheduled by cluster
+	this->mainUT = new uThread(this->localCluster);			                    //Default function takes up the default pthread's stack pointer and run from there
 	uThread::decrementTotalNumberofUTs();										//Default uThreads are not counted as valid work
 	this->mainUT->status	=	READY;
 	this->currentUT		= 	this->mainUT;
