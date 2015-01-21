@@ -50,7 +50,7 @@ protected:
 	BlockingQueue bq;
 	uThread* owner;
 
-	template<bool OL> // TO: timeout, OL: owner lock
+	template<bool OL> // OL: owner lock
 	bool internalAcquire(mword timeout) {
 
 		lock.lock();
