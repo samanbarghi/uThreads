@@ -10,25 +10,34 @@
 #include "kThread.h"
 #include  "MessageQueue.h"
 #include "Buffers.h"
+#include "BlockingSync.h"
+#include <time.h>
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>
 
 MessageQueue<FixedRingBuffer<int, 10>> mq;
+Mutex pMtx, cMtx;
 
 using namespace std;
 static void produce(void* args){
     //assume args is an int
     int value = *(int*)args;
     mq.send(value);
-    cout << "Producer sent: " << value << endl;
+    pMtx.acquire();
+    time_t timer;
+    time(&timer);
+    cout << timer << ":Producer sent: " << value << endl;
+    pMtx.release();
     kThread::currentKT->printThreadId();
     uThread::uexit();
 }
 static void consume(void* args){
     int result = 0;
     mq.recv(result);
+    cMtx.acquire();
     cout << "Consumer got: " << result << endl;
+    cMtx.release();
     kThread::currentKT->printThreadId();
     uThread::uexit();
 }
@@ -43,7 +52,7 @@ int main(){
     kThread kt3(cluster);
     uThread* ut;
     int value[100000];
-    for (int i=0; i< 100000; i++){
+    for (int i=0; i< 10; i++){
         //Numbers should be written in order
         value[i] = i;
         if(i%2 == 0) ut = uThread::create((funcvoid1_t)produce, &value[i], cluster);
