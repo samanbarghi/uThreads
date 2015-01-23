@@ -20,8 +20,7 @@ bool BlockingQueue::suspend(Mutex& mutex) {
     return true;
 }
 
-bool BlockingQueue::signal(std::mutex& lock) {
-    uThread* owner = nullptr;
+bool BlockingQueue::signal(std::mutex& lock, uThread*& owner) {
     //TODO: handle cancellation
     if (queue.front() != queue.fence()) {//Fetch one thread and put it back to ready queue
         owner = queue.front();					//FIFO?
