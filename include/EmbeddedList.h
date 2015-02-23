@@ -53,6 +53,18 @@ public:
     elem->Element::prev = prev;
   }
 
+  static void insert_many_after(T* elem, T* prev, int count) {
+      T* last = elem;       //Last element of the chain
+      for (int i=1; i < count && (next(last) != nullptr); i++) last = next(last);
+
+
+    prev->Element::next->Element::prev = last;
+    last->Element::next = prev->Element::next;
+
+    prev->Element::next = elem;
+    elem->Element::prev = prev;
+  }
+
   static void remove(T* elem) {
     elem->Element::prev->Element::next = elem->Element::next;
     elem->Element::next->Element::prev = elem->Element::prev;
@@ -60,9 +72,22 @@ public:
     elem->Element::prev = nullptr;
   }
 
+  static void remove_many(T* elem, int count) {
+    T* last = elem;       //Last element to remove
+    for (int i=1; i < count && (next(last) != nullptr); i++) last = next(last);
+
+    elem->Element::prev->Element::next = last->Element::next;
+    last->Element::next->Element::prev = elem->Element::prev;
+
+    last->Element::next = nullptr;
+    elem->Element::prev = nullptr;
+  }
+
   void push_front(T* e) { insert_before(e, front()); }
   void push_back(T* e)  { insert_after (e, back()); }
+  void push_many_back(T* e, int count) { insert_many_after(e, back(), count);}
   void pop_front() { remove(front()); }
+  void pop_many_front(int count) { remove_many(front(), count);}
   void pop_back()  { remove(back()); }
 } __packed;
 

@@ -24,18 +24,19 @@ private:
     std::mutex mtx;
     std::condition_variable cv;
     volatile mword size;
+
     void removeMany(EmbeddedList<uThread> *nqueue, mword numkt){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
         int popnum = (size / numkt) ? (size / numkt) : 1;
 
+        if (popnum > size) popnum = size;
+
         uThread* ut;
-        for (; popnum > 0 && !queue.empty(); popnum--) {
-            ut = queue.front();
-            queue.pop_front();
-            nqueue->push_back(ut);
-            size--;
-        }
+        ut = queue.front();
+        queue.pop_many_front(popnum);
+        nqueue->push_many_back(ut, popnum);
+        size -= popnum;
     }
 public:
     ReadyQueue() : size(0) {};
@@ -60,7 +61,7 @@ public:
 
     void popMany(EmbeddedList<uThread> *nqueue, mword numkt) {//Pop with condition variable
         //Spin before blocking
-        for (int spin = 1; spin < 22 * 1024; spin++) {
+        for (int spin = 1; spin < 52 * 1024; spin++) {
             if (size > 0) break;
             asm volatile("pause");
         }
