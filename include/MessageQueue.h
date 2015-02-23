@@ -17,37 +17,59 @@ private:
     std::mutex mlock;
     Buffer buffer;
     size_t slots;                   //available slots
+    Mutex mtx;
+    ConditionVariable sendCV;
+    ConditionVariable recvCV;
     BlockingQueue sendQueue;
     BlockingQueue recvQueue;
 
-    bool internalSend(const Element& elem) {
+    int internalSend(const Element& elem) {
+        //mtx.acquire();
         mlock.lock();
-        while slowpath(slots == 0) {
-            sendQueue.suspend(mlock);
-            mlock.lock();
-        }
+        while slowpath(slots == 0) {sendQueue.suspend(mlock);mlock.lock();}
         buffer.push(elem);
         slots -= 1;
 
-        if fastpath(recvQueue.signal(mlock)) return true;
+        //recvCV.signal(mtx);
+        if(recvQueue.signal(mlock, kThread::currentKT->currentUT)) return true;
         mlock.unlock();
-        return true;
+        return (buffer.max_size()-slots);
     }
 
     bool internalRecv(Element& elem) {
+        //mtx.acquire();
         mlock.lock();
-        while slowpath(slots >= buffer.max_size()) {
-            recvQueue.suspend(mlock);
-            mlock.lock();
-        }
+        while slowpath(slots >= buffer.max_size()) {recvQueue.suspend(mlock);mlock.lock();}
         elem = buffer.front();
         buffer.pop();
         slots += 1;
 
-        if fastpath(sendQueue.signal(mlock)) return true;
+        if(sendQueue.signal(mlock, kThread::currentKT->currentUT)) return true;
         mlock.unlock();
+
         return true;
     }
+
+    //Return maximum 10 elements
+    int internalRecvMany(Element* elements) {
+        int count = 0;
+        //mtx.acquire();
+        mlock.lock();
+        while slowpath(slots >= buffer.max_size()) {recvQueue.suspend(mlock);mlock.lock();}
+        //while slowpath(slots >= buffer.max_size()) {recvCV.wait(mtx);}
+        //grab as many items as you can
+        while(slots < buffer.max_size() && count < 5){
+            elements[count++] = buffer.front();
+            buffer.pop();
+            slots += 1;
+        }
+
+        if(sendQueue.signal(mlock, kThread::currentKT->currentUT)) return true;
+        mlock.unlock();
+
+        return count;
+    }
+
 public:
     explicit MessageQueue(size_t N = 0) :
             buffer(N), slots(buffer.max_size()) {
@@ -57,12 +79,15 @@ public:
         assert(buffer.empty());
         assert(slots == buffer.max_size());
     }
-    bool send(const Element& elem) {
+    int send(const Element& elem) {
         return internalSend(elem);
     }
 
     bool recv(Element& elem) {
         return internalRecv(elem);
+    }
+    int recvMany(Element* elem){
+        return internalRecvMany(elem);
     }
     mword size() {
         return buffer.size();
