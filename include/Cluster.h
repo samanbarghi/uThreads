@@ -30,8 +30,6 @@ private:
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
         int popnum = (size / numkt) ? (size / numkt) : 1;
 
-        if (popnum > size) popnum = size;
-
         uThread* ut;
         ut = queue.front();
         queue.pop_many_front(popnum);
