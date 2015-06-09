@@ -141,7 +141,7 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 		}
 	}
 //	std::cout << "This is the next thread: " << nextuThread << " : ID: " << nextuThread->getId() <<  " Stack: " << nextuThread->stackBottom << " Next:" << nextuThread->next  << " Pointer: " << nextuThread->stackPointer << std::endl;
-	kThread::currentKT->currentUT	= nextuThread;								//Change the current thread to the next
+	ck->currentUT	= nextuThread;								//Change the current thread to the next
 	nextuThread->status = RUNNING;
 }
 
