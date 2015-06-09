@@ -35,7 +35,7 @@ private:
 
 	void run();						//The run function for the thread.
 	void initialize();				//Initialization function for kThread
-	static void postSwitchFunc(uThread*, void*) __noreturn;
+	static inline void postSwitchFunc(uThread*, void*) __noreturn;
     void spin();
 
     void initialSynchronization();
