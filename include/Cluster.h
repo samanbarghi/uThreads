@@ -32,7 +32,12 @@ private:
 
         uThread* ut;
         ut = queue.front();
-        queue.pop_many_front(popnum);
+        //TODO: for when (size - popnum) < popnum, it's better to traverse the
+        //linked list from back instead of front ! call a function to do that.
+        if(size == popnum)
+            queue.pop_all();
+        else
+            queue.pop_many_front(popnum);
         nqueue->push_many_back(ut, popnum);
         size -= popnum;
     }
