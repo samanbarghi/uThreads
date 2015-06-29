@@ -54,9 +54,7 @@ public:
   }
 
   static void insert_many_after(T* elem, T* prev, int count) {
-      T* last = elem;       //Last element of the chain
-      for (int i=1; i < count && (next(last) != nullptr); i++) last = next(last);
-
+    T* last = EmbeddedList::prev(elem);       //Last element of the chain, carry over from remove_many
 
     prev->Element::next->Element::prev = last;
     last->Element::next = prev->Element::next;
@@ -80,7 +78,17 @@ public:
     last->Element::next->Element::prev = elem->Element::prev;
 
     last->Element::next = nullptr;
-    elem->Element::prev = nullptr;
+    elem->Element::prev = last;                 //Set the prev to the last element for further insertion
+  }
+
+  static void remove_all(T* first, T* last){
+      //anchor links to itself
+      first->Element::prev->Element::next = first->Element::prev;
+      first->Element::prev->Element::prev = first->Element::prev;
+
+      first->Element::prev = last;
+      last->Element::next = nullptr;
+
   }
 
   void push_front(T* e) { insert_before(e, front()); }
@@ -88,6 +96,7 @@ public:
   void push_many_back(T* e, int count) { insert_many_after(e, back(), count);}
   void pop_front() { remove(front()); }
   void pop_many_front(int count) { remove_many(front(), count);}
+  void pop_all(){ remove_all(front(), back()); };
   void pop_back()  { remove(back()); }
 } __packed;
 

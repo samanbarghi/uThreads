@@ -64,14 +64,15 @@ void kThread::switchContext(uThread* ut,void* args) {
 void kThread::switchContext(void* args){
 	uThread* ut = nullptr;
 	/*	First check the internal queue */
-	if(!ktReadyQueue->empty()){										//If not empty, grab a uThread and run it
-		ut = ktReadyQueue->front();
-		ktReadyQueue->pop_front();
+    EmbeddedList<uThread>* ktrq = ktReadyQueue;
+	if(!ktrq->empty()){										//If not empty, grab a uThread and run it
+		ut = ktrq->front();
+		ktrq->pop_front();
 	}else{													//If empty try to fill
-		localCluster->tryGetWorks(ktReadyQueue);							//Try to fill the local queue
-		if(!ktReadyQueue->empty()){									//If there is more work start using it
-			ut = ktReadyQueue->front();
-			ktReadyQueue->pop_front();
+		localCluster->tryGetWorks(ktrq);							//Try to fill the local queue
+		if(!ktrq->empty()){									//If there is more work start using it
+			ut = ktrq->front();
+			ktrq->pop_front();
 		}else{												//If no work is available, Switch to defaultUt
 			if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
 			ut = mainUT;
@@ -111,21 +112,22 @@ void kThread::defaultRun(void* args) {
 void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 //	std::cout << "This is post func for: " << kThread::currentKT->currentUT << " With status: " << kThread::currentKT->currentUT->status << std:: endl;
 
-	if(kThread::currentKT->currentUT != kThread::currentKT->mainUT){			//DefaultUThread do not need to be managed here
-		switch (kThread::currentKT->currentUT->status) {
+    kThread* ck = kThread::currentKT;
+	if(ck->currentUT != kThread::currentKT->mainUT){			//DefaultUThread do not need to be managed here
+		switch (ck->currentUT->status) {
 			case TERMINATED:
-				kThread::currentKT->currentUT->terminate();
+				ck->currentUT->terminate();
 				break;
 			case YIELD:
-				kThread::currentKT->localCluster->readyQueue.push(kThread::currentKT->currentUT);
+				ck->localCluster->readyQueue.push(kThread::currentKT->currentUT);
 				break;
 			case MIGRATE:
-				kThread::currentKT->currentUT->currentCluster->uThreadSchedule(kThread::currentKT->currentUT);
+				ck->currentUT->currentCluster->uThreadSchedule(kThread::currentKT->currentUT);
 				break;
 			case WAITING:
 			{
 				QueueAndLock* qal = (QueueAndLock*)args;
-				qal->list->push_back(kThread::currentKT->currentUT);
+				qal->list->push_back(ck->currentUT);
 				if(qal->mutex)
 					qal->mutex->unlock();
 				else if(qal->umutex)
@@ -139,7 +141,7 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 		}
 	}
 //	std::cout << "This is the next thread: " << nextuThread << " : ID: " << nextuThread->getId() <<  " Stack: " << nextuThread->stackBottom << " Next:" << nextuThread->next  << " Pointer: " << nextuThread->stackPointer << std::endl;
-	kThread::currentKT->currentUT	= nextuThread;								//Change the current thread to the next
+	ck->currentUT	= nextuThread;								//Change the current thread to the next
 	nextuThread->status = RUNNING;
 }
 

@@ -98,8 +98,9 @@ uThread* uThread::create(funcvoid1_t func, void* args, Cluster* cluster) {
 
 void uThread::yield(){
 //	std::cout << "YEIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIILD" << std::endl;
-	kThread::currentKT->currentUT->status = YIELD;
-	kThread::currentKT->switchContext();
+    kThread* ck = kThread::currentKT;
+	ck->currentUT->status = YIELD;
+	ck->switchContext();
 }
 
 void uThread::migrate(Cluster* cluster){
