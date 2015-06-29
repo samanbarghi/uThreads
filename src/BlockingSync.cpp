@@ -50,7 +50,7 @@ void BlockingQueue::signalAll(Mutex& mutex) {
 
     uThread* ut = queue.front();
     for (;;) {
-        if slowpath(ut == queue.fence()) break;
+        if (slowpath(ut == queue.fence())) break;
         queue.remove(ut);
         ut->resume();						//Send ut back to the ready queue
         ut = queue.front();
