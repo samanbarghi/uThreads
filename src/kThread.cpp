@@ -15,6 +15,7 @@ std::mutex kThread::kThreadSyncLock;
 __thread kThread* kThread::currentKT = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
 __thread EmbeddedList<uThread>* kThread::ktReadyQueue = nullptr;
+__thread IOHandler* kThread::ioHandler = nullptr;
 
 
 kThread* kThread::defaultKT = new kThread(true);
@@ -24,16 +25,19 @@ kThread::kThread(bool initial) : localCluster(&Cluster::defaultCluster), shouldS
 	//threadSelf does not need to be initialized
 	this->initialize();
 	currentUT = uThread::initUT;												//Current running uThread is the initial one
+	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
 }
 
 kThread::kThread(Cluster* cluster) : localCluster(cluster), shouldSpin(true){
 	threadSelf = new std::thread(&kThread::run, this);
+	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
 }
 
 kThread::kThread() : localCluster(&Cluster::defaultCluster), shouldSpin(true){
 	threadSelf = new std::thread(&kThread::run, this);
+	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
 }
 
@@ -42,12 +46,21 @@ kThread::~kThread() {
 	std::lock_guard<std::mutex> lock(kThreadSyncLock);
 	totalNumberofKTs--;
 	localCluster->numberOfkThreads--;
+
+	//free thread local members
+	free(kThread::ktReadyQueue);
+	free(kThread::ioHandler);
 }
 
 void kThread::initialSynchronization(){
 	std::lock_guard<std::mutex> lock(kThreadSyncLock);
 	totalNumberofKTs++;
 	localCluster->numberOfkThreads++;											//Increas the number of kThreads in the cluster
+}
+
+IOHandler* kThread::newIOHandler(){
+    IOHandler* ioh = new EpollIOHandler();                                  //TODO: have a default value and possibility to change for iohandler.
+    return ioh;
 }
 
 void kThread::run() {

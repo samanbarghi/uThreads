@@ -12,6 +12,8 @@
 #include "Cluster.h"
 #include "uThread.h"
 #include "global.h"
+#include "IOHandler.h"
+
 
 class kThread {
 	friend class uThread;
@@ -32,6 +34,7 @@ private:
 	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread
 
 	static __thread EmbeddedList<uThread> *ktReadyQueue;	//internal readyQueue for kThread, to avoid locking and unlocking the cluster ready queue
+	static __thread IOHandler* ioHandler;                    //Thread local iohandler (epoll, poll, select wrapper)
 
 	void run();						//The run function for the thread.
 	void initialize();				//Initialization function for kThread
@@ -39,6 +42,7 @@ private:
     void spin();
 
     void initialSynchronization();
+    IOHandler* newIOHandler();
 
 public:
 	kThread();

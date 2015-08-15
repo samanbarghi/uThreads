@@ -17,6 +17,7 @@
 class BlockingQueue;
 class Mutex;
 class Cluster;
+class IOHandler;
 
 class QueueAndLock {
 	friend class uThread;
@@ -76,7 +77,7 @@ private:
 public:
 
 
-	virtual ~uThread();
+	virtual ~uThread();                 //TODO: protected and nonvirtual? do we want to inherit from this ever?
 
 	uThread(const uThread&) = delete;
 	const uThread& operator=(const uThread&) = delete;
@@ -96,6 +97,7 @@ public:
 	void migrate(Cluster*);				//Migrate the thread to a new Cluster
 	void suspend(BlockingQueue*,std::mutex&);
 	void suspend(BlockingQueue*,Mutex&);
+	void suspend(IOHandler*);           //suspend on IOhandler
 	void resume();
 	static void uexit();				//End the thread
 

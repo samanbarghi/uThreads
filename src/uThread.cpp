@@ -132,8 +132,14 @@ void uThread::suspend(BlockingQueue* bqueue, Mutex& mutex) {
 
 	kThread::currentKT->switchContext(qal);
 }
+void uThread::suspend(IOHandler* ioh){
+    this->status = IOBLOCK;
+    kThread::currentKT->switchContext();
+}
+
 void uThread::resume(){
-	this->currentCluster->uThreadSchedule(this);		//Put thread back to readyqueue
+    if(this->status == WAITING || this->status == IOBLOCK)
+        this->currentCluster->uThreadSchedule(this);		//Put thread back to readyqueue
 }
 
 void uThread::terminate(){

@@ -42,6 +42,7 @@ enum uThreadStatus {
 	YIELD,															//uThread Yields
 	MIGRATE,														//Migrate to another cluster
 	WAITING,														//uThread is in waiting mode
+	IOBLOCK,                                                        //uThread is blocked on IO
 	TERMINATED														//uThread is done and should be terminated
 };
 
