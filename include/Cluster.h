@@ -12,12 +12,14 @@
 #include <iostream>
 #include <condition_variable>
 #include <thread>
+#include <assert.h>
 #include "global.h"
 #include "EmbeddedList.h"
 
 class ReadyQueue {
     friend class kThread;
     friend class Cluster;
+    friend class LibInitializer;
 private:
 //	std::priority_queue<uThread*, std::vector<uThread*>, CompareuThread> priorityQueue;
     EmbeddedList<uThread> queue;
@@ -28,6 +30,7 @@ private:
     void removeMany(EmbeddedList<uThread> *nqueue, mword numkt){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
+    	assert(numkt != 0);
         int popnum = (size / numkt) ? (size / numkt) : 1;
 
         uThread* ut;
@@ -108,8 +111,7 @@ public:
     Cluster(const Cluster&) = delete;
     const Cluster& operator=(const Cluster&) = delete;
 
-    static Cluster defaultCluster;						//Default cluster
-    static Cluster syscallCluster;						//Syscall cluster
+    static Cluster* defaultCluster;						//Default cluster
     static std::vector<Cluster*> clusters;				//List of all clusters
 
     static void invoke(funcvoid1_t, void*) __noreturn;//Function to invoke the run function of a uThread

@@ -6,17 +6,20 @@
  */
 
 #include "BlockingSync.h"
+#include "ListAndUnlock.h"
 #include <iostream>
 
 bool BlockingQueue::suspend(std::mutex& lock) {
 
-    kThread::currentKT->currentUT->suspend(this, lock);
+	EmbeddedListAndUnlock* elau = new EmbeddedListAndUnlock(&this->queue, &lock);
+    kThread::currentKT->currentUT->suspend(elau);
     //TODO: we do not have any cancellation yet, so this line will not be reached at all
     return true;
 }
 
 bool BlockingQueue::suspend(Mutex& mutex) {
-    kThread::currentKT->currentUT->suspend(this, mutex);
+	EmbeddedListAndUnlock* elau = new EmbeddedListAndUnlock(&this->queue, &mutex);
+    kThread::currentKT->currentUT->suspend(elau);
     return true;
 }
 

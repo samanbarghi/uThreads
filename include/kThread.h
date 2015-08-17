@@ -19,6 +19,8 @@ class kThread {
 	friend class uThread;
 	friend class Cluster;
 	friend class ReadyQueue;
+	friend class LibInitializer;
+
 private:
 	kThread(bool);							//This is only for the initial kThread
 	std::thread *threadSelf;				//pthread related to the current thread

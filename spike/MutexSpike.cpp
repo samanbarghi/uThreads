@@ -37,12 +37,13 @@ int main(){
 		if(i%2 == 0) ut = uThread::create((funcvoid1_t)run, &value[i], cluster);
 		else  ut = uThread::create((funcvoid1_t)run, &value[i]);
 	}
+
 	while(uThread::getTotalNumberofUTs() > 1){
 		uThread::yield();
 	}
 	cout << "End of Main Function!" << endl;
 
-    exit(1);
+	exit(EXIT_SUCCESS);
 	return 0;
 
 }

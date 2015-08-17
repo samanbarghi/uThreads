@@ -13,22 +13,17 @@
 #include <mutex>
 #include "global.h"
 #include "EmbeddedList.h"
+#include "ListAndUnlock.h"
 
 class BlockingQueue;
 class Mutex;
 class Cluster;
 class IOHandler;
 
-class QueueAndLock {
-	friend class uThread;
-	friend class kThread;
-	EmbeddedList<uThread>* list;
-	std::mutex* mutex;
-	Mutex* umutex;
-};
 class uThread : public EmbeddedList<uThread>::Element{
 	friend class kThread;
 	friend class Cluster;
+	friend class LibInitializer;
 private:
 
 	//TODO: Add a function to check uThread's stack for overflow ! Prevent overflow or throw an exception or error?
@@ -95,9 +90,7 @@ public:
 
 	static void yield();
 	void migrate(Cluster*);				//Migrate the thread to a new Cluster
-	void suspend(BlockingQueue*,std::mutex&);
-	void suspend(BlockingQueue*,Mutex&);
-	void suspend(IOHandler*);           //suspend on IOhandler
+	void suspend(ListAndUnlock*);
 	void resume();
 	static void uexit();				//End the thread
 
@@ -126,5 +119,14 @@ public:
 		}
 	}
 };
+
+/*
+ * Initialize static members with this function
+ */
+static class LibInitializer{
+public:
+	LibInitializer();
+	~LibInitializer();
+} initializer;
 
 #endif /* UTHREAD_H_ */

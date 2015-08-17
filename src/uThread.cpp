@@ -11,9 +11,34 @@
 #include "BlockingSync.h"
 #include <iostream>		//TODO: remove this, add debug object
 #include <cassert>
+
 uint64_t uThread::totalNumberofUTs = 0;
 uint64_t uThread::uThreadMasterID= 0;
 std::mutex uThread::uThreadSyncLock;
+
+
+static int _nifty_counter;
+Cluster* Cluster::defaultCluster = nullptr;
+uThread* uThread::initUT 		 = nullptr;
+kThread* kThread::defaultKT 	 = nullptr;
+
+
+LibInitializer::LibInitializer(){
+	if(0 == _nifty_counter++){
+
+		Cluster::defaultCluster = new Cluster();									//initialize default Cluster, ID:0
+		uThread::initUT = new uThread(Cluster::defaultCluster);						//must be initialized in defaultKT constructor.
+		kThread::defaultKT = new kThread(true);
+	}
+}
+
+LibInitializer::~LibInitializer(){
+	if(0 == --_nifty_counter){
+		delete Cluster::defaultCluster;
+		delete uThread::initUT;
+		delete kThread::defaultKT;
+	}
+}
 
 /*
  * This will only be called by the default uThread.
@@ -99,6 +124,8 @@ uThread* uThread::create(funcvoid1_t func, void* args, Cluster* cluster) {
 void uThread::yield(){
 //	std::cout << "YEIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIILD" << std::endl;
     kThread* ck = kThread::currentKT;
+    assert(ck != nullptr);
+    assert(ck->currentUT != nullptr);
 	ck->currentUT->status = YIELD;
 	ck->switchContext();
 }
@@ -114,27 +141,9 @@ void uThread::migrate(Cluster* cluster){
 	kThread::currentKT->switchContext();
 }
 
-void uThread::suspend(BlockingQueue* bqueue, std::mutex& lock) {
+void uThread::suspend(ListAndUnlock* lau) {
 	this->status = WAITING;
-	QueueAndLock* qal = new QueueAndLock();
-	qal->list = &bqueue->queue;
-	qal->mutex= &lock;
-	qal->umutex= nullptr;
-
-	kThread::currentKT->switchContext(qal);
-}
-void uThread::suspend(BlockingQueue* bqueue, Mutex& mutex) {
-	this->status = WAITING;
-	QueueAndLock* qal = new QueueAndLock();
-	qal->list = &bqueue->queue;
-	qal->mutex= nullptr;
-	qal->umutex= &mutex;
-
-	kThread::currentKT->switchContext(qal);
-}
-void uThread::suspend(IOHandler* ioh){
-    this->status = IOBLOCK;
-    kThread::currentKT->switchContext();
+	kThread::currentKT->switchContext(lau);
 }
 
 void uThread::resume(){

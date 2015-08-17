@@ -5,9 +5,9 @@ LIB_DIR=lib
 SPIKE_DIR=spike
 INCLUDE_IDR=include
 
-CXX		 := g++ -std=c++1y
+CXX		 := g++ -std=c++11
 #CXX		 := clang -std=c++1y
-CXXFLAGS := -g -ggdb -m64 -fpermissive -mtls-direct-seg-refs
+CXXFLAGS := -g -ggdb -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread
 
 SRCEXT 	:= cpp
 ASMEXT 	:= S
@@ -20,7 +20,7 @@ OBJECTS := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 SOBJECTS:= $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SSOURCES:.$(ASMEXT)=.o))
 SPIKEOBJECTS := $(patsubst $(SPIKE_DIR)/%,$(BIN_DIR)/%,$(SPIKESOURCES:.$(SRCEXT)=))
 
-LIB 	:= -pthread -ldl
+LIB 	:= -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -ldl
 INC		:= -I include
 TARGET	:= $(LIB_DIR)/libuThread.so
 

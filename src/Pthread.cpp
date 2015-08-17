@@ -9,7 +9,7 @@
 #include "uThread.h"
 #include "kThread.h"
 
-extern "C" int uthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg){
+/* extern "C" int uthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg){
 
 	//TODO: Where to delete these? Just wait till the program ends?
 	Cluster* cluster = new Cluster();
@@ -41,4 +41,4 @@ extern "C" void uthread_create_syscall_kthread(cpu_set_t cset){
 	if(pthread_setaffinity_np((pthread_t)kt->getThreadNativeHandle(), sizeof(cpu_set_t), &cset) < 0){
 		perror("Could not set affinity\n");
 	}
-}
+} */

@@ -10,9 +10,6 @@
 #include <iostream>
 
 std::vector<Cluster*> Cluster::clusters;
-Cluster	Cluster::defaultCluster;						//Default cluster, ID: 0
-Cluster	Cluster::syscallCluster;						//syscall cluster, ID: 1
-uThread* uThread::initUT = new uThread(&Cluster::defaultCluster);
 
 std::mutex Cluster::clusterSyncLock;
 uint64_t Cluster::clusterMasterID = 0;
@@ -46,6 +43,7 @@ void Cluster::invoke(funcvoid1_t func, void* args) {
 }
 
 void Cluster::uThreadSchedule(uThread* ut) {
+	assert(ut != nullptr);
 	ut->status	= READY;								//Change status to ready, before pushing it to ready queue just in case context switch occurred before we get to this part
 	readyQueue.push(ut);								//Scheduling uThread
 }
@@ -53,8 +51,14 @@ void Cluster::uThreadSchedule(uThread* ut) {
 uThread* Cluster::tryGetWork(){return readyQueue.tryPop();}
 
 //pop more than one uThread from the ready queue and push into the kthread local ready queue
-void Cluster::tryGetWorks(EmbeddedList<uThread> *queue){readyQueue.tryPopMany(queue, numberOfkThreads);}
+void Cluster::tryGetWorks(EmbeddedList<uThread> *queue){
+	assert(queue != nullptr);
+	readyQueue.tryPopMany(queue, numberOfkThreads);
+}
 
-void Cluster::getWork(EmbeddedList<uThread> *queue) {readyQueue.popMany(queue, numberOfkThreads);}
+void Cluster::getWork(EmbeddedList<uThread> *queue) {
+	assert(queue != nullptr);
+	readyQueue.popMany(queue, numberOfkThreads);
+}
 
 uint64_t Cluster::getClusterID() const {return this->clusterID;}
