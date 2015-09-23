@@ -16,45 +16,58 @@
 EpollIOHandler::EpollIOHandler() : IOHandler() {
     epoll_fd = epoll_create1 (EPOLL_CLOEXEC);               //Assuming kernel version >= 2.9
     														//TODO: Make sure this is backward compatible with kernel < 2.9
-
     if (epoll_fd == -1){
         std::cerr << "epoll_create: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
+//    std::cout << "EPOLL_FD" << epoll_fd << std::endl;
 
     events = (epoll_event*)calloc(MAXEVENTS, sizeof(struct epoll_event));
 }
 
-void EpollIOHandler::_ModifyFD(int fd, int flag){
+void EpollIOHandler::_Open(int fd){
+//    std::cout << "FD (" << fd << "): EPOLL OPEN" << std::endl;
     struct epoll_event ev;
+    ev.events = EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET;
     ev.data.fd = fd;
-    ev.events = 0;
 
-    if(flag & UT_IOREAD) ev.events |= EPOLLIN;
-    if(flag & UT_IOWRITE) ev.events |= EPOLLOUT;
 
-    //TODO:check whether the fd already exists in the list of monitored descriptors
-    bool fd_exist = ( IOTable.find(fd) != IOTable.end() );
-
-    if( fastpath(!epoll_ctl(epoll_fd, fd_exist ? EPOLL_CTL_MOD : EPOLL_CTL_ADD, fd, &ev)))
+    while( !epoll_ctl(epoll_fd,EPOLL_CTL_ADD, fd, &ev) && errno == EAGAIN)
     {
-        std::cerr << "epoll_ctl : " << errno << std::endl;
-        exit(EXIT_FAILURE);
+        //TODO:handle other epoll errors
+        std::cerr << "epoll_ctl : " << errno  << std::endl;
     }
-
-    //Now that we added the fd for listening move the current thread to the local map
-    //TODO: There is a problem here, what if epoll singals before this is added to the list? with level triggered
-    //There is no problem but for edge-triggered this should be handled
-    //TODO: is it possible to lose the uThread if we just add it to events.data.ptr, and retrieve it later?
-    //This requires the uThread be moved to a blocking queue in kThread or the Cluster and moved back to ready queue when
-    //fd is ready.
-
-    MapAndUnlock<int>* mau = new MapAndUnlock<int>(&this->IOTable, fd, nullptr);
-    kThread::currentKT->currentUT->suspend(mau);
 
 }
 
 void EpollIOHandler::_Poll(int timeout){
+    if(!epoll_fd)
+        return;
+
+    int32_t n, mode;
+    struct epoll_event *ev;
+
+    //TODO: dedicated thread always blocks but others should not
+    n = epoll_wait(epoll_fd, events, MAXEVENTS, timeout);
+    while( n < 0){
+       //TODO: Throw an exception
+        std::cout << "EPOLL ERROR" << std::endl;
+        n = epoll_wait(epoll_fd, events, MAXEVENTS, timeout);
+    }
+
+    for(int i = 0; i < n; i++) {
+        ev = &events[i];
+        //std::cout << "FD(" << ev->data.fd << ") EPOLL RETURN RESULT" << std::endl;
+        if(ev->events == 0)
+            continue;
+        mode = 0;
+        if(ev->events & (EPOLLIN|EPOLLRDHUP|EPOLLHUP|EPOLLERR))
+            mode |= UT_IOREAD;
+        if(ev->events & (EPOLLOUT|EPOLLHUP|EPOLLERR))
+            mode |= UT_IOWRITE;
+        if(mode)
+            this->PollReady(ev->data.fd, mode);
+    }
 
 }
 

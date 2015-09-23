@@ -24,6 +24,8 @@ class uThread : public EmbeddedList<uThread>::Element{
 	friend class kThread;
 	friend class Cluster;
 	friend class LibInitializer;
+	friend class BlockingQueue;
+	friend class IOHandler;
 private:
 
 	//TODO: Add a function to check uThread's stack for overflow ! Prevent overflow or throw an exception or error?
@@ -35,6 +37,7 @@ private:
 	uThread(funcvoid1_t, ptr_t, priority_t, Cluster*);		//To create a new uThread, create function should be called
 
 	static uThread*	initUT;				//initial uT that is associated with main
+	static uThread* ioUT;              //default IO uThread
 
 	/*
 	 * Statistics variables
@@ -65,6 +68,7 @@ private:
 
 	vaddr createStack(size_t);			//Create a stack with given size
 	void terminate();
+	void suspend(ListAndUnlock*);
 
 	void initialSynchronization();		//Used for assigning a thread ID, set totalNumberofUTs and ...
 	static void decrementTotalNumberofUTs();	//Decrement the number (only used in kThread with default uthread)
@@ -90,7 +94,6 @@ public:
 
 	static void yield();
 	void migrate(Cluster*);				//Migrate the thread to a new Cluster
-	void suspend(ListAndUnlock*);
 	void resume();
 	static void uexit();				//End the thread
 

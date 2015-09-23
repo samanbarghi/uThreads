@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <iostream>
 
+#ifdef DONTRUN
 static  size_t  (*real_fread)   (void *ptr, size_t size, size_t nmemb, FILE *stream) = (size_t(*)(void*, size_t, size_t, FILE*))dlsym(RTLD_NEXT, "fread");
 static  ssize_t (*real_read)    (int fd, void *buf, size_t count) = (ssize_t (*)(int, void*, size_t))dlsym(RTLD_NEXT, "read");
 static  ssize_t (*real_write)   (int fd, const void *buf, size_t count) = (ssize_t (*)(int, const void*, size_t))dlsym(RTLD_NEXT, "write");
@@ -27,7 +28,6 @@ static  int     (*real_close)   (int fd) = (int (*)(int))dlsym(RTLD_NEXT, "close
 static  void    (*real_rewind)  (FILE *stream) = (void (*)(FILE*))dlsym(RTLD_NEXT, "rewind");
 
 
-#ifdef DONTRUN
 extern "C" int puts(const char* str){
 	Cluster* tmpCluster = (Cluster*)kThread::currentKT->currentUT->getCurrentCluster();
 	kThread::currentKT->currentUT->migrate(&Cluster::syscallCluster);

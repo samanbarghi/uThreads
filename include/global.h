@@ -46,6 +46,12 @@ enum uThreadStatus {
 	TERMINATED														//uThread is done and should be terminated
 };
 
+/* polling flags */
+enum pollingFlags {
+    UT_IOREAD    = 1 << 0,                           //READ
+    UT_IOWRITE   = 1 << 1                            //WRITE
+};
+
 /*
  * Assembly declarations
  */

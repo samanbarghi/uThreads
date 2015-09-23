@@ -13,6 +13,8 @@
 #include <unordered_map>
 #include <vector>
 #include <utility>
+#include <assert.h>
+#include <iostream>
 #include "EmbeddedList.h"
 
 class Mutex;
@@ -52,19 +54,26 @@ public:
 };
 
 
-template <typename T> class MapAndUnlock : public ListAndUnlock{
+template <typename T, typename T2> class MapAndUnlock : public ListAndUnlock{
 
-	std::unordered_multimap<T, uThread*>* map;
+	std::unordered_multimap<T, T2*>* map;
 	std::mutex* mutex  = nullptr;
-	T id = nullptr;
+	T id = -1;
+	T2* data = nullptr;
 	void _PushAndUnlock(){
+	    assert(map != nullptr);
+	    assert(data != nullptr);
+	    assert(id != -1);
 
-		map->insert(std::make_pair(this->id, this->ut));
+	    if(map->find(id) == map->end()) //only add if it does not exists already
+	        map->insert(std::make_pair(this->id, data));
+
 		if(mutex) mutex->unlock();
 	}
 
 public:
-	MapAndUnlock(std::unordered_multimap<T, uThread*>* map, T id, std::mutex* mutex) : map(map), id(id), mutex(mutex){};
+	MapAndUnlock(std::unordered_multimap<T, T2*>* map, T id, T2* data, std::mutex* mutex) : map(map), id(id), data(data), mutex(mutex){};
+	~MapAndUnlock(){};
 };
 
 

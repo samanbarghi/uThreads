@@ -29,6 +29,7 @@ private:
 
 	static kThread* defaultKT;				//default main thread of the application
 	static std::mutex kThreadSyncLock;		//Global synchronization lock for kThread
+	static kThread* ioKT;                   //Dedicated IO kThread
 	/* make user create the kernel thread for ths syscalls as required */
 	//static kThread* syscallKT;				//syscall kernel thread for the application
 
@@ -36,10 +37,9 @@ private:
 	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread
 
 	static __thread EmbeddedList<uThread> *ktReadyQueue;	//internal readyQueue for kThread, to avoid locking and unlocking the cluster ready queue
-	static __thread IOHandler* ioHandler;                    //Thread local iohandler (epoll, poll, select wrapper)
 
 	void run();						//The run function for the thread.
-	void initialize();				//Initialization function for kThread
+	void initialize(bool);				//Initialization function for kThread
 	static inline void postSwitchFunc(uThread*, void*) __noreturn;
     void spin();
 
@@ -53,6 +53,7 @@ public:
 
 	uThread* currentUT;						//Pointer to the current running ut
 	static __thread kThread* currentKT;
+	static IOHandler* ioHandler;            //Thread local iohandler (epoll, poll, select wrapper)
 
 	static mword totalNumberofKTs;
 

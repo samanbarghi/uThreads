@@ -112,6 +112,7 @@ public:
     const Cluster& operator=(const Cluster&) = delete;
 
     static Cluster* defaultCluster;						//Default cluster
+    static Cluster* ioCluster;						    //io cluster
     static std::vector<Cluster*> clusters;				//List of all clusters
 
     static void invoke(funcvoid1_t, void*) __noreturn;//Function to invoke the run function of a uThread

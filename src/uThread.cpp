@@ -12,6 +12,8 @@
 #include <iostream>		//TODO: remove this, add debug object
 #include <cassert>
 
+//TODO: change all pointers to unique_ptr or shared_ptr
+/* initialize all static members here */
 uint64_t uThread::totalNumberofUTs = 0;
 uint64_t uThread::uThreadMasterID= 0;
 std::mutex uThread::uThreadSyncLock;
@@ -22,6 +24,10 @@ Cluster* Cluster::defaultCluster = nullptr;
 uThread* uThread::initUT 		 = nullptr;
 kThread* kThread::defaultKT 	 = nullptr;
 
+Cluster* Cluster::ioCluster      = nullptr;
+kThread* kThread::ioKT           = nullptr;
+uThread* uThread::ioUT           = nullptr;
+
 
 LibInitializer::LibInitializer(){
 	if(0 == _nifty_counter++){
@@ -29,6 +35,14 @@ LibInitializer::LibInitializer(){
 		Cluster::defaultCluster = new Cluster();									//initialize default Cluster, ID:0
 		uThread::initUT = new uThread(Cluster::defaultCluster);						//must be initialized in defaultKT constructor.
 		kThread::defaultKT = new kThread(true);
+
+		Cluster::ioCluster = new Cluster();
+		kThread::ioKT = new kThread(Cluster::ioCluster);
+		uThread::ioUT = uThread::create(IOHandler::defaultIOFunc, nullptr, Cluster::ioCluster);
+
+#ifdef __linux
+		kThread::ioHandler = new EpollIOHandler();
+#endif
 	}
 }
 
@@ -37,8 +51,15 @@ LibInitializer::~LibInitializer(){
 		delete Cluster::defaultCluster;
 		delete uThread::initUT;
 		delete kThread::defaultKT;
+
+		delete kThread::ioHandler;
+		delete uThread::ioUT;
+		delete kThread::ioKT;
+		delete Cluster::ioCluster;
+
 	}
 }
+/******************************************/
 
 /*
  * This will only be called by the default uThread.
