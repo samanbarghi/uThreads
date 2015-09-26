@@ -46,7 +46,7 @@ public:
  * I/O handler per kThread.
  */
 class IOHandler{
-    virtual void _Open(int fd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
+    virtual void _Open(int fd, PollData* pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
     /*
      * Timeout can be int for epoll, timeval for select or timespec for poll.
      * Here the assumption is timeout is passed in milliseconds as an integer, similar to epoll.
@@ -54,7 +54,7 @@ class IOHandler{
     virtual void _Poll(int timeout)=0;                ///
 protected:
     IOHandler(){};
-    void PollReady(int fd, int flag);                   //When there is notification update pollData and unblock the related ut
+    void PollReady(PollData* pd, int flag);                   //When there is notification update pollData and unblock the related ut
     /*
      * When a uThread request I/O, the device will be polled
      * and uThread should be added to IOTable.
@@ -62,7 +62,7 @@ protected:
      * the device is ready, this structure is used as a look up table to
      * put the waiting uThreads back on the related readyQueue.
      */
-    std::unordered_multimap<int, PollData*> IOTable;
+    std::unordered_map<int, PollData*> IOTable;
     std::mutex iomutex;
 public:
    ~IOHandler(){};  //should be protected
@@ -87,7 +87,7 @@ private:
     int epoll_fd = -1;
     struct epoll_event* events;
 
-    void _Open(int fd);
+    void _Open(int fd, PollData* pd);
     void _Poll(int timeout);
 public:
     EpollIOHandler();

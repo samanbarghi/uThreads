@@ -25,17 +25,17 @@ EpollIOHandler::EpollIOHandler() : IOHandler() {
     events = (epoll_event*)calloc(MAXEVENTS, sizeof(struct epoll_event));
 }
 
-void EpollIOHandler::_Open(int fd){
+void EpollIOHandler::_Open(int fd, PollData* pd){
 //    std::cout << "FD (" << fd << "): EPOLL OPEN" << std::endl;
     struct epoll_event ev;
     ev.events = EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET;
-    ev.data.fd = fd;
+    ev.data.ptr = (void*)pd;
 
 
     while( !epoll_ctl(epoll_fd,EPOLL_CTL_ADD, fd, &ev) && errno == EAGAIN)
     {
         //TODO:handle other epoll errors
-        std::cerr << "epoll_ctl : " << errno  << std::endl;
+        //std::cerr << "epoll_ctl : " << errno  << std::endl;
     }
 
 }
@@ -66,7 +66,7 @@ void EpollIOHandler::_Poll(int timeout){
         if(ev->events & (EPOLLOUT|EPOLLHUP|EPOLLERR))
             mode |= UT_IOWRITE;
         if(mode)
-            this->PollReady(ev->data.fd, mode);
+            this->PollReady((PollData*) ev->data.ptr , mode);
     }
 
 }

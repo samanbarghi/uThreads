@@ -56,7 +56,7 @@ public:
 
 template <typename T, typename T2> class MapAndUnlock : public ListAndUnlock{
 
-	std::unordered_multimap<T, T2*>* map;
+	std::unordered_map<T, T2*>* map;
 	std::mutex* mutex  = nullptr;
 	T id = -1;
 	T2* data = nullptr;
@@ -68,11 +68,11 @@ template <typename T, typename T2> class MapAndUnlock : public ListAndUnlock{
 	    if(map->find(id) == map->end()) //only add if it does not exists already
 	        map->insert(std::make_pair(this->id, data));
 
-		if(mutex) mutex->unlock();
+		if(mutex != nullptr) mutex->unlock();
 	}
 
 public:
-	MapAndUnlock(std::unordered_multimap<T, T2*>* map, T id, T2* data, std::mutex* mutex) : map(map), id(id), data(data), mutex(mutex){};
+	MapAndUnlock(std::unordered_map<T, T2*>* map, T id, T2* data, std::mutex*  mutex) : map(map), id(id), data(data), mutex(mutex){};
 	~MapAndUnlock(){};
 };
 

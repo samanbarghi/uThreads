@@ -14,23 +14,34 @@ void IOHandler::open(int fd, int flag){
 //    std::cout << "FD (" << fd << "): IOHandler::Open" << std::endl;
 
     PollData* pd;
+    std::mutex* sndMutex;
+    bool isIoMutex = false;
+
     std::unique_lock<std::mutex> mlock(iomutex);
     auto cfd =IOTable.find(fd) ;
 
     /*
      * If fd is not being monitored yet, add it to the underlying io interface
      */
-    if( cfd == IOTable.end())
+    if( cfd == IOTable.end()){
         pd = new PollData(fd);
-    else{ //otherwise load the pd
+        sndMutex = &iomutex;
+        isIoMutex = true;
+    }else{ //otherwise load the pd
         pd = cfd->second;
+        sndMutex = &(pd->mtx);
+        isIoMutex = false;
+
     }
 
     std::unique_lock<std::mutex> pdlock(pd->mtx);
+    if(!isIoMutex)
+        mlock.unlock();
+
     //if new or newFD flag is set, add it to underlying poll structure
     if( pd->newFD ){
         pd->newFD = false;
-        _Open(fd);
+        _Open(fd, pd);
     }
     //TODO:check other states
     if(flag & UT_IOREAD){
@@ -52,10 +63,13 @@ void IOHandler::open(int fd, int flag){
         pd->writeSate = pd->PARKED;
         pd->wut = kThread::currentKT->currentUT;
     }
-    pdlock.unlock();
+    if(isIoMutex){
+        mlock.release();
+        pdlock.unlock();
+    }else
+        pdlock.release();
 
-
-    MapAndUnlock<int, PollData>* mau = new MapAndUnlock<int,PollData>(&this->IOTable, fd, pd, &iomutex);
+    MapAndUnlock<int, PollData>* mau = new MapAndUnlock<int,PollData>(&this->IOTable, fd, pd, sndMutex);
     kThread::currentKT->currentUT->suspend(mau);
 //    std::cout << "Wake up from suspension" << std::endl;
     //when epoll returns this ut will be back on readyQueue and pick up from here
@@ -64,23 +78,14 @@ void IOHandler::poll(int timeout, int flag){
 
     _Poll(timeout);
 }
-void IOHandler::PollReady(int fd, int flag){
-    std::unique_lock<std::mutex> mlock(iomutex);
-//    std::cout << "FD(" << fd << "): POLL READY" << std::endl;
-    auto cfd =IOTable.find(fd) ;
-    if( cfd == IOTable.end() ){
-        //TODO: throw an exception, this should not happen
-        std::cout << "ERROR: NO FD in IOTABLE" << std::endl;
-        return;
-    }
-    PollData* pd = cfd->second;
-    mlock.unlock();                 //we are done with IOTable
-
-    std::lock_guard<std::mutex> pdlock(pd->mtx);
+void IOHandler::PollReady(PollData* pd, int flag){
+    assert(pd != nullptr);
 
     uThread *rut = nullptr, *wut = nullptr;
 
+    std::lock_guard<std::mutex> pdlock(pd->mtx);
     if(flag & UT_IOREAD){
+
         if(pd->readState == pd->IDLE){
             pd->readState = pd->READY;
             return;
