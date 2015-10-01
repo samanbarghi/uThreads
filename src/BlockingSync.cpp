@@ -11,15 +11,24 @@
 
 bool BlockingQueue::suspend(std::mutex& lock) {
 
-	EmbeddedListAndUnlock* elau = new EmbeddedListAndUnlock(&this->queue, &lock);
-    kThread::currentKT->currentUT->suspend(elau);
+	EmbeddedList<uThread>* lqueue = &(this->queue);
+	auto lambda([&, this](){
+	    this->queue.push_back(kThread::currentKT->currentUT);
+	    lock.unlock();
+	});
+	std::function<void()> f(std::cref(lambda));
+    kThread::currentKT->currentUT->suspend(f);
     //TODO: we do not have any cancellation yet, so this line will not be reached at all
     return true;
 }
 
 bool BlockingQueue::suspend(Mutex& mutex) {
-	EmbeddedListAndUnlock* elau = new EmbeddedListAndUnlock(&this->queue, &mutex);
-    kThread::currentKT->currentUT->suspend(elau);
+	auto lambda([&, this](){
+	        this->queue.push_back(kThread::currentKT->currentUT);
+	        mutex.release();
+	    });
+	    std::function<void()> f(std::cref(lambda));
+	    kThread::currentKT->currentUT->suspend(f);
     return true;
 }
 

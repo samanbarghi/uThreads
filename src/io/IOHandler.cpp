@@ -14,8 +14,6 @@ void IOHandler::open(int fd, int flag){
 //    std::cout << "FD (" << fd << "): IOHandler::Open" << std::endl;
 
     PollData* pd;
-    std::mutex* sndMutex;
-    bool isIoMutex = false;
 
     std::unique_lock<std::mutex> mlock(iomutex);
     auto cfd =IOTable.find(fd) ;
@@ -25,18 +23,13 @@ void IOHandler::open(int fd, int flag){
      */
     if( cfd == IOTable.end()){
         pd = new PollData(fd);
-        sndMutex = &iomutex;
-        isIoMutex = true;
+        IOTable.insert(std::make_pair(fd, pd));
     }else{ //otherwise load the pd
         pd = cfd->second;
-        sndMutex = &(pd->mtx);
-        isIoMutex = false;
-
     }
 
     std::unique_lock<std::mutex> pdlock(pd->mtx);
-    if(!isIoMutex)
-        mlock.unlock();
+    mlock.unlock();
 
     //if new or newFD flag is set, add it to underlying poll structure
     if( pd->newFD ){
@@ -63,14 +56,14 @@ void IOHandler::open(int fd, int flag){
         pd->writeSate = pd->PARKED;
         pd->wut = kThread::currentKT->currentUT;
     }
-    if(isIoMutex){
-        mlock.release();
-        pdlock.unlock();
-    }else
-        pdlock.release();
 
-    MapAndUnlock<int, PollData>* mau = new MapAndUnlock<int,PollData>(&this->IOTable, fd, pd, sndMutex);
-    kThread::currentKT->currentUT->suspend(mau);
+//    MapAndUnlock<int, PollData>* mau = new MapAndUnlock<int,PollData>(&this->IOTable, fd, pd, sndMutex);
+    //TODO:decrease the capture list to avoid hitting the hip
+    auto lambda([&pd](){
+        pd->mtx.unlock();
+    });
+    std::function<void()> f(std::cref(lambda));
+    kThread::currentKT->currentUT->suspend(f);
 //    std::cout << "Wake up from suspension" << std::endl;
     //when epoll returns this ut will be back on readyQueue and pick up from here
 }

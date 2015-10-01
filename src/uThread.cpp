@@ -162,9 +162,9 @@ void uThread::migrate(Cluster* cluster){
 	kThread::currentKT->switchContext();
 }
 
-void uThread::suspend(ListAndUnlock* lau) {
+void uThread::suspend(std::function<void()>& func) {
 	this->status = WAITING;
-	kThread::currentKT->switchContext(lau);
+	kThread::currentKT->switchContext(&func);
 }
 
 void uThread::resume(){

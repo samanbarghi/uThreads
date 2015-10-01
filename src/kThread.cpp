@@ -156,9 +156,8 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 			case WAITING:
 			{
 			    assert(args != nullptr);
-				ListAndUnlock* lau= (ListAndUnlock*)args;
-				lau->PushAndUnlock();
-				delete(lau);
+			    std::function<void()>* func = (std::function<void()>*)args;
+			    (*func)();
 				break;
 			}
 			default:
