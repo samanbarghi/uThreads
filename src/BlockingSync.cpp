@@ -6,7 +6,6 @@
  */
 
 #include "BlockingSync.h"
-#include "ListAndUnlock.h"
 #include <iostream>
 
 bool BlockingQueue::suspend(std::mutex& lock) {
