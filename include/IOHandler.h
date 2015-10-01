@@ -14,27 +14,26 @@
 #include <mutex>
 #include "uThread.h"
 
+#define POLL_CACHE_SIZE 1024                            //size of poll cache, for now we use an array
+
+#define POLL_READY  ((uThread*)1)
+#define POLL_WAIT   ((uThread*)2)
+
 /*
  * Include poll data
  */
 class PollData{
 public:
-    enum states {
-        IDLE,
-        READY,
-        WAIT,
-        PARKED
-    };
+
     std::mutex mtx;                                     //Mutex that protects this  PollData
     int fd;                                            //file descriptor
     bool newFD = true;                                 // Just opened?
 
-    short readState = IDLE;                             //read state
-    short writeSate = IDLE;                             //write state
     uThread* rut = nullptr;
     uThread* wut = nullptr;                             //read and write uThreads
 
     PollData( int fd) : fd(fd) {};
+    PollData(){};
     ~PollData(){};
 
 };
@@ -53,7 +52,11 @@ class IOHandler{
      */
     virtual void _Poll(int timeout)=0;                ///
 protected:
-    IOHandler(){};
+    IOHandler(){
+        for(int i=0; i< POLL_CACHE_SIZE; i++){
+            pollCache[i].fd = i;
+        }
+    };
     void PollReady(PollData* pd, int flag);                   //When there is notification update pollData and unblock the related ut
     /*
      * When a uThread request I/O, the device will be polled
@@ -62,8 +65,7 @@ protected:
      * the device is ready, this structure is used as a look up table to
      * put the waiting uThreads back on the related readyQueue.
      */
-    std::unordered_map<int, PollData*> IOTable;
-    std::mutex iomutex;
+    PollData pollCache[POLL_CACHE_SIZE];
 public:
    ~IOHandler(){};  //should be protected
     /* public interfaces */
