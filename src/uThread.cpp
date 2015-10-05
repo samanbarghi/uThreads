@@ -14,9 +14,8 @@
 
 //TODO: change all pointers to unique_ptr or shared_ptr
 /* initialize all static members here */
-uint64_t uThread::totalNumberofUTs = 0;
-uint64_t uThread::uThreadMasterID= 0;
-std::mutex uThread::uThreadSyncLock;
+std::atomic_ulong uThread::totalNumberofUTs(0);
+std::atomic_ulong uThread::uThreadMasterID(0);
 
 
 static int _nifty_counter;
@@ -92,12 +91,10 @@ uThread::~uThread() {
 	//This should never be called directly! terminate should be called instead
 }
 void uThread::decrementTotalNumberofUTs() {
-	std::lock_guard<std::mutex> lock(uThreadSyncLock);
 	totalNumberofUTs--;
 }
 
 void uThread::initialSynchronization() {
-	std::lock_guard<std::mutex> lock(uThreadSyncLock);
 	totalNumberofUTs++;
 	this->uThreadID = uThreadMasterID++;
 }

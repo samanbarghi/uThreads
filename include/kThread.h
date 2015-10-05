@@ -28,7 +28,6 @@ private:
     bool shouldSpin;                        //Should kThread spin before blocking
 
 	static kThread* defaultKT;				//default main thread of the application
-	static std::mutex kThreadSyncLock;		//Global synchronization lock for kThread
 	static kThread* ioKT;                   //Dedicated IO kThread
 	/* make user create the kernel thread for ths syscalls as required */
 	//static kThread* syscallKT;				//syscall kernel thread for the application
@@ -55,7 +54,7 @@ public:
 	static __thread kThread* currentKT;
 	static IOHandler* ioHandler;            //Thread local iohandler (epoll, poll, select wrapper)
 
-	static mword totalNumberofKTs;
+	static std::atomic_uint totalNumberofKTs;
 
 	void switchContext(uThread*,void* args = nullptr);			//Put current uThread in ready Queue and run the passed uThread
 	void switchContext(void* args = nullptr);					//Put current uThread in readyQueue and pop a new uThread to run

@@ -9,6 +9,7 @@
 #define CLUSTER_H_
 #include <vector>
 #include <mutex>
+#include <atomic>
 #include <iostream>
 #include <condition_variable>
 #include <thread>
@@ -96,10 +97,9 @@ class Cluster {
     friend class kThread;
 private:
     ReadyQueue readyQueue;				//There is one ready queue per cluster
-    mword numberOfkThreads;					//Number of kThreads in this Cluster
-    static std::mutex clusterSyncLock;	//Global cluster synchronization mutex
+    std::atomic_uint  numberOfkThreads;					//Number of kThreads in this Cluster
 
-    static uint64_t clusterMasterID;				//Global cluster ID holder
+    static std::atomic_ushort clusterMasterID;				//Global cluster ID holder
     uint64_t clusterID;									//Current Cluster ID
 
     void initialSynchronization();

@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <mutex>
+#include <atomic>
 #include "global.h"
 #include "EmbeddedList.h"
 
@@ -49,10 +50,9 @@ private:
 	priority_t 	priority;				//Threads priority, lower number means higher priority
 	uThreadStatus status;				//Current status of the uThread, should be private only friend classes can change this
 	Cluster*	currentCluster;			//This will be used for migrating to a new Cluster
-	static std::mutex uThreadSyncLock;	//Global uThread Mutex
 
-	static uint64_t totalNumberofUTs;			//Total number of existing uThreads
-	static uint64_t uThreadMasterID;			//The main ID counter
+	static std::atomic_ulong totalNumberofUTs;			//Total number of existing uThreads
+	static std::atomic_ulong uThreadMasterID;			//The main ID counter
 	uint64_t uThreadID;							//unique Id for this uthread
 	/*
 	 * Stack Boundary

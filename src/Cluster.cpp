@@ -11,8 +11,7 @@
 
 std::vector<Cluster*> Cluster::clusters;
 
-std::mutex Cluster::clusterSyncLock;
-uint64_t Cluster::clusterMasterID = 0;
+std::atomic_ushort Cluster::clusterMasterID(0);
 
 Cluster::Cluster(): numberOfkThreads(0) {
 
@@ -21,7 +20,6 @@ Cluster::Cluster(): numberOfkThreads(0) {
 }
 
 void Cluster::initialSynchronization(){
-	std::lock_guard<std::mutex> lock(clusterSyncLock);
 	clusterID = clusterMasterID++;
 }
 

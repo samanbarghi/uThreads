@@ -10,8 +10,7 @@
 #include <iostream>
 #include <unistd.h>
 
-mword kThread::totalNumberofKTs = 0;
-std::mutex kThread::kThreadSyncLock;
+std::atomic_uint kThread::totalNumberofKTs(0);
 
 
 __thread kThread* kThread::currentKT 					= nullptr;
@@ -47,7 +46,6 @@ kThread::~kThread() {
 	if(threadSelf->joinable())
 		threadSelf->join();															//wait for the thread to terminate properly
 
-	std::lock_guard<std::mutex> lock(kThreadSyncLock);
 	totalNumberofKTs--;
 	localCluster->numberOfkThreads--;
 
@@ -57,7 +55,6 @@ kThread::~kThread() {
 }
 
 void kThread::initialSynchronization(){
-	std::lock_guard<std::mutex> lock(kThreadSyncLock);
 	totalNumberofKTs++;
 	localCluster->numberOfkThreads++;											//Increas the number of kThreads in the cluster
 	//std::cout << "This Cluster " << localCluster->getClusterID() << " had " << localCluster->numberOfkThreads << std::endl;
