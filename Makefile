@@ -7,7 +7,7 @@ INCLUDE_IDR=include
 
 CXX		 := g++ -std=c++11
 #CXX		 := clang -std=c++1y
-CXXFLAGS := -g -ggdb -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread
+CXXFLAGS := -O3 -g -ggdb -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread
 
 SRCEXT 	:= cpp
 ASMEXT 	:= S
