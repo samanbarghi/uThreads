@@ -6,3 +6,4 @@ tags
 src/tags
 .settings
 Makefile.bak
+.idea
