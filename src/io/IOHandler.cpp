@@ -33,8 +33,8 @@ void IOHandler::open(int fd, int flag){
             pd->rut = nullptr;  //consume the notification and return;
             return;
         }
-        //set the state to parked
-        pd->rut = kThread::currentKT->currentUT;
+        //set the state to Waiting
+        pd->rut = POLL_WAIT;
     }
     if(flag & UT_IOWRITE)
     {
@@ -43,13 +43,32 @@ void IOHandler::open(int fd, int flag){
             return;
         }
         //set the state to parked
-        pd->wut = kThread::currentKT->currentUT;
+        pd->wut = POLL_WAIT;
     }
+    uThread* tmp = kThread::currentKT->currentUT;
+    pdlock.unlock();
 
 //    MapAndUnlock<int, PollData>* mau = new MapAndUnlock<int,PollData>(&this->IOTable, fd, pd, sndMutex);
     //TODO:decrease the capture list to avoid hitting the hip
-    auto lambda([&pd](){
-        pd->mtx.unlock();
+    auto lambda([&pd, &tmp, &flag](){
+        std::lock_guard<std::mutex> pdlock(pd->mtx);
+        if(flag & UT_IOREAD){
+            if(pd->rut == POLL_READY)
+                tmp->resume();
+            else if(pd->rut == POLL_WAIT)
+                pd->rut = tmp;
+            else
+                std::cout << "Exception on rut"<< std::endl;
+        }
+        if(flag & UT_IOWRITE){
+            if(pd->wut == POLL_READY)
+                tmp->resume();
+            else if(pd->wut == POLL_WAIT)
+                pd->wut = tmp;
+            else
+                std::cout << "Exception on wut"<< std::endl;
+        }
+
     });
     std::function<void()> f(std::cref(lambda));
     kThread::currentKT->currentUT->suspend(f);
@@ -57,7 +76,6 @@ void IOHandler::open(int fd, int flag){
     //when epoll returns this ut will be back on readyQueue and pick up from here
 }
 void IOHandler::poll(int timeout, int flag){
-
     _Poll(timeout);
 }
 void IOHandler::PollReady(PollData* pd, int flag){
@@ -68,10 +86,9 @@ void IOHandler::PollReady(PollData* pd, int flag){
     std::lock_guard<std::mutex> pdlock(pd->mtx);
     if(flag & UT_IOREAD){
 
-        if(pd->rut == nullptr){
+        if(pd->rut == nullptr || pd->rut == POLL_WAIT)
             pd->rut = POLL_READY;
-            return;
-        }else if(pd->rut > POLL_WAIT){
+        else if(pd->rut > POLL_WAIT){
             rut = pd->rut;
             pd->rut = nullptr;
 //            std::cout << "Resume UT on fd " << fd << std::endl;
@@ -80,7 +97,7 @@ void IOHandler::PollReady(PollData* pd, int flag){
         //if ready keep it that way? or should we do sth about it?
     }
     if(flag & UT_IOWRITE){
-        if(pd->wut == nullptr)
+        if(pd->wut == nullptr || pd->wut == POLL_WAIT)
             pd->wut = POLL_READY;
         else if(pd->wut > POLL_WAIT){
             wut = pd->wut;
@@ -94,7 +111,7 @@ void IOHandler::PollReady(PollData* pd, int flag){
 void IOHandler::defaultIOFunc(void*){
     //wait for IO
     //TODO: fix this
-    usleep(1000000);
+    usleep(10000);
     while(true){
 //       std::cout << "Waiting ... " << std::endl;
        kThread::ioHandler->poll(-1, 0);
