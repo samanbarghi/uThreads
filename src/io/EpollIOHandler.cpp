@@ -39,6 +39,16 @@ void EpollIOHandler::_Open(int fd, PollData* pd){
 
 }
 
+int EpollIOHandler::_Close(int fd){
+   struct epoll_event ev;
+   int res;
+
+   while(! (res = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, &ev)) && errno == EAGAIN){
+       //std::cout << "EPOLL DEL ERROR" << std::endl;
+   };
+   return res;
+}
+
 void EpollIOHandler::_Poll(int timeout){
     if(!epoll_fd)
         return;

@@ -46,11 +46,10 @@ public:
  */
 class IOHandler{
     virtual void _Open(int fd, PollData* pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
-    /*
-     * Timeout can be int for epoll, timeval for select or timespec for poll.
-     * Here the assumption is timeout is passed in milliseconds as an integer, similar to epoll.
-     */
+    virtual int  _Close(int fd) = 0;
     virtual void _Poll(int timeout)=0;                ///
+
+
 protected:
     IOHandler(){
         for(int i=0; i< POLL_CACHE_SIZE; i++){
@@ -66,10 +65,12 @@ protected:
      * put the waiting uThreads back on the related readyQueue.
      */
     PollData pollCache[POLL_CACHE_SIZE];
+
 public:
    ~IOHandler(){};  //should be protected
     /* public interfaces */
    void open(int fd, int flag);
+   int close(int fd);
    void poll(int timeout, int flag);
    //dealing with uThreads
 
@@ -90,6 +91,7 @@ private:
     struct epoll_event* events;
 
     void _Open(int fd, PollData* pd);
+    int  _Close(int fd);
     void _Poll(int timeout);
 public:
     EpollIOHandler();

@@ -32,18 +32,22 @@ void IOHandler::open(int fd, int flag){
 //            std::cout << "FD(" << fd << "): Result is ready" << std::endl;
             pd->rut = nullptr;  //consume the notification and return;
             return;
-        }
-        //set the state to Waiting
-        pd->rut = POLL_WAIT;
+        }else if(pd->rut == nullptr)
+                //set the state to Waiting
+                pd->rut = POLL_WAIT;
+        else
+            std::cout << "Exception on open rut" << std::endl;
     }
     if(flag & UT_IOWRITE)
     {
         if(slowpath(pd->wut == POLL_READY)){
             pd->wut = nullptr;              //consume the notification and return
             return;
-        }
-        //set the state to parked
-        pd->wut = POLL_WAIT;
+        }else if(pd->wut == nullptr)
+                //set the state to parked
+                pd->wut = POLL_WAIT;
+        else
+            std::cout << "Exception on open wut" << std::endl;
     }
     uThread* tmp = kThread::currentKT->currentUT;
     pdlock.unlock();
@@ -75,6 +79,19 @@ void IOHandler::open(int fd, int flag){
 //    std::cout << "Wake up from suspension" << std::endl;
     //when epoll returns this ut will be back on readyQueue and pick up from here
 }
+int IOHandler::close(int fd){
+    PollData* pd = &pollCache[fd];
+    int res = _Close(fd);
+    res = ::close(fd);
+
+    std::lock_guard<std::mutex> pdlock(pd->mtx);
+    pd->rut = nullptr;
+    pd->wut = nullptr;
+    pd->newFD = true;
+
+    return res;
+}
+
 void IOHandler::poll(int timeout, int flag){
     _Poll(timeout);
 }
