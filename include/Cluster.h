@@ -27,6 +27,7 @@ private:
     std::mutex mtx;
     std::condition_variable cv;
     volatile mword size;
+    volatile mword waiting;           //number of waiting kThreads
 
     void removeMany(EmbeddedList<uThread> *nqueue, mword numkt){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
@@ -76,7 +77,9 @@ public:
         std::unique_lock<std::mutex> mlock(mtx);
         //if spin was not enough, simply block
         if (size == 0) {
+            waiting++;
             while (queue.empty()) {cv.wait(mlock);}
+            waiting--;
         }
         removeMany(nqueue, numkt);
     }
@@ -85,7 +88,7 @@ public:
         std::unique_lock<std::mutex> mlock(mtx);
         queue.push_back(ut);
         size++;
-        if (size == 1) 		//Signal only when the queue was previously empty
+        if (waiting > 0) 		//Signal only when the queue was previously empty
             cv.notify_one();
     }
     bool empty() const {
