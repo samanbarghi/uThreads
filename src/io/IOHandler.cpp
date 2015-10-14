@@ -139,7 +139,7 @@ int IOHandler::accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen){
 //    std::cout << "FD(" << sockfd << "): Calling accept" << std::endl;
     //check connection queue for wating connetions
     //Set the fd as nonblocking
-    int res = ::accept4(sockfd, addr, addrlen, 0 );
+    int res = ::accept4(sockfd, addr, addrlen, SOCK_NONBLOCK );
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
         //User level blocking using nonblocking io
         open(sockfd, UT_IOREAD);
