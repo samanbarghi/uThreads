@@ -23,7 +23,9 @@ void IOHandler::open(int fd, int flag){
     //if new or newFD flag is set, add it to underlying poll structure
     if( pd->newFD ){
         pd->newFD = false;
-        _Open(fd, pd);
+        int res = _Open(fd, pd);
+        //TODO: handle epoll errors
+
     }
     //TODO:check other states
     if(flag & UT_IOREAD){
@@ -81,10 +83,12 @@ void IOHandler::open(int fd, int flag){
 }
 int IOHandler::close(int fd){
     PollData* pd = &pollCache[fd];
+    std::lock_guard<std::mutex> pdlock(pd->mtx);
+    assert(pd->rut < POLL_WAIT && pd->wut < POLL_WAIT);
     int res = _Close(fd);
+    //TODO: handle epoll errors
     res = ::close(fd);
 
-    std::lock_guard<std::mutex> pdlock(pd->mtx);
     pd->rut = nullptr;
     pd->wut = nullptr;
     pd->newFD = true;

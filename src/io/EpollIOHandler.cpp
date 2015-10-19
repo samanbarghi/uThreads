@@ -24,29 +24,26 @@ EpollIOHandler::EpollIOHandler() : IOHandler() {
     events = (epoll_event*)calloc(MAXEVENTS, sizeof(struct epoll_event));
 }
 
-void EpollIOHandler::_Open(int fd, PollData* pd){
+int EpollIOHandler::_Open(int fd, PollData* pd){
 //    std::cout << "FD (" << fd << "): EPOLL OPEN" << std::endl;
     struct epoll_event ev;
     ev.events = EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET;
     ev.data.ptr = (void*)pd;
 
-
-    while( !epoll_ctl(epoll_fd,EPOLL_CTL_ADD, fd, &ev) && errno == EAGAIN)
-    {
-        //TODO:handle other epoll errors
-        //std::cerr << "epoll_ctl : " << errno  << std::endl;
-    }
-
+    int res = epoll_ctl(epoll_fd,EPOLL_CTL_ADD, fd, &ev);
+    if(res < 0)
+        std::cout << "EPOLL ADD ERROR: " << errno << std::endl;
+    return res;
 }
 
 int EpollIOHandler::_Close(int fd){
    struct epoll_event ev;
    int res;
 
-   while(! (res = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, &ev)) && errno == EAGAIN){
-       //std::cout << "EPOLL DEL ERROR" << std::endl;
-   };
-   return res;
+  res = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, &ev);
+  if(res < 0 && errno != 2)
+      std::cout << "EPOLL DEL ERROR: " << errno << std::endl;
+  return res;
 }
 
 void EpollIOHandler::_Poll(int timeout){
@@ -63,6 +60,10 @@ void EpollIOHandler::_Poll(int timeout){
         std::cout << "EPOLL ERROR" << std::endl;
         n = epoll_wait(epoll_fd, events, MAXEVENTS, timeout);
     }
+
+    //timeout
+    if(n == 0 )
+        return;
 
     for(int i = 0; i < n; i++) {
         ev = &events[i];
