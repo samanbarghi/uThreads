@@ -159,6 +159,9 @@ int IOHandler::accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen){
         assert(res < POLL_CACHE_SIZE);
         std::lock_guard<std::mutex> pdlock(pollCache[res].mtx);
         pollCache[res].newFD = true;
+        pollCache[res].rut = nullptr;
+        pollCache[res].wut = nullptr;
+
     }
     return res;
 
