@@ -42,7 +42,7 @@ public:
 
     // Thread*& passed to support atomic setting of Mutex::owner
     bool signal(std::mutex& lock,uThread*& owner);			//Used along with Mutex
-    bool signal(std::mutex& lock){uThread* dummy = nullptr; signal(lock, dummy);}			//Used along with Mutex
+    bool signal(std::mutex& lock){uThread* dummy = nullptr; return signal(lock, dummy);}			//Used along with Mutex
     bool signal(Mutex&);						//Used with ConditionVariable
     void signalAll(Mutex&);						//Used with ConditionVariable
 };
