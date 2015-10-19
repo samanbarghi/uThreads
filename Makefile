@@ -5,7 +5,7 @@ LIB_DIR=lib
 SPIKE_DIR=spike
 INCLUDE_IDR=include
 
-CXX		 := g++ -std=c++11
+CXX		 := g++ -std=c++1y
 #CXX		 := clang -std=c++1y
 CXXFLAGS := -O3 -g -ggdb -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread
 
@@ -33,6 +33,7 @@ $(TARGET) :  $(SOBJECTS) $(OBJECTS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILD_DIR)
+	@mkdir -p $(BUILD_DIR)/io
 	$(CXX) $(CXXFLAGS) -MMD $(INC) -c -fPIC -o $@ $<
 	@mv -f $(BUILD_DIR)/$*.d $(BUILD_DIR)/$*.d.tmp
 	@sed -e 's|.*:|$(BUILD_DIR)/$*.o:|' < $(BUILD_DIR)/$*.d.tmp > $(BUILD_DIR)/$*.d
