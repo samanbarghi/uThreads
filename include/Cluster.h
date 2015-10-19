@@ -33,7 +33,7 @@ private:
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
     	assert(numkt != 0);
-        int popnum = (size / numkt) ? (size / numkt) : 1;
+        mword popnum = (size / numkt) ? (size / numkt) : 1;
 
         uThread* ut;
         ut = queue.front();
