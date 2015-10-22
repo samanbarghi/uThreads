@@ -15,7 +15,7 @@ std::atomic_uint kThread::totalNumberofKTs(0);
 
 __thread kThread* kThread::currentKT 					= nullptr;
 __thread EmbeddedList<uThread>* kThread::ktReadyQueue 	= nullptr;
-IOHandler* kThread::ioHandler 					= nullptr;
+IOHandler* kThread::ioHandler                                  = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
 
 

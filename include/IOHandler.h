@@ -14,27 +14,40 @@
 #include <mutex>
 #include "uThread.h"
 
-#define POLL_CACHE_SIZE 1024                            //size of poll cache, for now we use an array
-
 #define POLL_READY  ((uThread*)1)
 #define POLL_WAIT   ((uThread*)2)
+
+
+class Connection;
 
 /*
  * Include poll data
  */
 class PollData{
-public:
+    friend Connection;
+    friend IOHandler;
+private:
 
     std::mutex mtx;                                     //Mutex that protects this  PollData
-    int fd;                                            //file descriptor
-    bool newFD = true;                                 // Just opened?
+    int fd = -1;                                       //file descriptor
 
     uThread* rut = nullptr;
     uThread* wut = nullptr;                             //read and write uThreads
 
-    PollData( int fd) : fd(fd) {};
-    PollData(){};
+    std::atomic<bool> closing;
+
+    //TODO: in case of multiple epollfd's, this structure can include
+    //a pointer to the related epollfd that is being used on.
+    void reset(){
+       rut = nullptr;
+       wut = nullptr;
+    };
+public:
+    PollData( int fd) : fd(fd), closing(false) {};
+    PollData(): closing(false) {};
     ~PollData(){};
+
+
 
 };
 /*
@@ -45,42 +58,28 @@ public:
  * I/O handler per kThread.
  */
 class IOHandler{
-    virtual int _Open(int fd, PollData* pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
+    friend Connection;
+
+    virtual int _Open(int fd, PollData *pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
     virtual int  _Close(int fd) = 0;
     virtual void _Poll(int timeout)=0;                ///
 
 
 protected:
-    IOHandler(){
-        for(int i=0; i< POLL_CACHE_SIZE; i++){
-            pollCache[i].fd = i;
-        }
-    };
+    IOHandler(){};
     void PollReady(PollData* pd, int flag);                   //When there is notification update pollData and unblock the related ut
-    /*
-     * When a uThread request I/O, the device will be polled
-     * and uThread should be added to IOTable.
-     * This data structure maps file descriptors to uThreads, so when
-     * the device is ready, this structure is used as a look up table to
-     * put the waiting uThreads back on the related readyQueue.
-     */
-    PollData pollCache[POLL_CACHE_SIZE];
 
 public:
    ~IOHandler(){};  //should be protected
     /* public interfaces */
-   void open(int fd, int flag);
-   int close(int fd);
+   void open(PollData &pd);
+   void block(PollData &pd, int flag);
+   int close(PollData &pd);
    void poll(int timeout, int flag);
    //dealing with uThreads
 
    //IO function for dedicated kThread
    static void defaultIOFunc(void*) __noreturn;
-
-   //IO functions
-   ssize_t recv(int sockfd, void *buf, size_t len, int flags);
-   ssize_t send(int sockfd, const void *buf, size_t len, int flags);
-   int accept(int   sockfd, struct sockaddr *addr, socklen_t *addrlen);
 };
 
 /* epoll wrapper */

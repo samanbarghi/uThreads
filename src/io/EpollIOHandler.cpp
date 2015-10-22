@@ -24,7 +24,7 @@ EpollIOHandler::EpollIOHandler() : IOHandler() {
     events = (epoll_event*)calloc(MAXEVENTS, sizeof(struct epoll_event));
 }
 
-int EpollIOHandler::_Open(int fd, PollData* pd){
+int EpollIOHandler::_Open(int fd, PollData *pd){
 //    std::cout << "FD (" << fd << "): EPOLL OPEN" << std::endl;
     struct epoll_event ev;
     ev.events = EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET;
@@ -83,7 +83,7 @@ void EpollIOHandler::_Poll(int timeout){
 
 
 EpollIOHandler::~EpollIOHandler() {
-    close(epoll_fd);
+    ::close(epoll_fd);
     free(events);
 }
 

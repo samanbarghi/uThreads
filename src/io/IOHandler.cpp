@@ -5,49 +5,45 @@
  *      Author: Saman Barghi
  */
 #include "IOHandler.h"
+#include "Network.h"
 #include "kThread.h"
 #include "uThread.h"
 #include <unistd.h>
 #include <sys/types.h>
 
-void IOHandler::open(int fd, int flag){
-//    std::cout << "FD (" << fd << "): IOHandler::Open" << std::endl;
+void IOHandler::open(PollData &pd){
+    assert(pd.fd > 0);
 
-    PollData* pd;
+    int res = _Open(pd.fd, &pd);
+    //TODO: handle epoll errors
+}
 
-    assert(fd < POLL_CACHE_SIZE);
-    pd = &pollCache[fd];
+void IOHandler::block(PollData &pd, int flag){
+    assert(pd.fd > 0);
 
-    std::unique_lock<std::mutex> pdlock(pd->mtx);
+    std::unique_lock<std::mutex> pdlock(pd.mtx);
 
-    //if new or newFD flag is set, add it to underlying poll structure
-    if( pd->newFD ){
-        pd->newFD = false;
-        int res = _Open(fd, pd);
-        //TODO: handle epoll errors
-
-    }
     //TODO:check other states
     if(flag & UT_IOREAD){
-        if(slowpath(pd->rut == POLL_READY))    //This is unlikely since we just did a nonblocking read
+        if(slowpath(pd.rut == POLL_READY))    //This is unlikely since we just did a nonblocking read
         {
 //            std::cout << "FD(" << fd << "): Result is ready" << std::endl;
-            pd->rut = nullptr;  //consume the notification and return;
+            pd.rut = nullptr;  //consume the notification and return;
             return;
-        }else if(pd->rut == nullptr)
+        }else if(pd.rut == nullptr)
                 //set the state to Waiting
-                pd->rut = POLL_WAIT;
+                pd.rut = POLL_WAIT;
         else
             std::cout << "Exception on open rut" << std::endl;
     }
     if(flag & UT_IOWRITE)
     {
-        if(slowpath(pd->wut == POLL_READY)){
-            pd->wut = nullptr;              //consume the notification and return
+        if(slowpath(pd.wut == POLL_READY)){
+            pd.wut = nullptr;              //consume the notification and return
             return;
-        }else if(pd->wut == nullptr)
+        }else if(pd.wut == nullptr)
                 //set the state to parked
-                pd->wut = POLL_WAIT;
+                pd.wut = POLL_WAIT;
         else
             std::cout << "Exception on open wut" << std::endl;
     }
@@ -57,20 +53,20 @@ void IOHandler::open(int fd, int flag){
 //    MapAndUnlock<int, PollData>* mau = new MapAndUnlock<int,PollData>(&this->IOTable, fd, pd, sndMutex);
     //TODO:decrease the capture list to avoid hitting the hip
     auto lambda([&pd, &tmp, &flag](){
-        std::lock_guard<std::mutex> pdlock(pd->mtx);
+        std::lock_guard<std::mutex> pdlock(pd.mtx);
         if(flag & UT_IOREAD){
-            if(pd->rut == POLL_READY)
+            if(pd.rut == POLL_READY)
                 tmp->resume();
-            else if(pd->rut == POLL_WAIT)
-                pd->rut = tmp;
+            else if(pd.rut == POLL_WAIT)
+                pd.rut = tmp;
             else
                 std::cout << "Exception on rut"<< std::endl;
         }
         if(flag & UT_IOWRITE){
-            if(pd->wut == POLL_READY)
+            if(pd.wut == POLL_READY)
                 tmp->resume();
-            else if(pd->wut == POLL_WAIT)
-                pd->wut = tmp;
+            else if(pd.wut == POLL_WAIT)
+                pd.wut = tmp;
             else
                 std::cout << "Exception on wut"<< std::endl;
         }
@@ -81,18 +77,15 @@ void IOHandler::open(int fd, int flag){
 //    std::cout << "Wake up from suspension" << std::endl;
     //when epoll returns this ut will be back on readyQueue and pick up from here
 }
-int IOHandler::close(int fd){
-    PollData* pd = &pollCache[fd];
-    std::lock_guard<std::mutex> pdlock(pd->mtx);
-    assert(pd->rut < POLL_WAIT && pd->wut < POLL_WAIT);
-    int res = _Close(fd);
+int IOHandler::close(PollData &pd){
+
+    std::lock_guard<std::mutex> pdlock(pd.mtx);
+    assert(pd.rut < POLL_WAIT && pd.wut < POLL_WAIT);
+    //remove from underlying poll structure
+    int res = _Close(pd.fd);
+
+    pd.reset();
     //TODO: handle epoll errors
-    res = ::close(fd);
-
-    pd->rut = nullptr;
-    pd->wut = nullptr;
-    pd->newFD = true;
-
     return res;
 }
 
@@ -103,6 +96,11 @@ void IOHandler::PollReady(PollData* pd, int flag){
     assert(pd != nullptr);
 
     uThread *rut = nullptr, *wut = nullptr;
+    //if closing is set no need to process
+    if(pd->closing.load())
+    {
+        return;
+    }
 
     std::lock_guard<std::mutex> pdlock(pd->mtx);
     if(flag & UT_IOREAD){
@@ -139,54 +137,3 @@ void IOHandler::defaultIOFunc(void*){
    }
 }
 
-int IOHandler::accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen){
-//    std::cout << "FD(" << sockfd << "): Calling accept" << std::endl;
-    //check connection queue for wating connetions
-    //Set the fd as nonblocking
-    int res = ::accept4(sockfd, addr, addrlen, SOCK_NONBLOCK );
-    while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        //User level blocking using nonblocking io
-        open(sockfd, UT_IOREAD);
-        res = ::accept4(sockfd, addr, addrlen, 0);
-    }
-    //otherwise return the result
-//    std::cout << "FD(" << res << "): Accept result"  << std::endl;
-    /*
-     * Updated the user-level cache
-     */
-    if(res>0)
-    {
-        assert(res < POLL_CACHE_SIZE);
-        std::lock_guard<std::mutex> pdlock(pollCache[res].mtx);
-        pollCache[res].newFD = true;
-        pollCache[res].rut = nullptr;
-        pollCache[res].wut = nullptr;
-
-    }
-    return res;
-
-}
-ssize_t IOHandler::recv(int sockfd, void *buf, size_t len, int flags){
-    assert(buf != nullptr);
-
-    ssize_t res = ::recv(sockfd, (void*)buf, len, flags);
-    while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-//            std::cout << "EAGAIN on recv" << std::endl;
-           //User level blocking using nonblocking io
-           open(sockfd, UT_IOREAD);
-           res = ::recv(sockfd, buf, len, flags);
-    }
-//    std::cout << "FD(" << sockfd << "): recv result: " << res  << std::endl;
-
-    return res;
-}
-ssize_t IOHandler::send(int sockfd, const void *buf, size_t len, int flags){
-    assert(buf != nullptr);
-
-    ssize_t res = ::send(sockfd, buf, len, flags);
-    while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        open(sockfd, UT_IOWRITE);
-        res = ::send(sockfd, buf, len, flags);
-    }
-    return res;
-}
