@@ -39,15 +39,15 @@ private:
     //TODO: in case of multiple epollfd's, this structure can include
     //a pointer to the related epollfd that is being used on.
     void reset(){
+       std::lock_guard<std::mutex> pdlock(this->mtx);
        rut = nullptr;
        wut = nullptr;
+       closing = false;
     };
 public:
     PollData( int fd) : fd(fd), closing(false) {};
     PollData(): closing(false) {};
     ~PollData(){};
-
-
 
 };
 /*
@@ -76,6 +76,7 @@ public:
    void block(PollData &pd, int flag);
    int close(PollData &pd);
    void poll(int timeout, int flag);
+   void reset(PollData &pd);
    //dealing with uThreads
 
    //IO function for dedicated kThread

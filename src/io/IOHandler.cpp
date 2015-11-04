@@ -11,6 +11,10 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+struct ut_flag{
+   int flag;
+   uThread* ut;
+};
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
 
@@ -42,31 +46,34 @@ void IOHandler::block(PollData &pd, int flag){
             pd.wut = nullptr;              //consume the notification and return
             return;
         }else if(pd.wut == nullptr)
-                //set the state to parked
+                //set the state to waiting
                 pd.wut = POLL_WAIT;
         else
             std::cout << "Exception on open wut" << std::endl;
     }
-    uThread* tmp = kThread::currentKT->currentUT;
+    ut_flag utf;
+    utf.ut= kThread::currentKT->currentUT;
+    utf.flag = flag;
     pdlock.unlock();
 
 //    MapAndUnlock<int, PollData>* mau = new MapAndUnlock<int,PollData>(&this->IOTable, fd, pd, sndMutex);
     //TODO:decrease the capture list to avoid hitting the hip
-    auto lambda([&pd, &tmp, &flag](){
+    auto lambda([&pd, &utf](){
+        if(pd.closing) return;
         std::lock_guard<std::mutex> pdlock(pd.mtx);
-        if(flag & UT_IOREAD){
-            if(pd.rut == POLL_READY)
-                tmp->resume();
+        if(utf.flag & UT_IOREAD){
+          if(pd.rut == POLL_READY)
+                utf.ut->resume();
             else if(pd.rut == POLL_WAIT)
-                pd.rut = tmp;
+                pd.rut = utf.ut;
             else
                 std::cout << "Exception on rut"<< std::endl;
         }
-        if(flag & UT_IOWRITE){
+        if(utf.flag & UT_IOWRITE){
             if(pd.wut == POLL_READY)
-                tmp->resume();
+                utf.ut->resume();
             else if(pd.wut == POLL_WAIT)
-                pd.wut = tmp;
+                pd.wut = utf.ut;
             else
                 std::cout << "Exception on wut"<< std::endl;
         }
@@ -92,6 +99,11 @@ int IOHandler::close(PollData &pd){
 void IOHandler::poll(int timeout, int flag){
     _Poll(timeout);
 }
+
+void IOHandler::reset(PollData& pd){
+    pd.reset();
+}
+
 void IOHandler::PollReady(PollData* pd, int flag){
     assert(pd != nullptr);
 
