@@ -14,7 +14,10 @@ class Connection{
 private:
     PollData pd;
     int fd = -1;             //related file descriptor
-    Connection(int fd, bool poll);
+    void init(int fd, bool poll);
+
+    Connection(int fd, bool poll): fd(fd){init(fd, poll);};
+
 
     //set
     void setFD(int fd){
@@ -24,11 +27,21 @@ private:
 public:
 
     Connection(): fd(-1){}
+    Connection(int fd) : fd(fd){ init(fd, true);};
     ~Connection();
+
+    void pollOpen();
+    void pollReset();
 
     //IO functions
     ssize_t recv(void *buf, size_t len, int flags);
+    ssize_t recvfrom(void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
     ssize_t send(const void *buf, size_t len, int flags);
+    ssize_t sendmsg(const struct msghdr *msg, int flags);
+
+    ssize_t read(void *buf, size_t count);
+    ssize_t write(const void *buf, size_t count);
+
     int accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen);
     int socket(int domain, int type, int protocol);
     int listen(int backlog);

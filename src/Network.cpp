@@ -10,14 +10,22 @@
 #include <sys/types.h>
 #include <cassert>
 
-Connection::Connection(int fd, bool poll=false): fd(fd){
-   //TODO:throw an exception if fd <= 0
-    pd.fd = fd;
-    //if user is providing fd,
-    //add this to the underlying polling structure
-    if(poll)
-        kThread::ioHandler->open(this->pd);
-};
+void Connection::init(int fd, bool poll){
+    //TODO:throw an exception if fd <= 0
+     pd.fd = fd;
+     //if user is providing fd,
+     //add this to the underlying polling structure
+     if(poll)
+         kThread::ioHandler->open(this->pd);
+}
+
+void Connection::pollOpen(){
+    kThread::ioHandler->reset(this->pd);
+    kThread::ioHandler->open(this->pd);
+}
+void Connection::pollReset(){
+    kThread::ioHandler->reset(this->pd);
+}
 
 int Connection::socket(int domain, int type, int protocol){
 
@@ -47,7 +55,7 @@ int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrl
     while( (sockfd == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
         //User level blocking using nonblocking io
         kThread::ioHandler->block(this->pd, UT_IOREAD);
-        sockfd = ::accept4(this->fd, addr, addrlen, 0);
+        sockfd = ::accept4(this->fd, addr, addrlen, SOCK_NONBLOCK );
     }
     //otherwise return the result
     if(sockfd > 0){
@@ -69,6 +77,18 @@ ssize_t Connection::recv(void *buf, size_t len, int flags){
     }
     return res;
 }
+ssize_t Connection::recvfrom(void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen){
+    assert(buf != nullptr);
+    assert(this->fd != -1);
+
+    ssize_t res = ::recvfrom(this->fd, (void*)buf, len, flags, src_addr, addrlen);
+    while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
+           //User level blocking using nonblocking io
+           kThread::ioHandler->block(this->pd, UT_IOREAD);
+           res = ::recvfrom(this->fd, buf, len, flags, src_addr, addrlen);
+    }
+    return res;
+}
 ssize_t Connection::send(const void *buf, size_t len, int flags){
     assert(buf != nullptr);
     assert(this->fd != -1);
@@ -77,6 +97,40 @@ ssize_t Connection::send(const void *buf, size_t len, int flags){
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
         kThread::ioHandler->block(this->pd, UT_IOWRITE);
         res = ::send(this->fd, buf, len, flags);
+    }
+    return res;
+}
+ssize_t Connection::sendmsg(const struct msghdr *msg, int flags){
+    assert(this->fd != -1);
+
+    ssize_t res = ::sendmsg(this->fd, msg, flags);
+    while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
+        kThread::ioHandler->block(this->pd, UT_IOWRITE);
+        res = ::sendmsg(this->fd, msg, flags);
+    }
+    return res;
+}
+
+ssize_t Connection::read(void *buf, size_t count){
+    assert(buf != nullptr);
+    assert(this->fd != -1);
+
+    ssize_t res = ::read(this->fd, (void*)buf, count);
+    while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
+           //User level blocking using nonblocking io
+           kThread::ioHandler->block(this->pd, UT_IOREAD);
+           res = ::read(this->fd, buf, count);
+    }
+    return res;
+}
+ssize_t Connection::write(const void *buf, size_t count){
+    assert(buf != nullptr);
+    assert(this->fd != -1);
+
+    ssize_t res = ::write(this->fd, buf, count);
+    while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
+        kThread::ioHandler->block(this->pd, UT_IOWRITE);
+        res = ::write(this->fd, buf, count);
     }
     return res;
 }
