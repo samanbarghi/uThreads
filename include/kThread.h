@@ -57,7 +57,7 @@ public:
 	static std::atomic_uint totalNumberofKTs;
 
 	void switchContext(uThread*,void* args = nullptr);			//Put current uThread in ready Queue and run the passed uThread
-	void switchContext(void* args = nullptr);					//Put current uThread in readyQueue and pop a new uThread to run
+	void switchContext(void* args = nullptr, bool immediate=false);					//Put current uThread in readyQueue and pop a new uThread to run
 	static void defaultRun(void*) __noreturn;
 
 

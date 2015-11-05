@@ -159,13 +159,13 @@ void uThread::migrate(Cluster* cluster){
 	kThread::currentKT->switchContext();
 }
 
-void uThread::suspend(std::function<void()>& func) {
+void uThread::suspend(std::function<void()>& func, bool immediate) {
 	this->status = WAITING;
-	kThread::currentKT->switchContext(&func);
+	kThread::currentKT->switchContext(&func, immediate);
 }
 
 void uThread::resume(){
-    if(this->status == WAITING || this->status == IOBLOCK)
+    if(this->status == WAITING)
         this->currentCluster->uThreadSchedule(this);		//Put thread back to readyqueue
 }
 

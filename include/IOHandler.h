@@ -44,9 +44,10 @@ private:
        wut = nullptr;
        closing = false;
     };
+
 public:
-    PollData( int fd) : fd(fd), closing(false) {};
-    PollData(): closing(false) {};
+    PollData( int fd) : fd(fd), closing(false){};
+    PollData(): closing(false){};
     ~PollData(){};
 
 };
@@ -65,6 +66,9 @@ class IOHandler{
     virtual void _Poll(int timeout)=0;                ///
 
 
+
+    void block(PollData &pd, bool isRead);
+    void unblock(PollData *pd, bool isRead);
 protected:
     IOHandler(){};
     void PollReady(PollData* pd, int flag);                   //When there is notification update pollData and unblock the related ut
@@ -73,8 +77,8 @@ public:
    ~IOHandler(){};  //should be protected
     /* public interfaces */
    void open(PollData &pd);
-   void block(PollData &pd, int flag);
    int close(PollData &pd);
+   void wait(PollData& pd, int flag);
    void poll(int timeout, int flag);
    void reset(PollData &pd);
    //dealing with uThreads
