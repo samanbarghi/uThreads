@@ -67,7 +67,7 @@ private:
 
 	vaddr createStack(size_t);			//Create a stack with given size
 	void terminate();
-void suspend(std::function<void()>&, bool immediate=false);
+void suspend(std::function<void()>&);
 
 	void initialSynchronization();		//Used for assigning a thread ID, set totalNumberofUTs and ...
 	static void decrementTotalNumberofUTs();	//Decrement the number (only used in kThread with default uthread)

@@ -159,9 +159,9 @@ void uThread::migrate(Cluster* cluster){
 	kThread::currentKT->switchContext();
 }
 
-void uThread::suspend(std::function<void()>& func, bool immediate) {
+void uThread::suspend(std::function<void()>& func) {
 	this->status = WAITING;
-	kThread::currentKT->switchContext(&func, immediate);
+	kThread::currentKT->switchContext(&func);
 }
 
 void uThread::resume(){

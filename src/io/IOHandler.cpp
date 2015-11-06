@@ -55,7 +55,7 @@ void IOHandler::block(PollData &pd, bool isRead){
                 std::cout << "Exception on rut"<< std::endl;
     });
     std::function<void()> f(std::cref(lambda));
-    kThread::currentKT->currentUT->suspend(f, true); //ask for immediate suspension so the possible closing/notifications do not get lost
+    kThread::currentKT->currentUT->suspend(f); //ask for immediate suspension so the possible closing/notifications do not get lost
 //    std::cout << "Wake up from suspension" << std::endl;
     //when epoll returns this ut will be back on readyQueue and pick up from here
 }

@@ -52,8 +52,8 @@ public:
 
     uThread* tryPop() {					//Try to pop one item, or return null
         uThread* ut = nullptr;
-        std::unique_lock<std::mutex> mlock(mtx);
-        if (!queue.empty()) {
+        std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
+        if (mlock.owns_lock() && !queue.empty()) {
             ut = queue.front();
             queue.pop_front();
             size--;
@@ -62,8 +62,8 @@ public:
     }
 
     void tryPopMany(EmbeddedList<uThread> *nqueue, mword numkt) {//Try to pop ReadyQueueSize/#kThreads in cluster from the ready Queue
-        std::unique_lock<std::mutex> mlock(mtx);
-        if (size == 0) return; // There is no uThreads
+        std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
+        if(!mlock.owns_lock() || size == 0) return; // There is no uThreads
         removeMany(nqueue, numkt);
     }
 

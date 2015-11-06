@@ -79,7 +79,7 @@ void kThread::switchContext(uThread* ut,void* args) {
 	stackSwitch(ut, args, &kThread::currentKT->currentUT->stackPointer, ut->stackPointer, postSwitchFunc);
 }
 
-void kThread::switchContext(void* args, bool immediate){
+void kThread::switchContext(void* args){
 	uThread* ut = nullptr;
 	/*	First check the internal queue */
     EmbeddedList<uThread>* ktrq = ktReadyQueue;
@@ -87,8 +87,8 @@ void kThread::switchContext(void* args, bool immediate){
 		ut = ktrq->front();
 		ktrq->pop_front();
 	}else{													//If empty try to fill
-	    if(!immediate)                                      //need for immediate context switch, do not risk blocking on mutex
-	        localCluster->tryGetWorks(ktrq);				//Try to fill the local queue
+
+	    localCluster->tryGetWorks(ktrq);				//Try to fill the local queue
 		if(!ktrq->empty()){									//If there is more work start using it
 			ut = ktrq->front();
 			ktrq->pop_front();
