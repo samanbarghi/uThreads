@@ -33,7 +33,7 @@ WuThread* uThread_create(void *(*start_routine) (void *), void *arg){ return rei
 WuThread* uThread_create_with_cluster(WCluster* cluster, void *(*start_routine) (void *), void *arg){
     return reinterpret_cast<WuThread*>( uThread::create( (funcvoid1_t)start_routine, arg, reinterpret_cast<Cluster*>(cluster) ) );
 }
-void uThread_migrate(WuThread* ut, WCluster* cluster){ reinterpret_cast<uThread*>(ut)->migrate(reinterpret_cast<Cluster*>(cluster)); }
+void uThread_migrate(WCluster* cluster){ kThread::currentKT->currentUT->migrate(reinterpret_cast<Cluster*>(cluster)); }
 void uThread_destroy(WuThread* ut){ delete reinterpret_cast<uThread*>(ut); }
 void uThread_yield(){ kThread::currentKT->currentUT->yield(); }
 /**********************************/
