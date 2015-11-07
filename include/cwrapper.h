@@ -21,6 +21,7 @@ struct WCluster;
 typedef struct WCluster WCluster;
 WCluster* cluster_create();
 void cluster_destruct(WCluster* cluster);
+WCluster* cluster_get_default();//return default Cluster
 /**********************************/
 
 /*************kThread**************/
