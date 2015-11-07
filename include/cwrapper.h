@@ -40,6 +40,7 @@ struct WuThread;
 typedef struct WuThread WuThread;
 WuThread* uThread_create(void *(*start_routine) (void *), void *arg);
 WuThread* uThread_create_with_cluster(WCluster* cluster, void *(*start_routine) (void *), void *arg);
+void uThread_migrate(WuThread* ut, WCluster* cluster);
 void uThread_destroy(WuThread* ut);
 void uThread_yield();
 /**********************************/
