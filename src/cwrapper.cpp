@@ -18,6 +18,7 @@ extern "C"{
 WCluster* cluster_create(){  return reinterpret_cast<WCluster*>( new Cluster( ) );}
 void cluster_destroy(WCluster* cluster){ delete reinterpret_cast<Cluster*>(cluster); }
 WCluster* cluster_get_default(){ return reinterpret_cast<WCluster*>(Cluster::defaultCluster);}
+uint64_t cluster_get_id(WCluster* cluster){ return reinterpret_cast<Cluster*>(cluster)->getClusterID();}
 /**********************************/
 
 /*************kThread**************/
