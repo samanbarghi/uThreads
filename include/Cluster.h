@@ -74,8 +74,7 @@ public:
             asm volatile("pause");
         }
 
-        std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
-        while(!mlock.try_lock());       //spin till take the ownership
+        std::unique_lock<std::mutex> mlock(mtx);
         //if spin was not enough, simply block
         if (size == 0) {
             waiting++;
@@ -86,8 +85,7 @@ public:
     }
 
     void push(uThread* ut) {
-        std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
-        while(!mlock.try_lock());       //spin till take the ownership
+        std::unique_lock<std::mutex> mlock(mtx);
         queue.push_back(ut);
         size++;
         if (waiting > 0) 		//Signal only when the queue was previously empty
