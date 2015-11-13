@@ -26,8 +26,8 @@ private:
     EmbeddedList<uThread> queue;
     std::mutex mtx;
     std::condition_variable cv;
-    volatile mword size;
-    volatile mword waiting;           //number of waiting kThreads
+    std::atomic_uint size;
+    std::atomic_uint waiting;           //number of waiting kThreads
 
     void removeMany(EmbeddedList<uThread> *nqueue, mword numkt){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
@@ -47,7 +47,7 @@ private:
         size -= popnum;
     }
 public:
-    ReadyQueue() : size(0) {};
+    ReadyQueue() : size(0), waiting(0) {};
     virtual ~ReadyQueue() {};
 
     uThread* tryPop() {					//Try to pop one item, or return null
