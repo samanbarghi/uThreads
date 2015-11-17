@@ -10,6 +10,7 @@
 #include "uThread.h"
 #include "kThread.h"
 #include "Network.h"
+#include "uThreadPool.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -55,6 +56,15 @@ int connection_close(WConnection* con){ return reinterpret_cast<Connection*>(con
 void connection_poll_open(WConnection* con){ return reinterpret_cast<Connection*>(con)->pollOpen();}
 void connection_poll_reset(WConnection* con){ return reinterpret_cast<Connection*>(con)->pollReset();}
 /**********************************/
+/******************** uThreadPool **************/
+WuThreadPool* uthreadpool_create(){return reinterpret_cast<WuThreadPool*> (new uThreadPool());}
+void uthreadpool_destory(WuThreadPool* utp){ delete reinterpret_cast<uThreadPool*>(utp);}
+void uthreadpool_execute(WuThreadPool* utp, WCluster* cluster, void *(*start_routine) (void *), void *arg){
+    reinterpret_cast<uThreadPool*>(utp)->uThreadExecute((funcvoid1_t)start_routine, arg, reinterpret_cast<Cluster*>(cluster));
+}
+/**********************************/
+
+
 #ifdef __cplusplus
 }
 #endif

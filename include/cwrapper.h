@@ -63,6 +63,14 @@ int connection_close(WConnection* con);
 void connection_poll_open(WConnection* con);
 void connection_poll_reset(WConnection* con);
 /**********************************/
+
+/******************** uThreadPool **************/
+struct WuThreadPool;
+typedef struct WuThreadPool WuThreadPool;
+WuThreadPool* uthreadpool_create();
+void uthreadpool_destory(WuThreadPool* utp);
+void uthreadpool_execute(WuThreadPool* utp, WCluster* cluster, void *(*start_routine) (void *), void *arg);
+/**********************************/
 #ifdef __cplusplus
 }
 #endif
