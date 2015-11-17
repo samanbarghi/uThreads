@@ -20,7 +20,7 @@ void IOHandler::open(PollData &pd){
 void IOHandler::wait(PollData& pd, int flag){
     assert(pd.fd > 0);
     if(flag & UT_IOREAD) block(pd, true);
-    if(flag & UT_IOWRITE) block(pd, true);
+    if(flag & UT_IOWRITE) block(pd, false);
 
 }
 void IOHandler::block(PollData &pd, bool isRead){
