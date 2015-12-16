@@ -32,20 +32,19 @@ kThread::kThread(bool initial) : shouldSpin(true){								//This is only for ini
 
 kThread::kThread(Cluster* cluster) : localCluster(cluster), shouldSpin(true){
 	threadSelf = new std::thread(&kThread::run, this);
+	threadSelf->detach();                                                       //Detach the thread from the running thread
 //	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
 }
 
 kThread::kThread() : localCluster(Cluster::defaultCluster), shouldSpin(true){
 	threadSelf = new std::thread(&kThread::run, this);
+	threadSelf->detach();                                                       //Detach the thread from the running thread
 //	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
 }
 
 kThread::~kThread() {
-	if(threadSelf->joinable())
-		threadSelf->join();															//wait for the thread to terminate properly
-
 	totalNumberofKTs--;
 	localCluster->numberOfkThreads--;
 
