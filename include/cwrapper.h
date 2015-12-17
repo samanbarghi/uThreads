@@ -22,6 +22,7 @@ typedef struct WCluster WCluster;
 WCluster* cluster_create();
 void cluster_destruct(WCluster* cluster);
 WCluster* cluster_get_default();//return default Cluster
+WCluster* cluster_get_current();
 uint64_t cluster_get_id(WCluster* cluster);
 /**********************************/
 

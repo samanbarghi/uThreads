@@ -26,8 +26,8 @@ private:
     EmbeddedList<uThread> queue;
     std::mutex mtx;
     std::condition_variable cv;
-    std::atomic_uint size;
-    std::atomic_uint waiting;           //number of waiting kThreads
+    volatile unsigned int  size;
+    volatile unsigned int waiting;           //number of waiting kThreads
 
     void removeMany(EmbeddedList<uThread> *nqueue, mword numkt){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
@@ -53,7 +53,7 @@ public:
     uThread* tryPop() {					//Try to pop one item, or return null
         uThread* ut = nullptr;
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
-        if (mlock.owns_lock() && !queue.empty()) {
+        if (mlock.owns_lock() && size != 0) {
             ut = queue.front();
             queue.pop_front();
             size--;
@@ -78,7 +78,7 @@ public:
         //if spin was not enough, simply block
         if (size == 0) {
             waiting++;
-            while (queue.empty()) {cv.wait(mlock);}
+            while (size == 0) {cv.wait(mlock);}
             waiting--;
         }
         removeMany(nqueue, numkt);
