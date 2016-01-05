@@ -9,10 +9,10 @@
 #define KTHREAD_H_
 #include <thread>
 #include <mutex>
-#include "Cluster.h"
-#include "uThread.h"
-#include "global.h"
-#include "IOHandler.h"
+#include "runtime/Cluster.h"
+#include "runtime/uThread.h"
+#include "generic/global.h"
+#include "io/IOHandler.h"
 
 
 class kThread {

@@ -5,12 +5,12 @@
  *      Author: Saman Barghi
  */
 
-#include "global.h"
+#include "generic/global.h"
 #include "cwrapper.h"
-#include "uThread.h"
-#include "kThread.h"
-#include "Network.h"
-#include "uThreadPool.h"
+#include "runtime/uThread.h"
+#include "runtime/uThreadPool.h"
+#include "runtime/kThread.h"
+#include "io/Network.h"
 
 #ifdef __cplusplus
 extern "C"{

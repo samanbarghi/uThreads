@@ -12,7 +12,7 @@
 #include <vector>
 #include <sys/socket.h>
 #include <mutex>
-#include "uThread.h"
+#include "runtime/uThread.h"
 
 #define POLL_READY  ((uThread*)1)
 #define POLL_WAIT   ((uThread*)2)

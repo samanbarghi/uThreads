@@ -6,7 +6,7 @@
  */
 
 #include "IOHandler.h"
-#include "kThread.h"
+#include "runtime/kThread.h"
 #include <iostream>
 #include <sys/epoll.h>
 #include <errno.h>

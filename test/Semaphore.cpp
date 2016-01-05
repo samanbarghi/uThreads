@@ -1,13 +1,10 @@
-#include "uThread.h"
-#include "Cluster.h"
-#include "kThread.h"
-#include "BlockingSync.h"
+#include "uThreads.h"
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>
 
 static Mutex mtx;
-static ConditionVariable cv;
+static Semaphore s(1);
 static int counter = 0;
 
 using namespace std;
@@ -15,17 +12,9 @@ static void run(void* args){
 	//assume args is an int
 	int value = *(int*)args;
 
-	mtx.acquire();
-	while(counter != value){
-//		std::cout << "OOOOPSSS Not my turn: " << value << endl;
-		cv.wait(mtx);
-	}
-
-	cout << "This is run #" <<  value << endl;
-	counter++;
-//	kThread::currentKT->currentUT->migrate(cluster);
-	kThread::currentKT->printThreadId();
-	cv.signalAll(mtx);
+	s.P();
+	cout << "This is run #" <<  value << " - counter #" << counter++ << endl;
+	s.V();
 }
 int main(){
 
@@ -33,6 +22,10 @@ int main(){
 
 	Cluster* cluster =  new Cluster();
 	kThread kt(cluster);
+	kThread kt2(cluster);
+	kThread kt1(cluster);
+	kThread kt3(cluster);
+
 	uThread* ut;
 	int value[10000];
 	for (int i=0; i< 10000; i++){

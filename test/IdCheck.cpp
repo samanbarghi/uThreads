@@ -1,7 +1,4 @@
-#include "uThread.h"
-#include "Cluster.h"
-#include "kThread.h"
-#include "BlockingSync.h"
+#include "uThreads.h"
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>

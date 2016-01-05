@@ -4,8 +4,8 @@
  *  Created on: Nov 18, 2014
  *      Author: Saman Barghi
  */
-#include "Cluster.h"
-#include "kThread.h"
+#include "runtime/Cluster.h"
+#include "runtime/kThread.h"
 #include <dlfcn.h>
 #include <stdio.h>
 #include <iostream>

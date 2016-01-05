@@ -6,8 +6,8 @@
  */
 #include "IOHandler.h"
 #include "Network.h"
-#include "kThread.h"
-#include "uThread.h"
+#include "runtime/kThread.h"
+#include "runtime/uThread.h"
 #include <unistd.h>
 #include <sys/types.h>
 

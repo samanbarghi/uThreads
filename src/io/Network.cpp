@@ -5,7 +5,7 @@
  *      Author: Saman Barghi
  */
 #include "Network.h"
-#include "kThread.h"
+#include "runtime/kThread.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <cassert>

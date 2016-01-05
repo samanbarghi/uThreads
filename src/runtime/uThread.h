@@ -12,8 +12,8 @@
 #include <cstddef>
 #include <mutex>
 #include <atomic>
-#include "global.h"
-#include "EmbeddedList.h"
+#include "generic/global.h"
+#include "generic/EmbeddedList.h"
 
 class BlockingQueue;
 class Mutex;

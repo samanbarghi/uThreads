@@ -14,8 +14,8 @@
 #include <condition_variable>
 #include <thread>
 #include <assert.h>
-#include "global.h"
-#include "EmbeddedList.h"
+#include "generic/global.h"
+#include "generic/EmbeddedList.h"
 
 class ReadyQueue {
     friend class kThread;

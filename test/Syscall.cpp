@@ -1,6 +1,4 @@
-#include "uThread.h"
-#include "Cluster.h"
-#include "kThread.h"
+#include "uThreads.h"
 #include <unistd.h>
 
 static void run(void* args){

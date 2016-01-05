@@ -1,12 +1,9 @@
-#include "uThread.h"
-#include "Cluster.h"
-#include "kThread.h"
-#include "BlockingSync.h"
+#include "uThreads.h"
 #include <stdio.h>
 #include <iostream>
 #include <unistd.h>
 
-static OwnerLock mtx;
+static Mutex mtx;
 static mword counter = 0;
 
 using namespace std;
@@ -15,9 +12,10 @@ static void run(void* args){
 	int value = *(int*)args;
 
 	mtx.acquire();
-	cout << kThread::currentKT->currentUT->getCurrentCluster()->getClusterID() << ":uThreadID: " << kThread::currentKT->currentUT->getUthreadId() << ": This is run #" <<  value << " - counter #" << counter++ << endl;
+	cout << "This is run #" <<  value << " - counter #" << counter++ << endl;
 	kThread::currentKT->printThreadId();
 	mtx.release();
+	uThread::uexit();
 }
 int main(){
 
@@ -33,13 +31,17 @@ int main(){
 	for (int i=0; i< 100000; i++){
 		//Numbers should be written in order
 		value[i] = i;
-		ut = uThread::create((funcvoid1_t)run, &value[i], cluster);
+		if(i%2 == 0) ut = uThread::create((funcvoid1_t)run, &value[i], cluster);
+		else  ut = uThread::create((funcvoid1_t)run, &value[i]);
 	}
+
 	while(uThread::getTotalNumberofUTs() > 1){
 		uThread::yield();
 	}
 	cout << "End of Main Function!" << endl;
 
+	exit(EXIT_SUCCESS);
 	return 0;
+
 }
 

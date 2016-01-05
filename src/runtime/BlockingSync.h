@@ -8,8 +8,8 @@
 #ifndef BLOCKINGSYNC_H_
 #define BLOCKINGSYNC_H_
 
-#include "EmbeddedList.h"
-#include "kThread.h"
+#include "generic/EmbeddedList.h"
+#include "runtime/kThread.h"
 #include <cassert>
 #include <mutex>
 #include <iostream>

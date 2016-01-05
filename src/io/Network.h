@@ -7,7 +7,7 @@
 
 #ifndef INCLUDE_NETWORK_H_
 #define INCLUDE_NETWORK_H_
-#include "IOHandler.h"
+#include "io/IOHandler.h"
 
 class Connection{
     friend IOHandler;

@@ -8,7 +8,7 @@
 #ifndef EMBEDDEDLIST_H_
 #define EMBEDDEDLIST_H_
 
-#include "global.h"
+#include "generic/global.h"
 
 // NOTE WELL: this design (anchor) only works, if Element is first in T
 template<typename T, int ID=0> class EmbeddedList {
