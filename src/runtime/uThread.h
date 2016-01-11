@@ -51,26 +51,27 @@ private:
 	uThread(Cluster*);							            //This will be called by default uThread
 	uThread(funcvoid1_t, ptr_t, Cluster*);		//To create a new uThread, create function should be called
 
-	static uThread*	initUT;				//initial uT that is associated with main
+	static uThread*	initUT;            //initial uT that is associated with main
 	static uThread* ioUT;              //default IO uThread
 
 	/*
 	 * Statistics variables
 	 */
 	//TODO: Add more variables, number of suspended, number of running ...
-	/*
-	 * Thread variables
-	 */
-	size_t		stackSize;
-	uThreadStatus status;				//Current status of the uThread, should be private only friend classes can change this
-	Cluster*	currentCluster;			//This will be used for migrating to a new Cluster
-
 	static std::atomic_ulong totalNumberofUTs;			//Total number of existing uThreads
 	static std::atomic_ulong uThreadMasterID;			//The main ID counter
 	uint64_t uThreadID;							//unique Id for this uthread
+
+	/*
+	 * Thread variables
+	 */
+	uThreadStatus status;				//Current status of the uThread, should be private only friend classes can change this
+	Cluster*	currentCluster;			//This will be used for migrating to a new Cluster
+
 	/*
 	 * Stack Boundary
 	 */
+	size_t		stackSize;
 	vaddr 		stackPointer;			// holds stack pointer while thread inactive
 	vaddr		stackTop;				//Top of the stack
 	vaddr		stackBottom;			//Bottom of the stack
@@ -78,7 +79,6 @@ private:
 	/*
 	 * general functions
 	 */
-
 	vaddr createStack(size_t);			//Create a stack with given size
 	void terminate();
 	void suspend(std::function<void()>&);
@@ -109,7 +109,6 @@ public:
 	/*
 	 * general functions
 	 */
-
 	static uint64_t getTotalNumberofUTs();
 	uint64_t getUthreadId() const;
 };

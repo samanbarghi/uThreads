@@ -73,7 +73,7 @@ void kThread::run() {
 void kThread::switchContext(uThread* ut,void* args) {
 //	std::cout << "SwitchContext: " << kThread::currentKT->currentUT << " TO: " << ut << " IN: " << std::this_thread::get_id() << std::endl;
     assert(ut != nullptr);
-    assert(ut->stackPointer != nullptr);
+    assert(ut->stackPointer != 0);
 
 	stackSwitch(ut, args, &kThread::currentKT->currentUT->stackPointer, ut->stackPointer, postSwitchFunc);
 }

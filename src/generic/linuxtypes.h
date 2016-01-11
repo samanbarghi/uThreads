@@ -11,7 +11,7 @@
 typedef uint64_t        mword;
 typedef  int64_t        sword;
 
-typedef void*       vaddr;                                  //memory address
+typedef intptr_t        vaddr;                                  //memory address
 typedef void*           ptr_t;                                  //Pointer type
 
 typedef void (*funcvoid0_t)();

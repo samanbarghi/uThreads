@@ -67,7 +67,7 @@ LibInitializer::~LibInitializer(){
  */
 uThread::uThread(Cluster* cluster){
 	stackSize	= 0;									//Stack size depends on kernel thread's stack
-	stackPointer= nullptr;								//We don't know where on stack we are yet
+	stackPointer= 0;								//We don't know where on stack we are yet
 	status 		= RUNNING;
 	currentCluster = cluster;
 	initialSynchronization();
@@ -86,7 +86,7 @@ uThread::uThread(funcvoid1_t func, ptr_t args, Cluster* cluster = nullptr) {
 }
 
 uThread::~uThread() {
-	free(stackTop);									//Free the allocated memory for stack
+	free((ptr_t)stackTop);									//Free the allocated memory for stack
 	//This should never be called directly! terminate should be called instead
 }
 void uThread::decrementTotalNumberofUTs() {
@@ -99,11 +99,12 @@ void uThread::initialSynchronization() {
 }
 
 vaddr uThread::createStack(size_t ssize) {
-	stackTop = malloc(ssize);
-	if(stackTop == nullptr)
+    ptr_t st = malloc(ssize);
+	if(st == nullptr)
 		exit(-1);										//TODO: Proper exception
-	stackBottom = (char*) stackTop + ssize;
-	return (vaddr)stackBottom;
+	stackTop = (vaddr)st;
+	stackBottom =  stackTop + ssize;
+	return stackBottom;
 }
 
 //TODO: a create function that accepts a Cluster
