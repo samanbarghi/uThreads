@@ -5,8 +5,7 @@
  *      Author: Saman Barghi
  */
 
-#ifndef CLUSTER_H_
-#define CLUSTER_H_
+#pragma once
 #include <vector>
 #include <mutex>
 #include <atomic>
@@ -14,8 +13,10 @@
 #include <condition_variable>
 #include <thread>
 #include <assert.h>
-#include "generic/global.h"
+#include "generic/basics.h"
 #include "generic/EmbeddedList.h"
+
+class uThread;
 
 class ReadyQueue {
     friend class kThread;
@@ -127,5 +128,3 @@ public:
     uint64_t getClusterID() const;				//Get the ID of current Cluster
 
 };
-
-#endif /* CLUSTER_H_ */

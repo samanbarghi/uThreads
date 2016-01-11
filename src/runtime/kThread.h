@@ -5,13 +5,13 @@
  *      Author: Saman Barghi
  */
 
-#ifndef KTHREAD_H_
-#define KTHREAD_H_
+#pragma once
 #include <thread>
 #include <mutex>
+
+#include "../generic/basics.h"
 #include "runtime/Cluster.h"
 #include "runtime/uThread.h"
-#include "generic/global.h"
 #include "io/IOHandler.h"
 
 
@@ -67,5 +67,3 @@ public:
 
     void setShouldSpin(bool);
 };
-
-#endif /* KTHREAD_H_ */

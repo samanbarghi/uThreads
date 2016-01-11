@@ -12,13 +12,27 @@
 #include <cstddef>
 #include <mutex>
 #include <atomic>
-#include "generic/global.h"
+#include "generic/basics.h"
 #include "generic/EmbeddedList.h"
+#include "Stack.h"
 
 class BlockingQueue;
 class Mutex;
 class Cluster;
 class IOHandler;
+
+//Thread states
+enum uThreadStatus {
+    INITIALIZED,                                                    //uThread is initialized
+    READY,                                                          //uThread is in a ReadyQueue
+    RUNNING,                                                        //uThread is Running
+    YIELD,                                                          //uThread Yields
+    MIGRATE,                                                        //Migrate to another cluster
+    WAITING,                                                        //uThread is in waiting mode
+    IOBLOCK,                                                        //uThread is blocked on IO
+    TERMINATED                                                      //uThread is done and should be terminated
+};
+
 
 class uThread : public EmbeddedList<uThread>::Element{
 	friend class kThread;
@@ -32,6 +46,7 @@ private:
 	//TODO: Fix uThread.h includes: if this is the file that is being included to use the library, it should include at least kThread and Cluster headers
 	//TODO: Add a debug object to project, or a dtrace or lttng functionality
 	//TODO: Check all functions and add assertions wherever it is necessary
+
 
 	uThread(Cluster*);							            //This will be called by default uThread
 	uThread(funcvoid1_t, ptr_t, priority_t, Cluster*);		//To create a new uThread, create function should be called
@@ -67,7 +82,7 @@ private:
 
 	vaddr createStack(size_t);			//Create a stack with given size
 	void terminate();
-void suspend(std::function<void()>&);
+	void suspend(std::function<void()>&);
 
 	void initialSynchronization();		//Used for assigning a thread ID, set totalNumberofUTs and ...
 	static void decrementTotalNumberofUTs();	//Decrement the number (only used in kThread with default uthread)

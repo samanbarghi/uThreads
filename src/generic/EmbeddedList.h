@@ -5,10 +5,8 @@
  *      Author: Saman Barghi
  */
 
-#ifndef EMBEDDEDLIST_H_
-#define EMBEDDEDLIST_H_
-
-#include "generic/global.h"
+#pragma once
+#include "basics.h"
 
 // NOTE WELL: this design (anchor) only works, if Element is first in T
 template<typename T, int ID=0> class EmbeddedList {
@@ -99,5 +97,3 @@ public:
   void pop_all(){ remove_all(front(), back()); };
   void pop_back()  { remove(back()); }
 } __packed;
-
-#endif /* EMBEDDEDLIST_H_ */

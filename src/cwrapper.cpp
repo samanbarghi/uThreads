@@ -5,7 +5,7 @@
  *      Author: Saman Barghi
  */
 
-#include "generic/global.h"
+#include "generic/basics.h"
 #include "cwrapper.h"
 #include "runtime/uThread.h"
 #include "runtime/uThreadPool.h"

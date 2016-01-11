@@ -5,8 +5,7 @@
  *      Author: Saman Barghi
  */
 
-#ifndef CWRAPPER_H_
-#define CWRAPPER_H_
+#pragma once
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -75,5 +74,3 @@ void uthreadpool_execute(WuThreadPool* utp, WCluster* cluster, void *(*start_rou
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* CWRAPPER_H_ */

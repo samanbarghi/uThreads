@@ -5,9 +5,7 @@
  *      Author: Saman Barghi
  */
 
-#ifndef BLOCKINGSYNC_H_
-#define BLOCKINGSYNC_H_
-
+#pragma once
 #include "generic/EmbeddedList.h"
 #include "runtime/kThread.h"
 #include <cassert>
@@ -182,5 +180,3 @@ public:
         mutex.release();
     }
 };
-
-#endif /* BLOCKINGSYNC_H_ */
