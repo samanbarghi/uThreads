@@ -12,7 +12,7 @@ static void run(void* args){
 	int value = *(int*)args;
 
 	mtx.acquire();
-	cout << kThread::currentKT->currentUT->getCurrentCluster()->getClusterID() << ":uThreadID: " << kThread::currentKT->currentUT->getUthreadId() << ": This is run #" <<  value << " - counter #" << counter++ << endl;
+	cout << kThread::currentKT->currentUT->getCurrentCluster().getClusterID() << ":uThreadID: " << kThread::currentKT->currentUT->getUthreadId() << ": This is run #" <<  value << " - counter #" << counter++ << endl;
 	kThread::currentKT->printThreadId();
 	mtx.release();
 }
@@ -20,7 +20,7 @@ int main(){
 
 	std::cout<<"Start of Main Function"<<std::endl;
 
-	Cluster* cluster =  new Cluster();
+	Cluster cluster;
 	kThread kt(cluster);
 	kThread kt1(cluster);
 	kThread kt2(cluster);

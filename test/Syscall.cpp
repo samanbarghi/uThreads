@@ -11,7 +11,7 @@ int main(){
 
 //	std::cout<<"Start of Main Function"<<std::endl;
 
-	Cluster* cluster =  new Cluster();
+	Cluster cluster;
 	kThread kt(cluster);
 
 	write(0, "This is run\n", 13);

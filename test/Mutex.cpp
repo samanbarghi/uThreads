@@ -21,7 +21,7 @@ int main(){
 
 	std::cout<<"Start of Main Function"<<std::endl;
 
-	Cluster* cluster =  new Cluster();
+	Cluster cluster;
 	kThread kt(cluster);
 	kThread kt1(cluster);
 	kThread kt2(cluster);

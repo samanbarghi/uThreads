@@ -15,7 +15,7 @@ static void run(void* args){
 	//assume args is an int
 	int value = *(int*)args;
 
-	uThread::create((funcvoid1_t)voidrun, &value, (Cluster*) (kThread::currentKT->currentUT->getCurrentCluster()));
+	uThread::create((funcvoid1_t)voidrun, &value, kThread::currentKT->currentUT->getCurrentCluster());
 	cout << "uThreadID : " << kThread::currentKT->currentUT->getUthreadId() << " | Total uts: " << kThread::currentKT->currentUT->getTotalNumberofUTs() << endl;
 	uThread::uexit();
 }
@@ -23,10 +23,10 @@ int main(){
 
 	std::cout<<"Start of Main Function"<<std::endl;
 
-	Cluster* cluster =  new Cluster();
-	cout << "First Cluster ID: " << cluster->getClusterID() << endl;
-	Cluster* cluster2 =  new Cluster();
-	cout << "Second Cluster ID: " << cluster2->getClusterID() << endl;
+	Cluster cluster;
+	cout << "First Cluster ID: " << cluster.getClusterID() << endl;
+	Cluster cluster2;
+	cout << "Second Cluster ID: " << cluster2.getClusterID() << endl;
 
 	kThread kt(cluster);
 	kThread kt1(cluster);

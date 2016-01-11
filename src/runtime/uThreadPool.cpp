@@ -21,7 +21,7 @@ uThreadPool::~uThreadPool() {
 }
 
 
-void uThreadPool::uThreadExecute(funcvoid1_t func, void* args, Cluster* cluster){
+void uThreadPool::uThreadExecute(funcvoid1_t func, void* args, Cluster& cluster){
 
 
     //check if there is idle threads

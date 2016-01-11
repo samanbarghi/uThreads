@@ -38,6 +38,6 @@ public:
     uThreadPool();
     virtual ~uThreadPool();
 
-   void uThreadExecute(funcvoid1_t, void*, Cluster*);
+   void uThreadExecute(funcvoid1_t, void*, Cluster&);
 
 };

@@ -4,10 +4,7 @@
  *  Created on: Oct 23, 2014
  *      Author:  Saman Barghi
  */
-
-#ifndef UTHREAD_H_
-#define UTHREAD_H_
-
+#pragma once
 #include <mutex>
 #include <atomic>
 #include "generic/basics.h"
@@ -46,11 +43,12 @@ private:
 	//TODO: Check all functions and add assertions wherever it is necessary
 
 
-	uThread(Cluster*);							            //This will be called by default uThread
-	uThread(funcvoid1_t, ptr_t, Cluster*);		//To create a new uThread, create function should be called
+	uThread(Cluster&);                                      //This will be called by default uThread
+	uThread(funcvoid1_t, ptr_t, const Cluster&);                  //To create a new uThread, create function should be called
+	uThread(funcvoid1_t, ptr_t);                           //To create a new uThread, create function should be called
 
-	static uThread*	initUT;            //initial uT that is associated with main
-	static uThread* ioUT;              //default IO uThread
+	static uThread	initUT;            //initial uT that is associated with main
+	static uThread  ioUT;              //default IO uThread
 
 	/*
 	 * Statistics variables
@@ -92,12 +90,12 @@ public:
 	uThread(const uThread&) = delete;
 	const uThread& operator=(const uThread&) = delete;
 
-	const Cluster* getCurrentCluster() const;
+	const Cluster& getCurrentCluster() const;
 	/*
 	 * Thread management functions
 	 */
 	static uThread* create(funcvoid1_t, void*);
-	static uThread* create(funcvoid1_t, void*, Cluster*);
+	static uThread* create(funcvoid1_t, void*, const Cluster&);
 
 	static void yield();
 	void migrate(Cluster*);				//Migrate the thread to a new Cluster
@@ -110,14 +108,3 @@ public:
 	static uint64_t getTotalNumberofUTs();
 	uint64_t getUthreadId() const;
 };
-
-/*
- * Initialize static members with this function
- */
-static class LibInitializer{
-public:
-	LibInitializer();
-	~LibInitializer();
-} initializer;
-
-#endif /* UTHREAD_H_ */

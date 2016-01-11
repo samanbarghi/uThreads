@@ -28,11 +28,11 @@ OBJECTS := $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SOURCES:.$(SRCEXT)=.o))
 SOBJECTS:= $(patsubst $(SRC_DIR)/%,$(BUILD_DIR)/%,$(SSOURCES:.$(ASMEXT)=.o))
 TESTOBJECTS := $(patsubst $(TEST_DIR)/%,$(BIN_DIR)/%,$(TESTSOURCES:.$(SRCEXT)=))
 
-LIB 	:= -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -ldl -Wl,-soname,$(LIB_NAME).so.$(VERSION_MAJOR)
+LIB 	:= -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -ldl -Wl,-soname,$(LIB_NAME).$(VERSION_MAJOR)
 INC		:= -I $(SRC_DIR) -I $(INCLUDE_DIR)
 TARGET	:= $(LIB_DIR)/$(LIB_FULL_NAME)
 
-all: $(TARGET) 
+all: $(TARGET)
 	@mkdir -p $(BUILD_DIR)/io
 	@mkdir -p $(BUILD_DIR)/runtime
 	@mkdir -p $(BUILD_DIR)/generic
@@ -61,18 +61,18 @@ test: $(TESTOBJECTS)
 $(BIN_DIR)/%: $(TEST_DIR)/%.$(SRCEXT)
 	@echo "$@ $<"
 	@mkdir -p $(BIN_DIR)
-	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $< -luThread
+	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $< -luThreads
 
 clean:
 	@echo " Cleaning..."
-	find ./$(BUILD_DIR) -type f -name '*.o' -delete 
-	find ./$(BUILD_DIR) -type f -name '*.d' -delete 
+	find ./$(BUILD_DIR) -type f -name '*.o' -delete
+	find ./$(BUILD_DIR) -type f -name '*.d' -delete
 	rm -rf $(BIN_DIR)/*
 	rm -rf $(LIB_DIR)/*
 
 install: all
 	mkdir -p $(DEST_DIR)/include/uThreads
-	[ -d $(DEST_DIR)/lib ] || mkdir -p $(DEST_DIR)/lib	
+	[ -d $(DEST_DIR)/lib ] || mkdir -p $(DEST_DIR)/lib
 	rm -rf $(DEST_DIR)/lib/$(LIB_NAME)*
 	cp lib/$(LIB_FULL_NAME) $(DEST_DIR)/lib
 	ln -s $(DEST_DIR)/lib/$(LIB_FULL_NAME) $(DEST_DIR)/lib/$(LIB_NAME).$(VERSION_MAJOR)

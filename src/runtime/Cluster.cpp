@@ -57,4 +57,4 @@ void Cluster::getWork(IntrusiveList<uThread> &queue) {
 	readyQueue.popMany(queue, numberOfkThreads.load());
 }
 
-uint64_t Cluster::getClusterID() const {return this->clusterID;}
+uint64_t Cluster::getClusterID() const {return clusterID;}

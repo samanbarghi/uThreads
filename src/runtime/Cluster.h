@@ -41,7 +41,7 @@ private:
         ut = queue.front();
         //TODO: for when (size - popnum) < popnum, it's better to traverse the
         //linked list from back instead of front ! call a function to do that.
-        queue.transferFrom(nqueue, popnum);
+        nqueue.transferFrom(queue, popnum);
         size -= popnum;
     }
 public:
@@ -112,8 +112,8 @@ public:
     Cluster(const Cluster&) = delete;
     const Cluster& operator=(const Cluster&) = delete;
 
-    static Cluster* defaultCluster;						//Default cluster
-    static Cluster* ioCluster;						    //io cluster
+    static Cluster defaultCluster;						//Default cluster
+    static Cluster ioCluster;						    //io cluster
     static std::vector<Cluster*> clusters;				//List of all clusters
 
     static void invoke(funcvoid1_t, void*) __noreturn;//Function to invoke the run function of a uThread

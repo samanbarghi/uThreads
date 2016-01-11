@@ -12,33 +12,34 @@
 
 std::atomic_uint kThread::totalNumberofKTs(0);
 
-__thread kThread* kThread::currentKT 					= nullptr;
-IOHandler* kThread::ioHandler                                  = nullptr;
+__thread kThread* kThread::currentKT                    = nullptr;
+__thread IntrusiveList<uThread>* kThread::ktReadyQueue  = nullptr;
+
+IOHandler* kThread::ioHandler                           = nullptr;
+
 //__thread uThread* kThread::currentUT = nullptr;
 
 
 kThread::kThread(bool initial) : shouldSpin(true){								//This is only for initial kThread
-	this->threadSelf = new std::thread();										//For default kThread threadSelf should be initialized to current thread
-	this->localCluster = Cluster::defaultCluster;
-	this->initialize(true);
+	threadSelf = new std::thread();										//For default kThread threadSelf should be initialized to current thread
+	localCluster = &Cluster::defaultCluster;
+	initialize(true);
 
-	assert(uThread::initUT != nullptr);
-	this->currentUT = uThread::initUT;											//Current running uThread is the initial one
-//	kThread::ioHandler = newIOHandler();
+	currentUT = &uThread::initUT;											//Current running uThread is the initial one
+
+	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
 }
 
-kThread::kThread(Cluster* cluster) : localCluster(cluster), shouldSpin(true){
+kThread::kThread(Cluster& cluster) : localCluster(&cluster), shouldSpin(true){
 	threadSelf = new std::thread(&kThread::run, this);
 	threadSelf->detach();                                                       //Detach the thread from the running thread
-//	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
 }
 
-kThread::kThread() : localCluster(Cluster::defaultCluster), shouldSpin(true){
+kThread::kThread() : localCluster(&Cluster::defaultCluster), shouldSpin(true){
 	threadSelf = new std::thread(&kThread::run, this);
 	threadSelf->detach();                                                       //Detach the thread from the running thread
-//	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
 }
 
@@ -47,73 +48,71 @@ kThread::~kThread() {
 	localCluster->numberOfkThreads--;
 
 	//free thread local members
-	//free(kThread::ioHandler);
+	free(kThread::ioHandler);
+	delete kThread::ktReadyQueue;
 }
 
 void kThread::initialSynchronization(){
 	totalNumberofKTs++;
 	localCluster->numberOfkThreads++;											//Increas the number of kThreads in the cluster
-	//std::cout << "This Cluster " << localCluster->getClusterID() << " had " << localCluster->numberOfkThreads << std::endl;
 }
 
 IOHandler* kThread::newIOHandler(){
-    IOHandler* ioh = new EpollIOHandler();                                  //TODO: have a default value and possibility to change for iohandler.
+    IOHandler* ioh = nullptr;
+#if defined (__linux__)
+    ioh = new EpollIOHandler();                                  //TODO: have a default value and possibility to change for iohandler.
+#else
+#error unsupported system: only __linux__ supported at this moment
+#endif
     return ioh;
 }
 
 void kThread::run() {
-	this->initialize(false);
-//	std::cout << "Started Running! ID: " << std::this_thread::get_id() << std::endl;
+	initialize(false);
 	defaultRun(this);
 }
 
 void kThread::switchContext(uThread* ut,void* args) {
-//	std::cout << "SwitchContext: " << kThread::currentKT->currentUT << " TO: " << ut << " IN: " << std::this_thread::get_id() << std::endl;
     assert(ut != nullptr);
     assert(ut->stackPointer != 0);
-
 	stackSwitch(ut, args, &kThread::currentKT->currentUT->stackPointer, ut->stackPointer, postSwitchFunc);
 }
 
 void kThread::switchContext(void* args){
 	uThread* ut = nullptr;
 	/*	First check the internal queue */
-    IntrusiveList<uThread> ktrq = ktReadyQueue;
-	if(!ktrq.empty()){										//If not empty, grab a uThread and run it
-		ut = ktrq.front();
-		ktrq.pop_front();
+    IntrusiveList<uThread>* ktrq = ktReadyQueue;
+	if(!ktrq->empty()){										//If not empty, grab a uThread and run it
+		ut = ktrq->front();
+		ktrq->pop_front();
 	}else{													//If empty try to fill
 
-	    localCluster->tryGetWorks(ktrq);				//Try to fill the local queue
-		if(!ktrq.empty()){									//If there is more work start using it
-			ut = ktrq.front();
-			ktrq.pop_front();
+	    localCluster->tryGetWorks(*ktrq);				//Try to fill the local queue
+		if(!ktrq->empty()){									//If there is more work start using it
+			ut = ktrq->front();
+			ktrq->pop_front();
 		}else{												//If no work is available, Switch to defaultUt
 			if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
 			ut = mainUT;
 		}
 	}
 	assert(ut != nullptr);
-//	std::cout << "SwitchContext: " << kThread::currentKT->currentUT<< " Status: " << kThread::currentKT->currentUT->status <<   " IN Thread:" << std::this_thread::get_id()   << std::endl;
-
-//	else{std::cout << std::endl << std::this_thread::get_id() << ":Got WORK:" << ut->id << std::endl;}
-
 	switchContext(ut,args);
 }
 
 void kThread::initialize(bool isDefaultKT) {
 	kThread::currentKT		=	this;											//Set the thread_locl pointer to this thread, later we can find the executing thread by referring to this
+	kThread::ktReadyQueue = new IntrusiveList<uThread>();
 
 	if(isDefaultKT)
-	    this->mainUT = new uThread((funcvoid1_t)kThread::defaultRun, this, this->localCluster); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
+	    mainUT = new uThread((funcvoid1_t)kThread::defaultRun, this, *localCluster); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
 	else
-	    this->mainUT = new uThread(this->localCluster);			                    //Default function takes up the default pthread's stack pointer and run from there
+	    mainUT = new uThread(*localCluster);			                    //Default function takes up the default pthread's stack pointer and run from there
 
 
 	uThread::decrementTotalNumberofUTs();										//Default uThreads are not counted as valid work
-	this->mainUT->status	=	READY;
-	this->currentUT		= 	this->mainUT;
-	//std::cout << this->getThreadID() << std::endl;
+	mainUT->status	=	READY;
+	currentUT         =   mainUT;
 }
 
 void kThread::defaultRun(void* args) {
@@ -122,17 +121,16 @@ void kThread::defaultRun(void* args) {
 
     while (true) {
         //TODO: break this loop when total number of uThreads are less than 1, and end the kThread
-        thisKT->localCluster->getWork(thisKT->ktReadyQueue);
-        assert(!ktReadyQueue.empty());                         //ktReadyQueue should not be empty at this point
-        ut = thisKT->ktReadyQueue.front();
-        thisKT->ktReadyQueue.pop_front();
+        thisKT->localCluster->getWork(*thisKT->ktReadyQueue);
+        assert(!ktReadyQueue->empty());                         //ktReadyQueue should not be empty at this point
+        ut = thisKT->ktReadyQueue->front();
+        thisKT->ktReadyQueue->pop_front();
 
         thisKT->switchContext(ut, nullptr);                     //Switch to the new uThread
     }
 }
 
 void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
-//	std::cout << "This is post func for: " << kThread::currentKT->currentUT << " With status: " << kThread::currentKT->currentUT->status << std:: endl;
 
     kThread* ck = kThread::currentKT;
 	if(ck->currentUT != kThread::currentKT->mainUT){			//DefaultUThread do not need to be managed here
@@ -157,7 +155,6 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 				break;
 		}
 	}
-//	std::cout << "This is the next thread: " << nextuThread << " : ID: " << nextuThread->getId() <<  " Stack: " << nextuThread->stackBottom << " Next:" << nextuThread->next  << " Pointer: " << nextuThread->stackPointer << std::endl;
 	ck->currentUT	= nextuThread;								//Change the current thread to the next
 	nextuThread->status = RUNNING;
 }
@@ -165,18 +162,17 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 //TODO: Get rid of this. For test purposes only
 void kThread::printThreadId(){
 	std::thread::id main_thread_id = std::this_thread::get_id();
-//	std::cout << "This is my thread id: " << main_thread_id << std::endl;
 }
 
 std::thread::native_handle_type kThread::getThreadNativeHandle() {
-	assert(this->threadSelf != nullptr);
-	return this->threadSelf->native_handle();
+	assert(threadSelf != nullptr);
+	return threadSelf->native_handle();
 }
 
 std::thread::id kThread::getThreadID() {
-	assert(this->threadSelf != nullptr);
-	return this->threadSelf->get_id();
+	assert(threadSelf != nullptr);
+	return threadSelf->get_id();
 }
 void kThread::setShouldSpin(bool spin){
-    this->shouldSpin = spin;
+    shouldSpin = spin;
 }
