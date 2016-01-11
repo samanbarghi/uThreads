@@ -35,7 +35,7 @@ private:
 
 	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread
 
-	static __thread EmbeddedList<uThread> *ktReadyQueue;	//internal readyQueue for kThread, to avoid locking and unlocking the cluster ready queue
+	static __thread IntrusiveList<uThread> ktReadyQueue;	//internal readyQueue for kThread, to avoid locking and unlocking the cluster ready queue
 
 	void run();						//The run function for the thread.
 	void initialize(bool);				//Initialization function for kThread

@@ -49,13 +49,11 @@ void Cluster::uThreadSchedule(uThread* ut) {
 uThread* Cluster::tryGetWork(){return readyQueue.tryPop();}
 
 //pop more than one uThread from the ready queue and push into the kthread local ready queue
-void Cluster::tryGetWorks(EmbeddedList<uThread> *queue){
-	assert(queue != nullptr);
+void Cluster::tryGetWorks(IntrusiveList<uThread> &queue){
 	readyQueue.tryPopMany(queue, numberOfkThreads.load());
 }
 
-void Cluster::getWork(EmbeddedList<uThread> *queue) {
-	assert(queue != nullptr);
+void Cluster::getWork(IntrusiveList<uThread> &queue) {
 	readyQueue.popMany(queue, numberOfkThreads.load());
 }
 

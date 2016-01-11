@@ -6,6 +6,8 @@
  */
 
 #pragma once
+#include <cstddef>
+#include <cstdint>
 #if defined (__x86_64__)
 
 typedef uint64_t        mword;

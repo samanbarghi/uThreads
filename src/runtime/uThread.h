@@ -8,12 +8,10 @@
 #ifndef UTHREAD_H_
 #define UTHREAD_H_
 
-#include <cstdint>
-#include <cstddef>
 #include <mutex>
 #include <atomic>
 #include "generic/basics.h"
-#include "generic/EmbeddedList.h"
+#include "generic/IntrusiveContainers.h"
 #include "Stack.h"
 
 class BlockingQueue;
@@ -34,7 +32,7 @@ enum uThreadStatus {
 };
 
 
-class uThread : public EmbeddedList<uThread>::Element{
+class uThread : public IntrusiveList<uThread>::Link{
 	friend class kThread;
 	friend class Cluster;
 	friend class LibInitializer;

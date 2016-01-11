@@ -6,7 +6,7 @@
  */
 
 #pragma once
-#include "generic/EmbeddedList.h"
+#include "generic/IntrusiveContainers.h"
 #include "runtime/kThread.h"
 #include <cassert>
 #include <mutex>
@@ -21,7 +21,7 @@ class BlockingQueue {
     friend class ConditionVariable;
     friend class Semaphore;
     template<typename Buffer> friend class MessageQueue;
-    EmbeddedList<uThread> queue;
+    IntrusiveList<uThread> queue;
 
     bool suspend(std::mutex& lock);
     bool suspend(Mutex&);

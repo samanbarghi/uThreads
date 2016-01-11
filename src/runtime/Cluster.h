@@ -14,7 +14,8 @@
 #include <thread>
 #include <assert.h>
 #include "generic/basics.h"
-#include "generic/EmbeddedList.h"
+#include "generic/IntrusiveContainers.h"
+
 
 class uThread;
 
@@ -24,27 +25,23 @@ class ReadyQueue {
     friend class LibInitializer;
 private:
 //	std::priority_queue<uThread*, std::vector<uThread*>, CompareuThread> priorityQueue;
-    EmbeddedList<uThread> queue;
+    IntrusiveList<uThread> queue;
     std::mutex mtx;
     std::condition_variable cv;
     volatile unsigned int  size;
     volatile unsigned int waiting;           //number of waiting kThreads
 
-    void removeMany(EmbeddedList<uThread> *nqueue, mword numkt){
+    void removeMany(IntrusiveList<uThread> &nqueue, mword numkt){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
     	assert(numkt != 0);
-        mword popnum = (size / numkt) ? (size / numkt) : 1;
+        size_t popnum = (size / numkt) ? (size / numkt) : 1;
 
         uThread* ut;
         ut = queue.front();
         //TODO: for when (size - popnum) < popnum, it's better to traverse the
         //linked list from back instead of front ! call a function to do that.
-        if(size == popnum)
-            queue.pop_all();
-        else
-            queue.pop_many_front(popnum);
-        nqueue->push_many_back(ut, popnum);
+        queue.transferFrom(nqueue, popnum);
         size -= popnum;
     }
 public:
@@ -62,13 +59,13 @@ public:
         return ut;
     }
 
-    void tryPopMany(EmbeddedList<uThread> *nqueue, mword numkt) {//Try to pop ReadyQueueSize/#kThreads in cluster from the ready Queue
+    void tryPopMany(IntrusiveList<uThread> &nqueue, mword numkt) {//Try to pop ReadyQueueSize/#kThreads in cluster from the ready Queue
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
         if(!mlock.owns_lock() || size == 0) return; // There is no uThreads
         removeMany(nqueue, numkt);
     }
 
-    void popMany(EmbeddedList<uThread> *nqueue, mword numkt) {//Pop with condition variable
+    void popMany(IntrusiveList<uThread> &nqueue, mword numkt) {//Pop with condition variable
         //Spin before blocking
         for (int spin = 1; spin < 52 * 1024; spin++) {
             if (size > 0) break;
@@ -87,7 +84,7 @@ public:
 
     void push(uThread* ut) {
         std::unique_lock<std::mutex> mlock(mtx);
-        queue.push_back(ut);
+        queue.push_back(*ut);
         size++;
         if (waiting > 0) 		//Signal only when the queue was previously empty
             cv.notify_one();
@@ -122,8 +119,8 @@ public:
     static void invoke(funcvoid1_t, void*) __noreturn;//Function to invoke the run function of a uThread
     void uThreadSchedule(uThread*);	//Put ut in the ready queue to be picked up by kThread
     uThread* tryGetWork();			//Get a unit of work from the ready queue
-    void tryGetWorks(EmbeddedList<uThread>*);//Get as many uThreads as possible from the readyQueue and move them to local queue
-    void getWork(EmbeddedList<uThread>*);//Get a unit of work or if not available sleep till there is one
+    void tryGetWorks(IntrusiveList<uThread>&);//Get as many uThreads as possible from the readyQueue and move them to local queue
+    void getWork(IntrusiveList<uThread>&);//Get a unit of work or if not available sleep till there is one
 
     uint64_t getClusterID() const;				//Get the ID of current Cluster
 

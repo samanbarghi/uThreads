@@ -12,9 +12,7 @@
 
 std::atomic_uint kThread::totalNumberofKTs(0);
 
-
 __thread kThread* kThread::currentKT 					= nullptr;
-__thread EmbeddedList<uThread>* kThread::ktReadyQueue 	= nullptr;
 IOHandler* kThread::ioHandler                                  = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
 
@@ -49,7 +47,6 @@ kThread::~kThread() {
 	localCluster->numberOfkThreads--;
 
 	//free thread local members
-	delete kThread::ktReadyQueue;
 	//free(kThread::ioHandler);
 }
 
@@ -81,16 +78,16 @@ void kThread::switchContext(uThread* ut,void* args) {
 void kThread::switchContext(void* args){
 	uThread* ut = nullptr;
 	/*	First check the internal queue */
-    EmbeddedList<uThread>* ktrq = ktReadyQueue;
-	if(!ktrq->empty()){										//If not empty, grab a uThread and run it
-		ut = ktrq->front();
-		ktrq->pop_front();
+    IntrusiveList<uThread> ktrq = ktReadyQueue;
+	if(!ktrq.empty()){										//If not empty, grab a uThread and run it
+		ut = ktrq.front();
+		ktrq.pop_front();
 	}else{													//If empty try to fill
 
 	    localCluster->tryGetWorks(ktrq);				//Try to fill the local queue
-		if(!ktrq->empty()){									//If there is more work start using it
-			ut = ktrq->front();
-			ktrq->pop_front();
+		if(!ktrq.empty()){									//If there is more work start using it
+			ut = ktrq.front();
+			ktrq.pop_front();
 		}else{												//If no work is available, Switch to defaultUt
 			if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
 			ut = mainUT;
@@ -106,7 +103,6 @@ void kThread::switchContext(void* args){
 
 void kThread::initialize(bool isDefaultKT) {
 	kThread::currentKT		=	this;											//Set the thread_locl pointer to this thread, later we can find the executing thread by referring to this
-	kThread::ktReadyQueue = new EmbeddedList<uThread>();
 
 	if(isDefaultKT)
 	    this->mainUT = new uThread((funcvoid1_t)kThread::defaultRun, this, this->localCluster); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
@@ -127,9 +123,9 @@ void kThread::defaultRun(void* args) {
     while (true) {
         //TODO: break this loop when total number of uThreads are less than 1, and end the kThread
         thisKT->localCluster->getWork(thisKT->ktReadyQueue);
-        assert(!ktReadyQueue->empty());                         //ktReadyQueue should not be empty at this point
-        ut = thisKT->ktReadyQueue->front();
-        thisKT->ktReadyQueue->pop_front();
+        assert(!ktReadyQueue.empty());                         //ktReadyQueue should not be empty at this point
+        ut = thisKT->ktReadyQueue.front();
+        thisKT->ktReadyQueue.pop_front();
 
         thisKT->switchContext(ut, nullptr);                     //Switch to the new uThread
     }

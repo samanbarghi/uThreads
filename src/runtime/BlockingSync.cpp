@@ -10,9 +10,9 @@
 
 bool BlockingQueue::suspend(std::mutex& lock) {
 
-	EmbeddedList<uThread>* lqueue = &(this->queue);
+	IntrusiveList<uThread>* lqueue = &(this->queue);
 	auto lambda([&, this](){
-	    this->queue.push_back(kThread::currentKT->currentUT);
+	    this->queue.push_back(*kThread::currentKT->currentUT);
 	    lock.unlock();
 	});
 	std::function<void()> f(std::cref(lambda));
@@ -23,7 +23,7 @@ bool BlockingQueue::suspend(std::mutex& lock) {
 
 bool BlockingQueue::suspend(Mutex& mutex) {
 	auto lambda([&, this](){
-	        this->queue.push_back(kThread::currentKT->currentUT);
+	        this->queue.push_back(*kThread::currentKT->currentUT);
 	        mutex.release();
 	    });
 	    std::function<void()> f(std::cref(lambda));
@@ -62,7 +62,7 @@ void BlockingQueue::signalAll(Mutex& mutex) {
     uThread* ut = queue.front();
     for (;;) {
         if (slowpath(ut == queue.fence())) break;
-        queue.remove(ut);
+        queue.remove(*ut);
         ut->resume();						//Send ut back to the ready queue
         ut = queue.front();
     }
