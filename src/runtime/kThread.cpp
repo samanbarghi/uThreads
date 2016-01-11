@@ -105,7 +105,7 @@ void kThread::initialize(bool isDefaultKT) {
 	kThread::ktReadyQueue = new IntrusiveList<uThread>();
 
 	if(isDefaultKT)
-	    mainUT = new uThread((funcvoid1_t)kThread::defaultRun, this, *localCluster); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
+	    mainUT = new uThread(*localCluster, (funcvoid1_t)kThread::defaultRun, this, nullptr, nullptr); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
 	else
 	    mainUT = new uThread(*localCluster);			                    //Default function takes up the default pthread's stack pointer and run from there
 

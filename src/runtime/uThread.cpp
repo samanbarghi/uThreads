@@ -24,7 +24,7 @@ uThread uThread::initUT(Cluster::defaultCluster);
 
 Cluster Cluster::ioCluster;
 kThread kThread::ioKT(&Cluster::ioCluster);
-uThread uThread::ioUT(IOHandler::defaultIOFunc, nullptr, Cluster::ioCluster);
+uThread uThread::ioUT(Cluster::ioCluster, IOHandler::defaultIOFunc, nullptr, nullptr, nullptr);
 
 /******************************************/
 
@@ -40,18 +40,16 @@ uThread::uThread(Cluster& cluster){
 	currentCluster = const_cast<Cluster*>(&cluster);
 	initialSynchronization();
 }
-uThread::uThread(funcvoid1_t func, ptr_t args, const Cluster& cluster) {
+uThread::uThread(const Cluster& cluster, funcvoid1_t func, ptr_t args1, ptr_t args2, ptr_t args3){
 
 	stackSize	= default_stack_size;                   //Set the stack size to default
 	stackPointer= createStack(stackSize);               //Allocating stack for the thread
 	status		= INITIALIZED;
 	currentCluster = const_cast<Cluster*>(&cluster);
 	initialSynchronization();
-	stackPointer = (vaddr)stackInit(stackPointer, (funcvoid1_t)Cluster::invoke, (ptr_t) func, args, nullptr, nullptr);			//Initialize the thread context
+	stackPointer = (vaddr)stackInit(stackPointer, (funcvoid1_t)Cluster::invoke, (ptr_t) func, args1, args2, args3);			//Initialize the thread context
 	assert(stackPointer != 0);
 }
-
-uThread::uThread(funcvoid1_t func, ptr_t args) : uThread(func, args, Cluster::defaultCluster){};
 
 uThread::~uThread() {
 	free((ptr_t)stackTop);                              //Free the allocated memory for stack
@@ -75,25 +73,18 @@ vaddr uThread::createStack(size_t ssize) {
 	return stackBottom;
 }
 
-//TODO: a create function that accepts a Cluster
-uThread* uThread::create(funcvoid1_t func, void* args) {
-	uThread* ut = new uThread(func, args);
-	/*
-	 * if it is the main thread it goes to the the defaultCluster,
-	 * Otherwise to the related cluster
-	 */
-	ut->currentCluster->uThreadSchedule(ut);			//schedule current ut
-	return ut;
-}
-
-uThread* uThread::create(funcvoid1_t func, void* args, const Cluster& cluster) {
-	uThread* ut = new uThread(func, args, cluster);
+uThread* uThread::create(const Cluster& cluster, funcvoid1_t func, ptr_t args1, ptr_t args2, ptr_t args3) {
+	uThread* ut = new uThread(cluster, func, args1, args2, args3);
 	/*
 	 * if it is the main thread it goes to the the defaultCluster,
 	 * Otherwise to the related cluster
 	 */
 	ut->currentCluster->uThreadSchedule(ut);            //schedule current ut
 	return ut;
+}
+
+uThread* uThread::create(funcvoid1_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3){
+    return create(Cluster::defaultCluster, func, arg1, arg2, arg3);
 }
 
 void uThread::yield(){

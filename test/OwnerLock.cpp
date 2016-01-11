@@ -30,7 +30,7 @@ int main(){
 	for (int i=0; i< 100000; i++){
 		//Numbers should be written in order
 		value[i] = i;
-		ut = uThread::create((funcvoid1_t)run, &value[i], cluster);
+		ut = uThread::create(cluster, (funcvoid1_t)run, &value[i]);
 	}
 	while(uThread::getTotalNumberofUTs() > 1){
 		uThread::yield();

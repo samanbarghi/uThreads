@@ -31,7 +31,7 @@ int main(){
 	for (int i=0; i< 100000; i++){
 		//Numbers should be written in order
 		value[i] = i;
-		if(i%2 == 0) ut = uThread::create((funcvoid1_t)run, &value[i], cluster);
+		if(i%2 == 0) ut = uThread::create(cluster, (funcvoid1_t)run, &value[i]);
 		else  ut = uThread::create((funcvoid1_t)run, &value[i]);
 	}
 

@@ -15,7 +15,7 @@ static void run(void* args){
 	//assume args is an int
 	int value = *(int*)args;
 
-	uThread::create((funcvoid1_t)voidrun, &value, kThread::currentKT->currentUT->getCurrentCluster());
+	uThread::create(kThread::currentKT->currentUT->getCurrentCluster(), (funcvoid1_t)voidrun, &value);
 	cout << "uThreadID : " << kThread::currentKT->currentUT->getUthreadId() << " | Total uts: " << kThread::currentKT->currentUT->getTotalNumberofUTs() << endl;
 	uThread::uexit();
 }
@@ -39,7 +39,7 @@ int main(){
 	for (int i=0; i< 100000; i++){
 		//Numbers should be written in order
 		value[i] = i;
-		ut = uThread::create((funcvoid1_t)run, &value[i], cluster);
+		ut = uThread::create(cluster, (funcvoid1_t)run, &value[i]);
 	}
 
 	while(uThread::getTotalNumberofUTs() > 1){

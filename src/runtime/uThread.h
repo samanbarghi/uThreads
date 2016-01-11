@@ -44,8 +44,7 @@ private:
 
 
 	uThread(Cluster&);                                      //This will be called by default uThread
-	uThread(funcvoid1_t, ptr_t, const Cluster&);                  //To create a new uThread, create function should be called
-	uThread(funcvoid1_t, ptr_t);                           //To create a new uThread, create function should be called
+	uThread(const Cluster&, funcvoid1_t, ptr_t, ptr_t, ptr_t);                  //To create a new uThread, create function should be called
 
 	static uThread	initUT;            //initial uT that is associated with main
 	static uThread  ioUT;              //default IO uThread
@@ -94,8 +93,16 @@ public:
 	/*
 	 * Thread management functions
 	 */
-	static uThread* create(funcvoid1_t, void*);
-	static uThread* create(funcvoid1_t, void*, const Cluster&);
+	static uThread* create(const Cluster& cluster, funcvoid1_t func)                        {return create(cluster, func, nullptr, nullptr, nullptr);};
+	static uThread* create(const Cluster& cluster, funcvoid1_t func, ptr_t arg1)            {return create(cluster, func, arg1, nullptr, nullptr);};
+	static uThread* create(const Cluster& cluster, funcvoid1_t func, ptr_t arg1, ptr_t arg2){return create(cluster, func, arg1, arg2, nullptr);};
+	static uThread* create(const Cluster& cluster, funcvoid1_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3);
+
+	static uThread* create(funcvoid1_t func)                                    {return create(func, nullptr, nullptr, nullptr);};
+	static uThread* create(funcvoid1_t func, ptr_t arg1)                        {return create(func, arg1, nullptr, nullptr);};
+	static uThread* create(funcvoid1_t func, ptr_t arg1, ptr_t arg2)            {return create(func, arg1, arg2, nullptr);};
+	static uThread* create(funcvoid1_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3);
+
 
 	static void yield();
 	void migrate(Cluster*);				//Migrate the thread to a new Cluster
