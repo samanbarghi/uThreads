@@ -17,47 +17,14 @@
 std::atomic_ulong uThread::totalNumberofUTs(0);
 std::atomic_ulong uThread::uThreadMasterID(0);
 
+Cluster Cluster::defaultCluster;
+uThread uThread::initUT(&Cluster::defaultCluster);
+kThread kThread::defaultKT(true);
 
-static int _nifty_counter;
-Cluster* Cluster::defaultCluster = nullptr;
-uThread* uThread::initUT 		 = nullptr;
-kThread* kThread::defaultKT 	 = nullptr;
+Cluster Cluster::ioCluster;
+kThread kThread::ioKT(&Cluster::ioCluster);
+uThread uThread::ioUT(IOHandler::defaultIOFunc, nullptr, &Cluster::ioCluster);
 
-Cluster* Cluster::ioCluster      = nullptr;
-kThread* kThread::ioKT           = nullptr;
-uThread* uThread::ioUT           = nullptr;
-
-
-LibInitializer::LibInitializer(){
-	if(0 == _nifty_counter++){
-
-		Cluster::defaultCluster = new Cluster();									//initialize default Cluster, ID:0
-		uThread::initUT = new uThread(Cluster::defaultCluster);						//must be initialized in defaultKT constructor.
-		kThread::defaultKT = new kThread(true);
-
-		Cluster::ioCluster = new Cluster();
-		kThread::ioKT = new kThread(Cluster::ioCluster);
-		uThread::ioUT = uThread::create(IOHandler::defaultIOFunc, nullptr, Cluster::ioCluster);
-
-#ifdef __linux
-		kThread::ioHandler = new EpollIOHandler();
-#endif
-	}
-}
-
-LibInitializer::~LibInitializer(){
-	if(0 == --_nifty_counter){
-		delete Cluster::defaultCluster;
-		delete uThread::initUT;
-		delete kThread::defaultKT;
-
-		delete kThread::ioHandler;
-		delete uThread::ioUT;
-		delete kThread::ioKT;
-		delete Cluster::ioCluster;
-
-	}
-}
 /******************************************/
 
 /*
@@ -65,29 +32,27 @@ LibInitializer::~LibInitializer(){
  * Default uThread does not have a stack and rely only on
  * The current running pthread's stack
  */
-uThread::uThread(Cluster* cluster){
-	priority 	= default_uthread_priority;				//If no priority is set, set to the default priority
+uThread::uThread(Cluster* cluster): Thread(stackBottom, 0, mc ){
 	stackSize	= 0;									//Stack size depends on kernel thread's stack
-	stackPointer= nullptr;								//We don't know where on stack we are yet
+	stackPointer= 0;								//We don't know where on stack we are yet
 	status 		= RUNNING;
 	currentCluster = cluster;
 	initialSynchronization();
-//	std::cout << "Default uThread" << std::endl;
 }
 
-uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr, Cluster* cluster = nullptr) : priority(pr) {
+uThread::uThread(funcvoid1_t func, ptr_t args, Cluster* cluster = nullptr) : Thread(stackBottom, 0, mc) {
 
-	stackSize	= default_stack_size;					//Set the stack size to default
+	stackSize	= defaultStack;					//Set the stack size to default
 	stackPointer= createStack(stackSize);				//Allocating stack for the thread
 	status		= INITIALIZED;
 	if(cluster) this->currentCluster = cluster;
 	else this->currentCluster = kThread::currentKT->localCluster;
 	initialSynchronization();
-	stackPointer = (vaddr)stackInit(stackPointer, (funcvoid1_t)Cluster::invoke, (ptr_t) func, args, nullptr, nullptr);			//Initialize the thread context
+	stackPointer = (vaddr)stackInit((void*)stackPointer, (funcvoid1_t)Cluster::invoke, (ptr_t) func, args, nullptr, nullptr);			//Initialize the thread context
 }
 
 uThread::~uThread() {
-	free(stackTop);									//Free the allocated memory for stack
+	free((void*)stackTop);									//Free the allocated memory for stack
 	//This should never be called directly! terminate should be called instead
 }
 void uThread::decrementTotalNumberofUTs() {
@@ -100,26 +65,17 @@ void uThread::initialSynchronization() {
 }
 
 vaddr uThread::createStack(size_t ssize) {
-	stackTop = malloc(ssize);
-	if(stackTop == nullptr)
+    void* tmp = malloc(ssize);
+	if(tmp == nullptr)
 		exit(-1);										//TODO: Proper exception
-	stackBottom = (char*) stackTop + ssize;
-	return (vaddr)stackBottom;
+	stackTop = (vaddr)tmp;
+	stackBottom = (vaddr)( (uint8_t*) stackTop + ssize);
+	return stackBottom;
 }
 
 //TODO: a create function that accepts a Cluster
 uThread* uThread::create(funcvoid1_t func, void* args) {
-	uThread* ut = new uThread(func, args, default_uthread_priority);
-	/*
-	 * if it is the main thread it goes to the the defaultCluster,
-	 * Otherwise to the related cluster
-	 */
-	ut->currentCluster->uThreadSchedule(ut);			//schedule current ut
-	return ut;
-}
-
-uThread* uThread::create(funcvoid1_t func, void* args, priority_t pr) {
-	uThread* ut = new uThread(func, args, pr);
+	uThread* ut = new uThread(func, args);
 	/*
 	 * if it is the main thread it goes to the the defaultCluster,
 	 * Otherwise to the related cluster
@@ -129,8 +85,7 @@ uThread* uThread::create(funcvoid1_t func, void* args, priority_t pr) {
 }
 
 uThread* uThread::create(funcvoid1_t func, void* args, Cluster* cluster) {
-	uThread* ut = new uThread(func, args, default_uthread_priority, cluster);
-//	std::cerr << "CREATED: " << ut->id << " ADRESS:" << ut  << " STACKBOTTOM: " << ut->stackBottom  << " Pointer: " << ut->stackPointer << std::endl;
+	uThread* ut = new uThread(func, args, cluster);
 	/*
 	 * if it is the main thread it goes to the the defaultCluster,
 	 * Otherwise to the related cluster
@@ -140,7 +95,6 @@ uThread* uThread::create(funcvoid1_t func, void* args, Cluster* cluster) {
 }
 
 void uThread::yield(){
-//	std::cout << "YEIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIILD" << std::endl;
     kThread* ck = kThread::currentKT;
     assert(ck != nullptr);
     assert(ck->currentUT != nullptr);
@@ -152,10 +106,8 @@ void uThread::migrate(Cluster* cluster){
 	assert(cluster != nullptr);
 	if(kThread::currentKT->localCluster == cluster)				//no need to migrate
 		return;
-//	std::cout << "MIGRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATE" << std::endl;
 	kThread::currentKT->currentUT->currentCluster= cluster;
 	kThread::currentKT->currentUT->status = MIGRATE;
-//	std::cout << "Migrating to Cluster:" << cluster->clusterID << std::endl;
 	kThread::currentKT->switchContext();
 }
 
@@ -182,8 +134,6 @@ void uThread::uexit(){
 /*
  * Setters and Getters
  */
-priority_t uThread::getPriority() const {return priority;}
-void uThread::setPriority(priority_t priority) {this->priority = priority;}
 const Cluster* uThread::getCurrentCluster() const {return this->currentCluster;}
 uint64_t uThread::getTotalNumberofUTs() {return totalNumberofUTs;}
 uint64_t uThread::getUthreadId() const { return this->uThreadID;}

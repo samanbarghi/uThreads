@@ -10,9 +10,9 @@
 
 bool BlockingQueue::suspend(std::mutex& lock) {
 
-	EmbeddedList<uThread>* lqueue = &(this->queue);
+	IntrusiveList<Thread>* lqueue = &(this->queue);
 	auto lambda([&, this](){
-	    this->queue.push_back(kThread::currentKT->currentUT);
+	    this->queue.push_back(*(kThread::currentKT->currentUT));
 	    lock.unlock();
 	});
 	std::function<void()> f(std::cref(lambda));
@@ -23,7 +23,7 @@ bool BlockingQueue::suspend(std::mutex& lock) {
 
 bool BlockingQueue::suspend(Mutex& mutex) {
 	auto lambda([&, this](){
-	        this->queue.push_back(kThread::currentKT->currentUT);
+	        this->queue.push_back(*(kThread::currentKT->currentUT));
 	        mutex.release();
 	    });
 	    std::function<void()> f(std::cref(lambda));
@@ -34,7 +34,7 @@ bool BlockingQueue::suspend(Mutex& mutex) {
 bool BlockingQueue::signal(std::mutex& lock, uThread*& owner) {
     //TODO: handle cancellation
     if (queue.front() != queue.fence()) {//Fetch one thread and put it back to ready queue
-        owner = queue.front();					//FIFO?
+        owner = (uThread*)queue.front();					//FIFO?
         queue.pop_front();
         lock.unlock();
 //		printAll();
@@ -48,7 +48,7 @@ bool BlockingQueue::signal(Mutex& mutex) {
     //TODO: handle cancellation
     uThread* owner = nullptr;
     if (!queue.empty()) {	//Fetch one thread and put it back to ready queue
-        owner = queue.front();					//FIFO?
+        owner = (uThread*)queue.front();					//FIFO?
         queue.pop_front();
         mutex.release();
         owner->resume();
@@ -59,12 +59,12 @@ bool BlockingQueue::signal(Mutex& mutex) {
 
 void BlockingQueue::signalAll(Mutex& mutex) {
 
-    uThread* ut = queue.front();
+    uThread* ut = (uThread*) queue.front();
     for (;;) {
         if (slowpath(ut == queue.fence())) break;
-        queue.remove(ut);
+        queue.remove(*ut);
         ut->resume();						//Send ut back to the ready queue
-        ut = queue.front();
+        ut = (uThread*) queue.front();
     }
     mutex.release();
 }

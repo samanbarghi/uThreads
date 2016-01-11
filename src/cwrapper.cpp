@@ -5,8 +5,9 @@
  *      Author: Saman Barghi
  */
 
-#include "generic/global.h"
 #include "cwrapper.h"
+
+#include "generic/basics.h"
 #include "runtime/uThread.h"
 #include "runtime/uThreadPool.h"
 #include "runtime/kThread.h"
@@ -18,7 +19,7 @@ extern "C"{
 /**************Cluster*************/
 WCluster* cluster_create(){  return reinterpret_cast<WCluster*>( new Cluster( ) );}
 void cluster_destroy(WCluster* cluster){ delete reinterpret_cast<Cluster*>(cluster); }
-WCluster* cluster_get_default(){ return reinterpret_cast<WCluster*>(Cluster::defaultCluster);}
+WCluster* cluster_get_default(){ return reinterpret_cast<WCluster*>(&Cluster::defaultCluster);}
 WCluster* cluster_get_current(){ return reinterpret_cast<WCluster*>((Cluster*)kThread::currentKT->currentUT->getCurrentCluster());}
 uint64_t cluster_get_id(WCluster* cluster){ return reinterpret_cast<Cluster*>(cluster)->getClusterID();}
 /**********************************/

@@ -8,7 +8,7 @@
 #ifndef BLOCKINGSYNC_H_
 #define BLOCKINGSYNC_H_
 
-#include "generic/EmbeddedList.h"
+#include "KOS/generic/IntrusiveContainers.h"
 #include "runtime/kThread.h"
 #include <cassert>
 #include <mutex>
@@ -23,7 +23,7 @@ class BlockingQueue {
     friend class ConditionVariable;
     friend class Semaphore;
     template<typename Buffer> friend class MessageQueue;
-    EmbeddedList<uThread> queue;
+    IntrusiveList<Thread> queue;
 
     bool suspend(std::mutex& lock);
     bool suspend(Mutex&);

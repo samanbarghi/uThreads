@@ -9,13 +9,9 @@
 #include "kThread.h"
 #include <iostream>
 
-std::vector<Cluster*> Cluster::clusters;
-
 std::atomic_ushort Cluster::clusterMasterID(0);
 
 Cluster::Cluster(): numberOfkThreads(0) {
-
-	clusters.push_back(this);
 	initialSynchronization();
 }
 
@@ -23,19 +19,11 @@ void Cluster::initialSynchronization(){
 	clusterID = clusterMasterID++;
 }
 
-Cluster::~Cluster() {
-	/*TODO: Make sure to call this at the end of the program !!!!
-	 * for(Cluster* c:clusters){
-		free(c);
-	}
-	clusters.erase(clusters.front(), clusters.end());*/
-}
+Cluster::~Cluster() {}
 
 void Cluster::invoke(funcvoid1_t func, void* args) {
-//	std::cout << "We are going to invoke the thread" << std::endl;
 	func(args);
 	kThread::currentKT->currentUT->status	= TERMINATED;
-//	std::cout << "After run function: " << kThread::currentKT->currentUT << std::endl;
 	kThread::currentKT->switchContext();
 	//Context will be switched in kThread
 }
@@ -49,13 +37,11 @@ void Cluster::uThreadSchedule(uThread* ut) {
 uThread* Cluster::tryGetWork(){return readyQueue.tryPop();}
 
 //pop more than one uThread from the ready queue and push into the kthread local ready queue
-void Cluster::tryGetWorks(EmbeddedList<uThread> *queue){
-	assert(queue != nullptr);
+void Cluster::tryGetWorks(IntrusiveList<Thread> &queue){
 	readyQueue.tryPopMany(queue, numberOfkThreads.load());
 }
 
-void Cluster::getWork(EmbeddedList<uThread> *queue) {
-	assert(queue != nullptr);
+void Cluster::getWork(IntrusiveList<Thread> &queue) {
 	readyQueue.popMany(queue, numberOfkThreads.load());
 }
 

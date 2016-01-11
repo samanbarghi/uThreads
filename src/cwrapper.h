@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <stdint.h>
 
 
 #ifdef __cplusplus

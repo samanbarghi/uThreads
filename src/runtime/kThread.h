@@ -9,9 +9,10 @@
 #define KTHREAD_H_
 #include <thread>
 #include <mutex>
+
+#include "../generic/basics.h"
 #include "runtime/Cluster.h"
 #include "runtime/uThread.h"
-#include "generic/global.h"
 #include "io/IOHandler.h"
 
 
@@ -27,15 +28,15 @@ private:
 	uThread* mainUT;						//Each kThread has a default uThread that is used when there is no work available
     bool shouldSpin;                        //Should kThread spin before blocking
 
-	static kThread* defaultKT;				//default main thread of the application
-	static kThread* ioKT;                   //Dedicated IO kThread
+	static kThread defaultKT;				//default main thread of the application
+	static kThread ioKT;                   //Dedicated IO kThread
 	/* make user create the kernel thread for ths syscalls as required */
 	//static kThread* syscallKT;				//syscall kernel thread for the application
 
 
 	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread
 
-	static __thread EmbeddedList<uThread> *ktReadyQueue;	//internal readyQueue for kThread, to avoid locking and unlocking the cluster ready queue
+	static __thread IntrusiveList<Thread> ktReadyQueue;	//internal readyQueue for kThread, to avoid locking and unlocking the cluster ready queue
 
 	void run();						//The run function for the thread.
 	void initialize(bool);				//Initialization function for kThread
