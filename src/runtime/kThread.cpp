@@ -109,7 +109,7 @@ void kThread::initialize(bool isDefaultKT) {
 	kThread::ktReadyQueue = new EmbeddedList<uThread>();
 
 	if(isDefaultKT)
-	    this->mainUT = new uThread((funcvoid1_t)kThread::defaultRun, this, default_uthread_priority, this->localCluster); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
+	    this->mainUT = new uThread((funcvoid1_t)kThread::defaultRun, this, this->localCluster); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
 	else
 	    this->mainUT = new uThread(this->localCluster);			                    //Default function takes up the default pthread's stack pointer and run from there
 

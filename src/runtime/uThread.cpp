@@ -66,7 +66,6 @@ LibInitializer::~LibInitializer(){
  * The current running pthread's stack
  */
 uThread::uThread(Cluster* cluster){
-	priority 	= default_uthread_priority;				//If no priority is set, set to the default priority
 	stackSize	= 0;									//Stack size depends on kernel thread's stack
 	stackPointer= nullptr;								//We don't know where on stack we are yet
 	status 		= RUNNING;
@@ -75,7 +74,7 @@ uThread::uThread(Cluster* cluster){
 //	std::cout << "Default uThread" << std::endl;
 }
 
-uThread::uThread(funcvoid1_t func, ptr_t args, priority_t pr, Cluster* cluster = nullptr) : priority(pr) {
+uThread::uThread(funcvoid1_t func, ptr_t args, Cluster* cluster = nullptr) {
 
 	stackSize	= default_stack_size;					//Set the stack size to default
 	stackPointer= createStack(stackSize);				//Allocating stack for the thread
@@ -109,17 +108,7 @@ vaddr uThread::createStack(size_t ssize) {
 
 //TODO: a create function that accepts a Cluster
 uThread* uThread::create(funcvoid1_t func, void* args) {
-	uThread* ut = new uThread(func, args, default_uthread_priority);
-	/*
-	 * if it is the main thread it goes to the the defaultCluster,
-	 * Otherwise to the related cluster
-	 */
-	ut->currentCluster->uThreadSchedule(ut);			//schedule current ut
-	return ut;
-}
-
-uThread* uThread::create(funcvoid1_t func, void* args, priority_t pr) {
-	uThread* ut = new uThread(func, args, pr);
+	uThread* ut = new uThread(func, args);
 	/*
 	 * if it is the main thread it goes to the the defaultCluster,
 	 * Otherwise to the related cluster
@@ -129,7 +118,7 @@ uThread* uThread::create(funcvoid1_t func, void* args, priority_t pr) {
 }
 
 uThread* uThread::create(funcvoid1_t func, void* args, Cluster* cluster) {
-	uThread* ut = new uThread(func, args, default_uthread_priority, cluster);
+	uThread* ut = new uThread(func, args);
 //	std::cerr << "CREATED: " << ut->id << " ADRESS:" << ut  << " STACKBOTTOM: " << ut->stackBottom  << " Pointer: " << ut->stackPointer << std::endl;
 	/*
 	 * if it is the main thread it goes to the the defaultCluster,
@@ -182,8 +171,6 @@ void uThread::uexit(){
 /*
  * Setters and Getters
  */
-priority_t uThread::getPriority() const {return priority;}
-void uThread::setPriority(priority_t priority) {this->priority = priority;}
 const Cluster* uThread::getCurrentCluster() const {return this->currentCluster;}
 uint64_t uThread::getTotalNumberofUTs() {return totalNumberofUTs;}
 uint64_t uThread::getUthreadId() const { return this->uThreadID;}

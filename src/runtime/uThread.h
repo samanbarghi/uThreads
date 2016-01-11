@@ -49,7 +49,7 @@ private:
 
 
 	uThread(Cluster*);							            //This will be called by default uThread
-	uThread(funcvoid1_t, ptr_t, priority_t, Cluster*);		//To create a new uThread, create function should be called
+	uThread(funcvoid1_t, ptr_t, Cluster*);		//To create a new uThread, create function should be called
 
 	static uThread*	initUT;				//initial uT that is associated with main
 	static uThread* ioUT;              //default IO uThread
@@ -62,7 +62,6 @@ private:
 	 * Thread variables
 	 */
 	size_t		stackSize;
-	priority_t 	priority;				//Threads priority, lower number means higher priority
 	uThreadStatus status;				//Current status of the uThread, should be private only friend classes can change this
 	Cluster*	currentCluster;			//This will be used for migrating to a new Cluster
 
@@ -95,15 +94,11 @@ public:
 	uThread(const uThread&) = delete;
 	const uThread& operator=(const uThread&) = delete;
 
-	void setPriority(priority_t);
-	priority_t getPriority() const;
 	const Cluster* getCurrentCluster() const;
-
 	/*
 	 * Thread management functions
 	 */
 	static uThread* create(funcvoid1_t, void*);
-	static uThread* create(funcvoid1_t, void*, priority_t);
 	static uThread* create(funcvoid1_t, void*, Cluster*);
 
 	static void yield();
@@ -117,24 +112,6 @@ public:
 
 	static uint64_t getTotalNumberofUTs();
 	uint64_t getUthreadId() const;
-};
-
-/*
- * An object for comparing uThreads based on their priorities.
- * This will be used in priority queues to determine which uThread
- * should run next.
- */
-class CompareuThread{
-public:
-	bool operator()(uThread* ut1, uThread* ut2){
-		int p1 = ut1->getPriority();
-		int p2 = ut2->getPriority();
-		if(p1 < p2 || p1 == p2){
-			return true;
-		}else{
-			return false;
-		}
-	}
 };
 
 /*

@@ -13,7 +13,6 @@ typedef  int64_t        sword;
 
 typedef void*       vaddr;                                  //memory address
 typedef void*           ptr_t;                                  //Pointer type
-typedef unsigned short  priority_t;
 
 typedef void (*funcvoid0_t)();
 typedef void (*funcvoid1_t)(ptr_t);

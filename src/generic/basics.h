@@ -30,7 +30,6 @@
 /*
 * Constant variables
 */
-static const unsigned int default_uthread_priority = 20;
 static const unsigned int default_stack_size = (8 * 1024);			//8k stack size, TODO: determine what is the best stack size, or implement dynamic stack allocation
 
 /* polling flags */
