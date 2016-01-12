@@ -56,6 +56,8 @@ private:
 
 	static vaddr createStack(size_t);   //Create a stack with given size
 
+	static uThreadCache utCache;        //data structure to cache uThreads
+
 	/*
 	 * Statistics variables
 	 */

@@ -13,21 +13,14 @@
 //caching interface for uThreads
 class uThreadCache {
 
-    //This is a singleton class
-    static uThreadCache *single_instance;
-    uThreadCache(size_t size) : count(0), size(size){};
-
     std::mutex mtx;             //global mutex for protecting the underlying data structure
     IntrusiveList<uThread> stack;
     size_t count;
     size_t size;
 
 public:
-    static uThreadCache* instance(){
-        if(!single_instance)
-            single_instance = new uThreadCache(defaultuThreadCacheSize);
-        return single_instance;
-    }
+    uThreadCache(size_t size = defaultuThreadCacheSize) : count(0), size(size){};
+    ~uThreadCache(){}
 
     ssize_t push(uThread* ut){
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
