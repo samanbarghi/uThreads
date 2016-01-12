@@ -18,7 +18,7 @@
 std::atomic_ulong uThread::totalNumberofUTs(0);
 std::atomic_ulong uThread::uThreadMasterID(0);
 
-uThreadCache uThread::utCache;
+uThreadCache* uThreadCache::single_instance = nullptr;
 Cluster Cluster::defaultCluster;
 uThread* uThread::initUT = nullptr;
 kThread kThread::defaultKT(true);
@@ -33,7 +33,7 @@ void uThread::reset(){
 void uThread::destory(bool force=false) {
     //check whether we should cache it or not
     totalNumberofUTs--;
-    if(force || (utCache.push(this)<0)){
+    if(force || (uThreadCache::instance()->push(this)<0)){
         free((ptr_t)(stackBottom));                              //Free the allocated memory for stack
     }
 }
@@ -46,7 +46,7 @@ vaddr uThread::createStack(size_t ssize) {
 }
 
 uThread* uThread::create(size_t ss){
-    uThread* ut = utCache.pop();
+    uThread* ut = uThreadCache::instance()->pop();
 
     if(ut == nullptr){
         vaddr mem = uThread::createStack(ss);               //Allocating stack for the thread
