@@ -113,7 +113,6 @@ void kThread::initialize(bool isDefaultKT) {
 	    mainUT = uThread::createMainUT(*localCluster);			                    //Default function takes up the default pthread's stack pointer and run from there
 	}
 
-
 	uThread::totalNumberofUTs--; //Default uThreads are not counted as valid work
 	mainUT->state =	READY;
 	currentUT         =   mainUT;
@@ -140,7 +139,7 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 	if(ck->currentUT != kThread::currentKT->mainUT){			//DefaultUThread do not need to be managed here
 		switch (ck->currentUT->state) {
 			case TERMINATED:
-				ck->currentUT->destory( ck->currentUT==ck->mainUT || ck->currentUT == uThread::initUT);
+				ck->currentUT->destory(false);
 				break;
 			case YIELD:
 				ck->localCluster->readyQueue.push(kThread::currentKT->currentUT);

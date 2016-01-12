@@ -52,9 +52,9 @@ uThread* uThread::create(size_t ss){
         vaddr mem = uThread::createStack(ss);               //Allocating stack for the thread
         vaddr This = mem + ss - sizeof(uThread);
         ut = new (ptr_t(This)) uThread(mem, ss);
+    }else{
+        totalNumberofUTs++;
     }
-
-    totalNumberofUTs++;
     return ut;
 
 }

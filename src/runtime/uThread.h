@@ -46,7 +46,9 @@ private:
 
 	uThread(vaddr sb, size_t ss) :
 	stackPointer(vaddr(this)), stackBottom(sb), stackSize(ss),
-	state(INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(nullptr){}
+	state(INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(nullptr){
+	    totalNumberofUTs++;
+	}
 
 	static uThread* createMainUT(Cluster&);      //Only to create init and main uThreads
 
