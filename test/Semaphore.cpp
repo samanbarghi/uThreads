@@ -30,9 +30,10 @@ int main(){
 	int value[10000];
 	for (int i=0; i< 10000; i++){
 		//Numbers should be written in order
+	    ut = uThread::create();
 		value[i] = i;
-		if(i%2 == 0)	ut = uThread::create(cluster, (funcvoid1_t)run, &value[i]);
-		else	ut = uThread::create((funcvoid1_t)run, &value[i]);
+		if(i%2 == 0)    ut->start(cluster, (ptr_t)run, &value[i]);
+		else    ut->start((ptr_t)run, &value[i]);
 	}
 
 	while(uThread::getTotalNumberofUTs() > 1){

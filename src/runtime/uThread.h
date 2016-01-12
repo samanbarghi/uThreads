@@ -13,11 +13,12 @@
 
 class BlockingQueue;
 class Mutex;
-class Cluster;
 class IOHandler;
+class Cluster;
+class uThreadCache;
 
 //Thread states
-enum uThreadStatus {
+enum uThreadState {
     INITIALIZED,                                                    //uThread is initialized
     READY,                                                          //uThread is in a ReadyQueue
     RUNNING,                                                        //uThread is Running
@@ -30,6 +31,7 @@ enum uThreadStatus {
 
 
 class uThread : public IntrusiveList<uThread>::Link{
+    friend class uThreadCache;
 	friend class kThread;
 	friend class Cluster;
 	friend class LibInitializer;
@@ -38,16 +40,21 @@ class uThread : public IntrusiveList<uThread>::Link{
 private:
 
 	//TODO: Add a function to check uThread's stack for overflow ! Prevent overflow or throw an exception or error?
-	//TODO: Fix uThread.h includes: if this is the file that is being included to use the library, it should include at least kThread and Cluster headers
 	//TODO: Add a debug object to project, or a dtrace or lttng functionality
 	//TODO: Check all functions and add assertions wherever it is necessary
 
 
-	uThread(Cluster&);                                      //This will be called by default uThread
-	uThread(const Cluster&, funcvoid1_t, ptr_t, ptr_t, ptr_t);                  //To create a new uThread, create function should be called
+	uThread(vaddr sb, size_t ss) :
+	stackPointer(vaddr(this)), stackBottom(sb), stackSize(ss),
+	state(INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(nullptr){}
 
-	static uThread	initUT;            //initial uT that is associated with main
-	static uThread  ioUT;              //default IO uThread
+	static uThread* createMainUT(Cluster&);      //Only to create init and main uThreads
+
+	static uThread*	initUT;             //initial uT that is associated with main
+
+	static vaddr createStack(size_t);   //Create a stack with given size
+
+	static uThreadCache utCache;        //data structure to cache uThreads
 
 	/*
 	 * Statistics variables
@@ -60,7 +67,7 @@ private:
 	/*
 	 * Thread variables
 	 */
-	uThreadStatus status;				//Current status of the uThread, should be private only friend classes can change this
+	uThreadState state;				//Current state of the uThread, should be private only friend classes can change this
 	Cluster*	currentCluster;			//This will be used for migrating to a new Cluster
 
 	/*
@@ -68,23 +75,15 @@ private:
 	 */
 	size_t		stackSize;
 	vaddr 		stackPointer;			// holds stack pointer while thread inactive
-	vaddr		stackTop;				//Top of the stack
 	vaddr		stackBottom;			//Bottom of the stack
 
 	/*
 	 * general functions
 	 */
-	vaddr createStack(size_t);			//Create a stack with given size
-	void terminate();
+	void destory(bool);                     //destroy the stack which destroys the uThread
+	void reset();                       //reset stack pointers
 	void suspend(std::function<void()>&);
-
-	void initialSynchronization();		//Used for assigning a thread ID, set totalNumberofUTs and ...
-	static void decrementTotalNumberofUTs();	//Decrement the number (only used in kThread with default uthread)
-
 public:
-
-
-	virtual ~uThread();                 //TODO: protected and nonvirtual? do we want to inherit from this ever?
 
 	uThread(const uThread&) = delete;
 	const uThread& operator=(const uThread&) = delete;
@@ -93,21 +92,16 @@ public:
 	/*
 	 * Thread management functions
 	 */
-	static uThread* create(const Cluster& cluster, funcvoid1_t func)                        {return create(cluster, func, nullptr, nullptr, nullptr);};
-	static uThread* create(const Cluster& cluster, funcvoid1_t func, ptr_t arg1)            {return create(cluster, func, arg1, nullptr, nullptr);};
-	static uThread* create(const Cluster& cluster, funcvoid1_t func, ptr_t arg1, ptr_t arg2){return create(cluster, func, arg1, arg2, nullptr);};
-	static uThread* create(const Cluster& cluster, funcvoid1_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3);
+    static uThread* create(size_t ss);
+    static uThread* create(){ return create(defaultStackSize);}
 
-	static uThread* create(funcvoid1_t func)                                    {return create(func, nullptr, nullptr, nullptr);};
-	static uThread* create(funcvoid1_t func, ptr_t arg1)                        {return create(func, arg1, nullptr, nullptr);};
-	static uThread* create(funcvoid1_t func, ptr_t arg1, ptr_t arg2)            {return create(func, arg1, arg2, nullptr);};
-	static uThread* create(funcvoid1_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3);
-
+	void start(const Cluster& cluster, ptr_t func, ptr_t arg1=nullptr, ptr_t arg2=nullptr, ptr_t arg3=nullptr);
+	void start(ptr_t func, ptr_t arg1=nullptr, ptr_t arg2=nullptr, ptr_t arg3=nullptr);
 
 	static void yield();
+	static void terminate();
 	void migrate(Cluster*);				//Migrate the thread to a new Cluster
 	void resume();
-	static void uexit();				//End the thread
 
 	/*
 	 * general functions

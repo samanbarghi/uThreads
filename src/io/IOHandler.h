@@ -19,6 +19,7 @@
 
 
 class Connection;
+class kThread;
 
 /*
  * Include poll data
@@ -69,8 +70,21 @@ class IOHandler{
 
     void block(PollData &pd, bool isRead);
     void unblock(PollData *pd, bool isRead);
+
+
+    static Cluster ioCluster;           //default IO Cluster
+    static kThread  ioKT;               //default IO kThread
+	static uThread*  ioUT;               //default IO uThread
+    std::once_flag io_once_flag;
+
+    static void io_once_function(){
+        //IOHandler::ioUT->start(IOHandler::ioCluster, (ptr_t)IOHandler::defaultIOFunc, nullptr, nullptr, nullptr);
+    }
+
 protected:
-    IOHandler(){};
+    IOHandler(){
+        std::call_once(io_once_flag, io_once_function);
+    };
     void PollReady(PollData* pd, int flag);                   //When there is notification update pollData and unblock the related ut
 
 public:

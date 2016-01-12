@@ -28,9 +28,10 @@ int main(){
 	uThread* ut;
 	int value[100000];
 	for (int i=0; i< 100000; i++){
+	    ut = uThread::create();
 		//Numbers should be written in order
 		value[i] = i;
-		ut = uThread::create(cluster, (funcvoid1_t)run, &value[i]);
+		ut->start(cluster, (ptr_t)run, &value[i]);
 	}
 	while(uThread::getTotalNumberofUTs() > 1){
 		uThread::yield();

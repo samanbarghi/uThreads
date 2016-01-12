@@ -30,7 +30,8 @@
 /*
 * Constant variables
 */
-static const unsigned int default_stack_size = (8 * 1024);			//8k stack size, TODO: determine what is the best stack size, or implement dynamic stack allocation
+static const size_t defaultStackSize        = (8 * 1024);           //8k stack size, TODO: determine what is the best stack size, or implement dynamic stack allocation
+static const size_t defaultuThreadCacheSize = 1000;                 //Maximum number of uThreads that should be cached
 
 /* polling flags */
 enum pollingFlags {

@@ -24,8 +24,8 @@ kThread::kThread(bool initial) : shouldSpin(true){								//This is only for ini
 	threadSelf = new std::thread();										//For default kThread threadSelf should be initialized to current thread
 	localCluster = &Cluster::defaultCluster;
 	initialize(true);
-
-	currentUT = &uThread::initUT;											//Current running uThread is the initial one
+	uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
+	currentUT = uThread::initUT;											//Current running uThread is the initial one
 
 	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
@@ -50,6 +50,7 @@ kThread::~kThread() {
 	//free thread local members
 	free(kThread::ioHandler);
 	delete kThread::ktReadyQueue;
+	mainUT->destory(true);
 }
 
 void kThread::initialSynchronization(){
@@ -92,7 +93,7 @@ void kThread::switchContext(void* args){
 			ut = ktrq->front();
 			ktrq->pop_front();
 		}else{												//If no work is available, Switch to defaultUt
-			if(kThread::currentKT->currentUT->status == YIELD)	return;				//if the running uThread yielded, continue running it
+			if(kThread::currentKT->currentUT->state == YIELD)	return;				//if the running uThread yielded, continue running it
 			ut = mainUT;
 		}
 	}
@@ -104,14 +105,17 @@ void kThread::initialize(bool isDefaultKT) {
 	kThread::currentKT		=	this;											//Set the thread_locl pointer to this thread, later we can find the executing thread by referring to this
 	kThread::ktReadyQueue = new IntrusiveList<uThread>();
 
-	if(isDefaultKT)
-	    mainUT = new uThread(*localCluster, (funcvoid1_t)kThread::defaultRun, this, nullptr, nullptr); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
-	else
-	    mainUT = new uThread(*localCluster);			                    //Default function takes up the default pthread's stack pointer and run from there
+	if(isDefaultKT){
+	    mainUT = uThread::create(defaultStackSize);
+        mainUT->start(*localCluster, (ptr_t)kThread::defaultRun, this, nullptr, nullptr); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
+    }
+	else{
+	    mainUT = uThread::createMainUT(*localCluster);			                    //Default function takes up the default pthread's stack pointer and run from there
+	}
 
 
-	uThread::decrementTotalNumberofUTs();										//Default uThreads are not counted as valid work
-	mainUT->status	=	READY;
+	uThread::totalNumberofUTs--; //Default uThreads are not counted as valid work
+	mainUT->state =	READY;
 	currentUT         =   mainUT;
 }
 
@@ -134,9 +138,9 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 
     kThread* ck = kThread::currentKT;
 	if(ck->currentUT != kThread::currentKT->mainUT){			//DefaultUThread do not need to be managed here
-		switch (ck->currentUT->status) {
+		switch (ck->currentUT->state) {
 			case TERMINATED:
-				ck->currentUT->terminate();
+				ck->currentUT->destory( ck->currentUT==ck->mainUT || ck->currentUT == uThread::initUT);
 				break;
 			case YIELD:
 				ck->localCluster->readyQueue.push(kThread::currentKT->currentUT);
@@ -156,7 +160,7 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 		}
 	}
 	ck->currentUT	= nextuThread;								//Change the current thread to the next
-	nextuThread->status = RUNNING;
+	nextuThread->state = RUNNING;
 }
 
 //TODO: Get rid of this. For test purposes only

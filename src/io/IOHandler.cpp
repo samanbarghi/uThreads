@@ -11,6 +11,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 
+
+Cluster IOHandler::ioCluster;
+kThread IOHandler::ioKT(IOHandler::ioCluster);
+uThread* IOHandler::ioUT = uThread::create(defaultStackSize);
+
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
 

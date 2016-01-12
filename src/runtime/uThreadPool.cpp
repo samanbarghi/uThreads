@@ -26,7 +26,9 @@ void uThreadPool::uThreadExecute(funcvoid1_t func, void* args, Cluster& cluster)
 
         Argument* runArgs = new Argument(func, args, this);
         //create a new uThread
-        uThread::create(cluster, (funcvoid1_t)(this->run), (void*)runArgs);
+
+        uThread* ut = uThread::create();
+        ut->start(cluster, (ptr_t)(this->run), (void*)runArgs);
         //atomically increase the total number of threads
         totalnumuThreads++;
     }else{

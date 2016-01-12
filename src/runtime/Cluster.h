@@ -112,7 +112,6 @@ public:
     const Cluster& operator=(const Cluster&) = delete;
 
     static Cluster defaultCluster;						//Default cluster
-    static Cluster ioCluster;						    //io cluster
 
     static void invoke(funcvoid1_t, void*) __noreturn;//Function to invoke the run function of a uThread
     void uThreadSchedule(uThread*);	//Put ut in the ready queue to be picked up by kThread

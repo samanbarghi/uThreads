@@ -9,6 +9,7 @@
 #include "Cluster.h"
 #include "kThread.h"
 #include "BlockingSync.h"
+#include "uThreadCache.h"
 #include <iostream>		//TODO: remove this, add debug object
 #include <cassert>
 
@@ -17,81 +18,69 @@
 std::atomic_ulong uThread::totalNumberofUTs(0);
 std::atomic_ulong uThread::uThreadMasterID(0);
 
-
+uThreadCache uThread::utCache;
 Cluster Cluster::defaultCluster;
+uThread* uThread::initUT = nullptr;
 kThread kThread::defaultKT(true);
-uThread uThread::initUT(Cluster::defaultCluster);
-
-Cluster Cluster::ioCluster;
-kThread kThread::ioKT(&Cluster::ioCluster);
-uThread uThread::ioUT(Cluster::ioCluster, IOHandler::defaultIOFunc, nullptr, nullptr, nullptr);
 
 /******************************************/
-
-/*
- * This will only be called by the default uThread.
- * Default uThread does not have a stack and rely only on
- * The current running pthread's stack
- */
-uThread::uThread(Cluster& cluster){
-	stackSize	= 0;                                    //Stack size depends on kernel thread's stack
-	stackPointer= 0;                                    //We don't know where on stack we are yet
-	status 		= RUNNING;
-	currentCluster = const_cast<Cluster*>(&cluster);
-	initialSynchronization();
-}
-uThread::uThread(const Cluster& cluster, funcvoid1_t func, ptr_t args1, ptr_t args2, ptr_t args3){
-
-	stackSize	= default_stack_size;                   //Set the stack size to default
-	stackPointer= createStack(stackSize);               //Allocating stack for the thread
-	status		= INITIALIZED;
-	currentCluster = const_cast<Cluster*>(&cluster);
-	initialSynchronization();
-	stackPointer = (vaddr)stackInit(stackPointer, (funcvoid1_t)Cluster::invoke, (ptr_t) func, args1, args2, args3);			//Initialize the thread context
-	assert(stackPointer != 0);
+void uThread::reset(){
+   stackPointer = (vaddr)this;                //reset stack pointer
+   currentCluster = nullptr;
+   state=INITIALIZED;
 }
 
-uThread::~uThread() {
-	free((ptr_t)stackTop);                              //Free the allocated memory for stack
-	//This should never be called directly! terminate should be called instead
-}
-void uThread::decrementTotalNumberofUTs() {
-	totalNumberofUTs--;
-}
-
-void uThread::initialSynchronization() {
-	totalNumberofUTs++;
-	uThreadID = uThreadMasterID++;
+void uThread::destory(bool force=false) {
+    //check whether we should cache it or not
+    totalNumberofUTs--;
+    if(force || (utCache.push(this)<0)){
+        free((ptr_t)(stackBottom));                              //Free the allocated memory for stack
+    }
 }
 
 vaddr uThread::createStack(size_t ssize) {
     ptr_t st = malloc(ssize);
 	if(st == nullptr)
 		exit(-1);										//TODO: Proper exception
-	stackTop = (vaddr)st;
-	stackBottom =  stackTop + ssize;
-	return stackBottom;
+	return ((vaddr)st);
 }
 
-uThread* uThread::create(const Cluster& cluster, funcvoid1_t func, ptr_t args1, ptr_t args2, ptr_t args3) {
-	uThread* ut = new uThread(cluster, func, args1, args2, args3);
-	/*
-	 * if it is the main thread it goes to the the defaultCluster,
-	 * Otherwise to the related cluster
-	 */
-	ut->currentCluster->uThreadSchedule(ut);            //schedule current ut
-	return ut;
+uThread* uThread::create(size_t ss){
+    uThread* ut = utCache.pop();
+
+    if(ut == nullptr){
+        vaddr mem = uThread::createStack(ss);               //Allocating stack for the thread
+        vaddr This = mem + ss - sizeof(uThread);
+        ut = new (ptr_t(This)) uThread(mem, ss);
+    }
+
+    totalNumberofUTs++;
+    return ut;
+
 }
 
-uThread* uThread::create(funcvoid1_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3){
-    return create(Cluster::defaultCluster, func, arg1, arg2, arg3);
+uThread* uThread::createMainUT(Cluster& cluster){
+   uThread* ut = new uThread(0,0);
+   ut->currentCluster = &cluster;
+   return ut;
+}
+
+void uThread::start(const Cluster& cluster, ptr_t func, ptr_t args1, ptr_t args2, ptr_t args3) {
+    currentCluster = const_cast<Cluster*>(&cluster);
+    stackPointer = (vaddr)stackInit(stackPointer, (ptr_t)Cluster::invoke, (ptr_t) func, args1, args2, args3);			//Initialize the thread context
+    assert(stackPointer != 0);
+    this->resume();
+}
+
+void uThread::start(ptr_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3){
+    return start(Cluster::defaultCluster, func, arg1, arg2, arg3);
 }
 
 void uThread::yield(){
     kThread* ck = kThread::currentKT;
     assert(ck != nullptr);
     assert(ck->currentUT != nullptr);
-	ck->currentUT->status = YIELD;
+	ck->currentUT->state = YIELD;
 	ck->switchContext();
 }
 
@@ -100,28 +89,22 @@ void uThread::migrate(Cluster* cluster){
 	if(kThread::currentKT->localCluster == cluster)     //no need to migrate
 		return;
 	kThread::currentKT->currentUT->currentCluster= cluster;
-	kThread::currentKT->currentUT->status = MIGRATE;
+	kThread::currentKT->currentUT->state = MIGRATE;
 	kThread::currentKT->switchContext();
 }
 
 void uThread::suspend(std::function<void()>& func) {
-	status = WAITING;
+	state = WAITING;
 	kThread::currentKT->switchContext(&func);
 }
 
 void uThread::resume(){
-    if(status == WAITING)
+    if(state== WAITING || state== INITIALIZED)
         currentCluster->uThreadSchedule(this);          //Put thread back to readyqueue
 }
 
 void uThread::terminate(){
-	//TODO: This should take care of locks as well ?
-	decrementTotalNumberofUTs();
-	delete this;										//Suicide
-}
-
-void uThread::uexit(){
-	kThread::currentKT->currentUT->status = TERMINATED;
+	kThread::currentKT->currentUT->state = TERMINATED;
 	kThread::currentKT->switchContext();                //It's scheduler job to switch to another context and terminate this thread
 }
 /*

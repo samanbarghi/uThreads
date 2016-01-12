@@ -28,7 +28,6 @@ private:
     bool shouldSpin;                        //Should kThread spin before blocking
 
 	static kThread defaultKT;				//default main thread of the application
-	static kThread ioKT;                   //Dedicated IO kThread
 	/* make user create the kernel thread for ths syscalls as required */
 	//static kThread* syscallKT;				//syscall kernel thread for the application
 

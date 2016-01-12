@@ -33,9 +33,13 @@ uint64_t kThread_count(){ return kThread::totalNumberofKTs.load(); }
 
 
 /*************uThread**************/
-WuThread* uThread_create(void *(*start_routine) (void *), void *arg){ return reinterpret_cast<WuThread*>( uThread::create((funcvoid1_t)start_routine, arg)); }
+WuThread* uThread_create(void *(*start_routine) (void *), void *arg){ uThread* ut = uThread::create();
+    ut->start((ptr_t)start_routine, arg);
+    return reinterpret_cast<WuThread*>( ut); }
 WuThread* uThread_create_with_cluster(WCluster* cluster, void *(*start_routine) (void *), void *arg){
-    return reinterpret_cast<WuThread*>( uThread::create(*reinterpret_cast<Cluster*>(cluster), (funcvoid1_t)start_routine, arg ) );
+    uThread* ut = uThread::create();
+    ut->start(*reinterpret_cast<Cluster*>(cluster), (ptr_t)start_routine, arg );
+    return reinterpret_cast<WuThread*>( ut);
 }
 void uThread_migrate(WCluster* cluster){ kThread::currentKT->currentUT->migrate(reinterpret_cast<Cluster*>(cluster)); }
 void uThread_destroy(WuThread* ut){ delete reinterpret_cast<uThread*>(ut); }

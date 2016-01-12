@@ -15,7 +15,7 @@ static void run(void* args){
 	cout << "This is run #" <<  value << " - counter #" << counter++ << endl;
 	kThread::currentKT->printThreadId();
 	mtx.release();
-	uThread::uexit();
+	uThread::terminate();
 }
 int main(){
 
@@ -30,12 +30,13 @@ int main(){
 	int value[100000];
 	for (int i=0; i< 100000; i++){
 		//Numbers should be written in order
+	    ut = uThread::create();
 		value[i] = i;
-		if(i%2 == 0) ut = uThread::create(cluster, (funcvoid1_t)run, &value[i]);
-		else  ut = uThread::create((funcvoid1_t)run, &value[i]);
+		if(i%2 == 0) ut->start(cluster, (ptr_t)run, &value[i]);
+		else  ut->start((ptr_t)run, &value[i]);
 	}
 
-	while(uThread::getTotalNumberofUTs() > 1){
+	while(uThread::getTotalNumberofUTs() > 2){
 		uThread::yield();
 	}
 	cout << "End of Main Function!" << endl;
