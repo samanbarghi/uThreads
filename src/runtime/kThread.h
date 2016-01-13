@@ -8,6 +8,7 @@
 #pragma once
 #include <thread>
 #include <mutex>
+#include <condition_variable>
 
 #include "../generic/basics.h"
 #include "runtime/Cluster.h"
@@ -15,7 +16,7 @@
 #include "io/IOHandler.h"
 
 
-class kThread {
+class kThread : public IntrusiveList<kThread>::Link {
 	friend class uThread;
 	friend class Cluster;
 	friend class ReadyQueue;
@@ -29,15 +30,15 @@ private:
 
 	static kThread defaultKT;				//default main thread of the application
 	/* make user create the kernel thread for ths syscalls as required */
-	//static kThread* syscallKT;				//syscall kernel thread for the application
-
 
 	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread
 
 	static __thread IntrusiveList<uThread>* ktReadyQueue;	//internal readyQueue for kThread, to avoid locking and unlocking the cluster ready queue
+	std::condition_variable   cv;                           //condition variable to be used by ready queue in the Cluster
+	bool cv_flag;                                           //A flag to track the state of kThread on CV stack
 
-	void run();						//The run function for the thread.
-	void initialize(bool);				//Initialization function for kThread
+	void run();                         //The run function for the thread.
+	void initialize(bool);              //Initialization function for kThread
 	static inline void postSwitchFunc(uThread*, void*) __noreturn;
     void spin();
 

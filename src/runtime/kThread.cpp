@@ -20,18 +20,18 @@ IOHandler* kThread::ioHandler                           = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
 
 
-kThread::kThread(bool initial) : shouldSpin(true){								//This is only for initial kThread
-	threadSelf = new std::thread();										//For default kThread threadSelf should be initialized to current thread
+kThread::kThread(bool initial) : shouldSpin(true), cv_flag(true){       //This is only for initial kThread
+	threadSelf = new std::thread();                                     //For default kThread threadSelf should be initialized to current thread
 	localCluster = &Cluster::defaultCluster;
 	initialize(true);
 	uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
-	currentUT = uThread::initUT;											//Current running uThread is the initial one
+	currentUT = uThread::initUT;                                        //Current running uThread is the initial one
 
 	kThread::ioHandler = newIOHandler();
 	initialSynchronization();
 }
 
-kThread::kThread(Cluster& cluster) : localCluster(&cluster), shouldSpin(true){
+kThread::kThread(Cluster& cluster) : localCluster(&cluster), shouldSpin(true), cv_flag(false){
 	threadSelf = new std::thread(&kThread::run, this);
 	threadSelf->detach();                                                       //Detach the thread from the running thread
 	initialSynchronization();
@@ -142,7 +142,7 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 				ck->currentUT->destory(false);
 				break;
 			case YIELD:
-				ck->localCluster->readyQueue.push(kThread::currentKT->currentUT);
+				ck->currentUT->currentCluster->uThreadSchedule(kThread::currentKT->currentUT);
 				break;
 			case MIGRATE:
 				ck->currentUT->currentCluster->uThreadSchedule(kThread::currentKT->currentUT);

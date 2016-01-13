@@ -15,96 +15,22 @@
 #include "generic/basics.h"
 #include "generic/IntrusiveContainers.h"
 
-
 class uThread;
-
-class ReadyQueue {
-    friend class kThread;
-    friend class Cluster;
-    friend class LibInitializer;
-private:
-//	std::priority_queue<uThread*, std::vector<uThread*>, CompareuThread> priorityQueue;
-    IntrusiveList<uThread> queue;
-    std::mutex mtx;
-    std::condition_variable cv;
-    volatile unsigned int  size;
-    volatile unsigned int waiting;           //number of waiting kThreads
-
-    void removeMany(IntrusiveList<uThread> &nqueue, mword numkt){
-        //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
-        //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
-    	assert(numkt != 0);
-        size_t popnum = (size / numkt) ? (size / numkt) : 1;
-
-        uThread* ut;
-        ut = queue.front();
-        //TODO: for when (size - popnum) < popnum, it's better to traverse the
-        //linked list from back instead of front ! call a function to do that.
-        nqueue.transferFrom(queue, popnum);
-        size -= popnum;
-    }
-public:
-    ReadyQueue() : size(0), waiting(0) {};
-    virtual ~ReadyQueue() {};
-
-    uThread* tryPop() {					//Try to pop one item, or return null
-        uThread* ut = nullptr;
-        std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
-        if (mlock.owns_lock() && size != 0) {
-            ut = queue.front();
-            queue.pop_front();
-            size--;
-        }
-        return ut;
-    }
-
-    void tryPopMany(IntrusiveList<uThread> &nqueue, mword numkt) {//Try to pop ReadyQueueSize/#kThreads in cluster from the ready Queue
-        std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
-        if(!mlock.owns_lock() || size == 0) return; // There is no uThreads
-        removeMany(nqueue, numkt);
-    }
-
-    void popMany(IntrusiveList<uThread> &nqueue, mword numkt) {//Pop with condition variable
-        //Spin before blocking
-        for (int spin = 1; spin < 52 * 1024; spin++) {
-            if (size > 0) break;
-            asm volatile("pause");
-        }
-
-        std::unique_lock<std::mutex> mlock(mtx);
-        //if spin was not enough, simply block
-        if (size == 0) {
-            waiting++;
-            while (size == 0) {cv.wait(mlock);}
-            waiting--;
-        }
-        removeMany(nqueue, numkt);
-    }
-
-    void push(uThread* ut) {
-        std::unique_lock<std::mutex> mlock(mtx);
-        queue.push_back(*ut);
-        size++;
-        if (waiting > 0) 		//Signal only when the queue was previously empty
-            cv.notify_one();
-    }
-    bool empty() const {
-        return queue.empty();
-    }
-};
+class ReadyQueue;
 
 class Cluster {
     friend class kThread;
 private:
-    ReadyQueue readyQueue;				//There is one ready queue per cluster
-    std::atomic_uint  numberOfkThreads;					//Number of kThreads in this Cluster
+    ReadyQueue* readyQueue;                              //There is one ready queue per cluster
+    std::atomic_uint  numberOfkThreads;                 //Number of kThreads in this Cluster
 
-    static std::atomic_ushort clusterMasterID;				//Global cluster ID holder
-    uint64_t clusterID;									//Current Cluster ID
+    static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
+    uint64_t clusterID;                                 //Current Cluster ID
 
     void initialSynchronization();
 
 public:
+    //TODO:: add constructors that accepts a number x and creates x kThreads for that Cluster
     Cluster();
     virtual ~Cluster();
 

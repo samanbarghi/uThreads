@@ -7,11 +7,13 @@
 
 #include "Cluster.h"
 #include "kThread.h"
+#include "ReadyQueue.h"
 #include <iostream>
 
 std::atomic_ushort Cluster::clusterMasterID(0);
 
 Cluster::Cluster(): numberOfkThreads(0) {
+    readyQueue = new ReadyQueue();
 	initialSynchronization();
 }
 
@@ -31,18 +33,18 @@ void Cluster::invoke(funcvoid1_t func, void* args) {
 void Cluster::uThreadSchedule(uThread* ut) {
 	assert(ut != nullptr);
 	ut->state	= READY;								//Change state to ready, before pushing it to ready queue just in case context switch occurred before we get to this part
-	readyQueue.push(ut);								//Scheduling uThread
+	readyQueue->push(ut);								//Scheduling uThread
 }
 
-uThread* Cluster::tryGetWork(){return readyQueue.tryPop();}
+uThread* Cluster::tryGetWork(){return readyQueue->tryPop();}
 
 //pop more than one uThread from the ready queue and push into the kthread local ready queue
 void Cluster::tryGetWorks(IntrusiveList<uThread> &queue){
-	readyQueue.tryPopMany(queue, numberOfkThreads.load());
+	readyQueue->tryPopMany(queue, numberOfkThreads.load());
 }
 
 void Cluster::getWork(IntrusiveList<uThread> &queue) {
-	readyQueue.popMany(queue, numberOfkThreads.load());
+	readyQueue->popMany(queue, numberOfkThreads.load());
 }
 
 uint64_t Cluster::getClusterID() const {return clusterID;}
