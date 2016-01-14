@@ -50,6 +50,37 @@ private:
             kt->cv.notify_one();
         }
     }
+    /*
+     * This function uses std::mutex to exponentially spin
+     * to provide a semi-spinlock behavior. If after the
+     * first round of exponential spin the lock is not still
+     * available, simply block. This is to avoid overhead of
+     * blocking, although it adds some overhead to cache misses
+     * happening by accessing the mutex memory address.
+     * It can also cause out of ordeing accesses to the mutex (not that
+     * it was fully FIFO before), which is somehow desired to provide
+     * a chance for producers not to be preceded by many consumers that
+     * just need to check whether the queue is empty and block on that.
+     */
+    inline void spinLock(std::unique_lock<std::mutex>& mlock){
+        const uint32_t SPIN_START = 4;
+        const uint32_t SPIN_END = 4 * 1024;
+
+        size_t spin = SPIN_START;
+        for(;;){
+            if(mlock.try_lock()) break;
+            //exponential spin
+            for ( int i = 0; i < spin; i += 1 ) {
+                asm volatile( "pause" );
+            }
+            spin += spin;                   // powers of 2
+            if ( spin > SPIN_END ) {
+                //spin = SPIN_START;              // prevent overflow
+                mlock.lock();
+                break;
+            }
+        }
+    }
 
     uThread* tryPop() {                     //Try to pop one item, or return null
         uThread* ut = nullptr;
@@ -75,7 +106,8 @@ private:
             asm volatile("pause");
         }
 
-        std::unique_lock<std::mutex> mlock(mtx);
+        std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
+        spinLock(mlock);
         //if spin was not enough, simply block
         if (size == 0) {
             //Push the kThread to the stack before waiting on it's cv
@@ -98,7 +130,8 @@ private:
     }
 
     void push(uThread* ut) {
-        std::unique_lock<std::mutex> mlock(mtx);
+        std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
+        spinLock(mlock);
         queue.push_back(*ut);
         size++;
         unBlock();
@@ -106,7 +139,8 @@ private:
 
     //Push multiple uThreads in the ready Queue
     void pushMany(IntrusiveList<uThread>& utList, size_t count){
-        std::unique_lock<std::mutex> mlock(mtx);
+        std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
+        spinLock(mlock);
         queue.transferFrom(utList, count);
         size+=count;
         unBlock();
