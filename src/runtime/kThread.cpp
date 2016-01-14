@@ -162,11 +162,6 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 	nextuThread->state = RUNNING;
 }
 
-//TODO: Get rid of this. For test purposes only
-void kThread::printThreadId(){
-	std::thread::id main_thread_id = std::this_thread::get_id();
-}
-
 std::thread::native_handle_type kThread::getThreadNativeHandle() {
 	assert(threadSelf != nullptr);
 	return threadSelf->native_handle();

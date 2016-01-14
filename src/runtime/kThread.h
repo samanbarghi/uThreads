@@ -60,7 +60,6 @@ public:
 	static void defaultRun(void*) __noreturn;
 
 
-	void printThreadId();
 	std::thread::native_handle_type getThreadNativeHandle();
 	std::thread::id	getThreadID();
 };
