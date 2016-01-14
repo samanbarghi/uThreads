@@ -44,10 +44,10 @@ public:
     Cluster(const Cluster&) = delete;
     const Cluster& operator=(const Cluster&) = delete;
 
-    static Cluster defaultCluster;						//Default cluster
-    static void invoke(funcvoid1_t, void*) __noreturn;          //Function to invoke the run function of a uThread
+    static Cluster defaultCluster;                                          //Default cluster
+    static void invoke(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn;        //Function to invoke the run function of a uThread
 
-    uint64_t getClusterID() const {return clusterID;};				//Get the ID of current Cluster
+    uint64_t getClusterID() const {return clusterID;};                      //Get the ID of current Cluster
     size_t  getNumberOfkThreads() const { return numberOfkThreads.load();};
 
 };
