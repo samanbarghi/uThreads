@@ -39,7 +39,6 @@ private:
 	void run();                         //The run function for the thread.
 	void initialize(bool);              //Initialization function for kThread
 	static inline void postSwitchFunc(uThread*, void*) __noreturn;
-    void spin();
 
     void initialSynchronization();
     IOHandler* newIOHandler();
