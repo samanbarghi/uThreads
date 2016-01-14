@@ -13,7 +13,6 @@ static void run(void* args){
 
 	mtx.acquire();
 	cout << kThread::currentKT->currentUT->getCurrentCluster().getClusterID() << ":uThreadID: " << kThread::currentKT->currentUT->getUthreadId() << ": This is run #" <<  value << " - counter #" << counter++ << endl;
-	kThread::currentKT->printThreadId();
 	mtx.release();
 }
 int main(){

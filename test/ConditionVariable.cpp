@@ -21,7 +21,6 @@ static void run(void* args){
 	cout << "This is run #" <<  value << endl;
 	counter++;
 //	kThread::currentKT->currentUT->migrate(cluster);
-	kThread::currentKT->printThreadId();
 	cv.signalAll(mtx);
 }
 int main(){

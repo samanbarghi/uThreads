@@ -13,7 +13,6 @@ static void run(void* args){
 
 	mtx.acquire();
 	cout << "This is run #" <<  value << " - counter #" << counter++ << endl;
-	kThread::currentKT->printThreadId();
 	mtx.release();
 	uThread::terminate();
 }
