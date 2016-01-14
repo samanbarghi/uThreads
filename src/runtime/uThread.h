@@ -107,9 +107,8 @@ public:
 	/*
 	 * general functions
 	 */
-	const Cluster& uThread::getCurrentCluster() const {return *currentCluster;}
-	uint64_t uThread::getTotalNumberofUTs() {return totalNumberofUTs;}
-	uint64_t uThread::getUthreadId() const { return uThreadID;}
-	uThread* currentUThread() const{ return kThread::currentKT->currentUT; }
-
+	const Cluster& getCurrentCluster() const    {return *currentCluster;}
+	uint64_t getTotalNumberofUTs() const        {return totalNumberofUTs.load();}
+	uint64_t getUthreadId() const               { return uThreadID;}
+	uThread* currentUThread() const;
 };

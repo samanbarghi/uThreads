@@ -109,3 +109,5 @@ void uThread::terminate(){
 	kThread::currentKT->currentUT->state = TERMINATED;
 	kThread::currentKT->switchContext();                //It's scheduler job to switch to another context and terminate this thread
 }
+
+uThread* uThread::currentUThread () const   { return kThread::currentKT->currentUT; }
