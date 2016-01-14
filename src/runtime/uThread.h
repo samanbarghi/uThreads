@@ -108,7 +108,7 @@ public:
 	 * general functions
 	 */
 	const Cluster& getCurrentCluster() const    {return *currentCluster;}
-	uint64_t getTotalNumberofUTs() const        {return totalNumberofUTs.load();}
+	static uint64_t getTotalNumberofUTs()       {return totalNumberofUTs.load();}
 	uint64_t getUthreadId() const               { return uThreadID;}
 	uThread* currentUThread() const;
 };
