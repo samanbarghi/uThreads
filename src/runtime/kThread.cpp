@@ -27,7 +27,7 @@ kThread::kThread(bool initial) : cv_flag(true){       //This is only for initial
 	uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
 	currentUT = uThread::initUT;                                        //Current running uThread is the initial one
 
-	kThread::ioHandler = newIOHandler();
+	kThread::ioHandler = IOHandler::createIOHandler();
 	initialSynchronization();
 }
 
@@ -56,16 +56,6 @@ kThread::~kThread() {
 void kThread::initialSynchronization(){
 	totalNumberofKTs++;
 	localCluster->numberOfkThreads++;											//Increas the number of kThreads in the cluster
-}
-
-IOHandler* kThread::newIOHandler(){
-    IOHandler* ioh = nullptr;
-#if defined (__linux__)
-    ioh = new EpollIOHandler();                                  //TODO: have a default value and possibility to change for iohandler.
-#else
-#error unsupported system: only __linux__ supported at this moment
-#endif
-    return ioh;
 }
 
 void kThread::run() {

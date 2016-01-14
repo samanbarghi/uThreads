@@ -41,7 +41,6 @@ private:
 	static inline void postSwitchFunc(uThread*, void*) __noreturn;
 
     void initialSynchronization();
-    IOHandler* newIOHandler();
 
 public:
     //TODO: add a function to create multiple kThreads on a given cluster

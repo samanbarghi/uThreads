@@ -99,6 +99,9 @@ public:
 
    //IO function for dedicated kThread
    static void defaultIOFunc(void*) __noreturn;
+
+   //create an instance of IOHandler based on the platform
+   static IOHandler* createIOHandler();
 };
 
 /* epoll wrapper */

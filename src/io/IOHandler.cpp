@@ -16,6 +16,16 @@ Cluster IOHandler::ioCluster;
 kThread IOHandler::ioKT(IOHandler::ioCluster);
 uThread* IOHandler::ioUT = uThread::create(defaultStackSize);
 
+IOHandler* IOHandler::createIOHandler(){
+    IOHandler* ioh = nullptr;
+#if defined (__linux__)
+    ioh = new EpollIOHandler();                                  //TODO: have a default value and possibility to change for iohandler.
+#else
+#error unsupported system: only __linux__ supported at this moment
+#endif
+    return ioh;
+}
+
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
 
