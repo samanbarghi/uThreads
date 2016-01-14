@@ -12,9 +12,7 @@
 class uThread;
 
 class ReadyQueue {
-    friend class kThread;
     friend class Cluster;
-    friend class LibInitializer;
 private:
     IntrusiveList<uThread> queue;           //The main producer-consumer queue to keep track of uThreads in the Cluster
     /*
@@ -34,14 +32,21 @@ private:
 
         uThread* ut;
         ut = queue.front();
-        //TODO: for when (size - popnum) < popnum, it's better to traverse the
-        //linked list from back instead of front ! call a function to do that.
         nqueue.transferFrom(queue, popnum);
         size -= popnum;
     }
-public:
+
     ReadyQueue() : size(0) {};
     virtual ~ReadyQueue() {};
+
+    inline void unBlock(){
+         if(!ktStack.empty()){
+            kThread* kt = ktStack.back();
+            ktStack.pop_back();
+            kt->cv_flag = true;
+            kt->cv.notify_one();
+        }
+    }
 
     uThread* tryPop() {                     //Try to pop one item, or return null
         uThread* ut = nullptr;
@@ -76,19 +81,32 @@ public:
             while (size == 0 || !kThread::currentKT->cv_flag) {kThread::currentKT->cv.wait(mlock);}
         }
         removeMany(nqueue, numkt);
+        /*
+         * Each kThread unblocks the next kThread in case
+         * PushMany was called. First, only one kThread can always hold
+         * the lock, so there is no benefit in unblocking all kThreads just
+         * for them to be blocked by the mutex.
+         * Chaining the unblocking has the benefit of distributing the cost
+         * of multiple cv.notify_one() calls over producer + waiting consumers.
+         */
+        unBlock();
     }
 
     void push(uThread* ut) {
         std::unique_lock<std::mutex> mlock(mtx);
         queue.push_back(*ut);
         size++;
-        if (!ktStack.empty()){ //Signal only when there is a kThread waiting
-            kThread* kt = ktStack.back();
-            ktStack.pop_back();
-            kt->cv_flag = true;
-            kt->cv.notify_one();
-        }
+        unBlock();
     }
+
+    //Push multiple uThreads in the ready Queue
+    void pushMany(IntrusiveList<uThread>& utList, size_t count){
+        std::unique_lock<std::mutex> mlock(mtx);
+        queue.transferFrom(utList, count);
+        size+=count;
+        unBlock();
+    }
+
     bool empty() const {
         return queue.empty();
     }
