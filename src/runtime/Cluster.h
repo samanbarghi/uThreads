@@ -30,15 +30,14 @@ private:
 
     void initialSynchronization();
 
-    void uThreadSchedule(uThread*);                             //Put uThread in the ready queue to be picked up by related kThreads
-    void uThreadScheduleMany(IntrusiveList<uThread>&, size_t ); //Schedule many uThreads
-    void getWork(IntrusiveList<uThread>&);                      //Get a unit of work or if not available sleep till there is one
+    void schedule(uThread*);                                    //Put uThread in the ready queue to be picked up by related kThreads
+    void scheduleMany(IntrusiveList<uThread>&, size_t );        //Schedule many uThreads
+    ssize_t getWork(IntrusiveList<uThread>&);                   //Get a unit of work or if not available sleep till there is one
     uThread* tryGetWork();                                      //Get a unit of work from the ready queue
-    void tryGetWorks(IntrusiveList<uThread>&);                  //Get as many uThreads as possible from the readyQueue and move them to local queue
+    ssize_t tryGetWorks(IntrusiveList<uThread>&);               //Get as many uThreads as possible from the readyQueue and move them to local queue
 
 
 public:
-    //TODO:: add constructors that accepts a number x and creates x kThreads for that Cluster
     Cluster();
     virtual ~Cluster();
 
@@ -48,6 +47,7 @@ public:
     static Cluster defaultCluster;						//Default cluster
     static void invoke(funcvoid1_t, void*) __noreturn;          //Function to invoke the run function of a uThread
 
-    uint64_t getClusterID() const;				//Get the ID of current Cluster
+    uint64_t getClusterID() const {return clusterID;};				//Get the ID of current Cluster
+    size_t  getNumberOfkThreads() const { return numberOfkThreads.load();};
 
 };

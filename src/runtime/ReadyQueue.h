@@ -24,9 +24,14 @@ private:
     std::mutex mtx;
     volatile unsigned int  size;
 
-    void removeMany(IntrusiveList<uThread> &nqueue, mword numkt){
+
+    ReadyQueue() : size(0) {};
+    virtual ~ReadyQueue() {};
+
+    ssize_t removeMany(IntrusiveList<uThread> &nqueue){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
+        size_t numkt = kThread::currentKT->localCluster->getNumberOfkThreads();
         assert(numkt != 0);
         size_t popnum = (size / numkt) ? (size / numkt) : 1; //TODO: This number exponentially decreases, any better way to handle this?
 
@@ -34,10 +39,8 @@ private:
         ut = queue.front();
         nqueue.transferFrom(queue, popnum);
         size -= popnum;
+        return popnum;
     }
-
-    ReadyQueue() : size(0) {};
-    virtual ~ReadyQueue() {};
 
     inline void unBlock(){
          if(!ktStack.empty()){
@@ -59,13 +62,13 @@ private:
         return ut;
     }
 
-    void tryPopMany(IntrusiveList<uThread> &nqueue, mword numkt) {//Try to pop ReadyQueueSize/#kThreads in cluster from the ready Queue
+    ssize_t tryPopMany(IntrusiveList<uThread> &nqueue) {//Try to pop ReadyQueueSize/#kThreads in cluster from the ready Queue
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
-        if(!mlock.owns_lock() || size == 0) return; // There is no uThreads
-        removeMany(nqueue, numkt);
+        if(!mlock.owns_lock() || size == 0) return -1; // There is no uThreads
+        return removeMany(nqueue);
     }
 
-    void popMany(IntrusiveList<uThread> &nqueue, mword numkt) {//Pop with condition variable
+    ssize_t popMany(IntrusiveList<uThread> &nqueue) {//Pop with condition variable
         //Spin before blocking
         for (int spin = 1; spin < 52 * 1024; spin++) {
             if (size > 0) break;
@@ -80,7 +83,7 @@ private:
             kThread::currentKT->cv_flag = false;                                //Set the cv_flag so we can identify spurious wakeup from notifies
             while (size == 0 || !kThread::currentKT->cv_flag) {kThread::currentKT->cv.wait(mlock);}
         }
-        removeMany(nqueue, numkt);
+        ssize_t res = removeMany(nqueue);
         /*
          * Each kThread unblocks the next kThread in case
          * PushMany was called. First, only one kThread can always hold
@@ -89,7 +92,9 @@ private:
          * Chaining the unblocking has the benefit of distributing the cost
          * of multiple cv.notify_one() calls over producer + waiting consumers.
          */
-        unBlock();
+        if(size != 0) unBlock();
+
+        return res;
     }
 
     void push(uThread* ut) {

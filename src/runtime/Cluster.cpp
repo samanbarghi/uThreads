@@ -30,21 +30,18 @@ void Cluster::invoke(funcvoid1_t func, void* args) {
 	//Context will be switched in kThread
 }
 
-void Cluster::uThreadSchedule(uThread* ut) {
+void Cluster::schedule(uThread* ut) {
 	assert(ut != nullptr);
-	ut->state	= READY;								//Change state to ready, before pushing it to ready queue just in case context switch occurred before we get to this part
 	readyQueue->push(ut);								//Scheduling uThread
 }
 
 uThread* Cluster::tryGetWork(){return readyQueue->tryPop();}
 
 //pop more than one uThread from the ready queue and push into the kthread local ready queue
-void Cluster::tryGetWorks(IntrusiveList<uThread> &queue){
-	readyQueue->tryPopMany(queue, numberOfkThreads.load());
+ssize_t Cluster::tryGetWorks(IntrusiveList<uThread> &queue){
+	return readyQueue->tryPopMany(queue);
 }
 
-void Cluster::getWork(IntrusiveList<uThread> &queue) {
-	readyQueue->popMany(queue, numberOfkThreads.load());
+ssize_t Cluster::getWork(IntrusiveList<uThread> &queue) {
+	return readyQueue->popMany(queue);
 }
-
-uint64_t Cluster::getClusterID() const {return clusterID;}

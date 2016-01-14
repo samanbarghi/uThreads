@@ -99,8 +99,10 @@ void uThread::suspend(std::function<void()>& func) {
 }
 
 void uThread::resume(){
-    if(state== WAITING || state== INITIALIZED)
-        currentCluster->uThreadSchedule(this);          //Put thread back to readyqueue
+    if(state== WAITING || state== INITIALIZED || state == MIGRATE || state == YIELD){
+        state = READY;
+        currentCluster->schedule(this);          //Put thread back to readyqueue
+    }
 }
 
 void uThread::terminate(){

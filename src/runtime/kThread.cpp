@@ -142,10 +142,10 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 				ck->currentUT->destory(false);
 				break;
 			case YIELD:
-				ck->currentUT->currentCluster->uThreadSchedule(kThread::currentKT->currentUT);
+				ck->currentUT->resume();;
 				break;
 			case MIGRATE:
-				ck->currentUT->currentCluster->uThreadSchedule(kThread::currentKT->currentUT);
+				ck->currentUT->resume();
 				break;
 			case WAITING:
 			{
