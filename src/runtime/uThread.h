@@ -90,7 +90,6 @@ public:
 	uThread(const uThread&) = delete;
 	const uThread& operator=(const uThread&) = delete;
 
-	const Cluster& getCurrentCluster() const;
 	/*
 	 * Thread management functions
 	 */
@@ -108,6 +107,9 @@ public:
 	/*
 	 * general functions
 	 */
-	static uint64_t getTotalNumberofUTs();
-	uint64_t getUthreadId() const;
+	const Cluster& uThread::getCurrentCluster() const {return *currentCluster;}
+	uint64_t uThread::getTotalNumberofUTs() {return totalNumberofUTs;}
+	uint64_t uThread::getUthreadId() const { return uThreadID;}
+	uThread* currentUThread() const{ return kThread::currentKT->currentUT; }
+
 };

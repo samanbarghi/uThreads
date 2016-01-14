@@ -109,11 +109,3 @@ void uThread::terminate(){
 	kThread::currentKT->currentUT->state = TERMINATED;
 	kThread::currentKT->switchContext();                //It's scheduler job to switch to another context and terminate this thread
 }
-/*
- * Setters and Getters
- */
-const Cluster& uThread::getCurrentCluster() const {return *currentCluster;}
-uint64_t uThread::getTotalNumberofUTs() {return totalNumberofUTs;}
-uint64_t uThread::getUthreadId() const { return uThreadID;}
-
-
