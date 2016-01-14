@@ -50,7 +50,6 @@ public:
 
 	uThread* currentUT;						//Pointer to the current running ut
 	static __thread kThread* currentKT;
-	static IOHandler* ioHandler;            //Thread local iohandler (epoll, poll, select wrapper)
 
 	static std::atomic_uint totalNumberofKTs;
 

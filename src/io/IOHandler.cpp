@@ -15,6 +15,7 @@
 Cluster IOHandler::ioCluster;
 kThread IOHandler::ioKT(IOHandler::ioCluster);
 uThread* IOHandler::ioUT = uThread::create(defaultStackSize);
+IOHandler* IOHandler::ioHandler = IOHandler::createIOHandler();
 
 IOHandler* IOHandler::createIOHandler(){
     IOHandler* ioh = nullptr;
@@ -128,7 +129,7 @@ void IOHandler::defaultIOFunc(void*){
     usleep(10000);
     while(true){
 //       std::cout << "Waiting ... " << std::endl;
-       kThread::ioHandler->poll(-1, 0);
+       IOHandler::ioHandler->poll(-1, 0);
    }
 }
 

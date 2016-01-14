@@ -14,9 +14,6 @@ std::atomic_uint kThread::totalNumberofKTs(0);
 
 __thread kThread* kThread::currentKT                    = nullptr;
 __thread IntrusiveList<uThread>* kThread::ktReadyQueue  = nullptr;
-
-IOHandler* kThread::ioHandler                           = nullptr;
-
 //__thread uThread* kThread::currentUT = nullptr;
 
 
@@ -27,7 +24,6 @@ kThread::kThread(bool initial) : cv_flag(true){       //This is only for initial
 	uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
 	currentUT = uThread::initUT;                                        //Current running uThread is the initial one
 
-	kThread::ioHandler = IOHandler::createIOHandler();
 	initialSynchronization();
 }
 
@@ -48,9 +44,8 @@ kThread::~kThread() {
 	localCluster->numberOfkThreads--;
 
 	//free thread local members
-	free(kThread::ioHandler);
-	delete kThread::ktReadyQueue;
-	mainUT->destory(true);
+	//delete kThread::ktReadyQueue;
+	//mainUT->destory(true);
 }
 
 void kThread::initialSynchronization(){

@@ -75,7 +75,7 @@ class IOHandler{
     static Cluster ioCluster;           //default IO Cluster
     static kThread  ioKT;               //default IO kThread
 	static uThread*  ioUT;               //default IO uThread
-    std::once_flag io_once_flag;
+	    std::once_flag io_once_flag;
 
     static void io_once_function(){
         IOHandler::ioUT->start(IOHandler::ioCluster, (ptr_t)IOHandler::defaultIOFunc, nullptr, nullptr, nullptr);
@@ -89,6 +89,12 @@ protected:
 
 public:
    ~IOHandler(){};  //should be protected
+   /*
+	 * For now ioHanlder has a single instance
+	 * later this should be per Cluster
+	 */
+	static IOHandler* ioHandler;            //Thread local iohandler (epoll, poll, select wrapper)
+
     /* public interfaces */
    void open(PollData &pd);
    int close(PollData &pd);
