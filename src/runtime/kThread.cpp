@@ -20,7 +20,7 @@ IOHandler* kThread::ioHandler                           = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
 
 
-kThread::kThread(bool initial) : shouldSpin(true), cv_flag(true){       //This is only for initial kThread
+kThread::kThread(bool initial) : cv_flag(true){       //This is only for initial kThread
 	threadSelf = new std::thread();                                     //For default kThread threadSelf should be initialized to current thread
 	localCluster = &Cluster::defaultCluster;
 	initialize(true);
@@ -31,13 +31,13 @@ kThread::kThread(bool initial) : shouldSpin(true), cv_flag(true){       //This i
 	initialSynchronization();
 }
 
-kThread::kThread(Cluster& cluster) : localCluster(&cluster), shouldSpin(true), cv_flag(false){
+kThread::kThread(Cluster& cluster) : localCluster(&cluster), cv_flag(false){
 	threadSelf = new std::thread(&kThread::run, this);
 	threadSelf->detach();                                                       //Detach the thread from the running thread
 	initialSynchronization();
 }
 
-kThread::kThread() : localCluster(&Cluster::defaultCluster), shouldSpin(true){
+kThread::kThread() : localCluster(&Cluster::defaultCluster){
 	threadSelf = new std::thread(&kThread::run, this);
 	threadSelf->detach();                                                       //Detach the thread from the running thread
 	initialSynchronization();
@@ -175,7 +175,4 @@ std::thread::native_handle_type kThread::getThreadNativeHandle() {
 std::thread::id kThread::getThreadID() {
 	assert(threadSelf != nullptr);
 	return threadSelf->get_id();
-}
-void kThread::setShouldSpin(bool spin){
-    shouldSpin = spin;
 }

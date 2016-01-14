@@ -26,7 +26,6 @@ private:
 	kThread(bool);							//This is only for the initial kThread
 	std::thread *threadSelf;				//pthread related to the current thread
 	uThread* mainUT;						//Each kThread has a default uThread that is used when there is no work available
-    bool shouldSpin;                        //Should kThread spin before blocking
 
 	static kThread defaultKT;				//default main thread of the application
 	/* make user create the kernel thread for ths syscalls as required */
@@ -46,8 +45,9 @@ private:
     IOHandler* newIOHandler();
 
 public:
-	kThread();
-	kThread(Cluster&);
+    //TODO: add a function to create multiple kThreads on a given cluster
+	kThread();                              //Create a kThread on defaultCluster
+	kThread(Cluster&);                      //Create a single kThread on cluster
 	virtual ~kThread();
 
 	uThread* currentUT;						//Pointer to the current running ut
@@ -64,6 +64,4 @@ public:
 	void printThreadId();
 	std::thread::native_handle_type getThreadNativeHandle();
 	std::thread::id	getThreadID();
-
-    void setShouldSpin(bool);
 };
