@@ -19,7 +19,7 @@ uThread* IOHandler::ioUT = uThread::create(defaultStackSize);
 IOHandler* IOHandler::createIOHandler(){
     IOHandler* ioh = nullptr;
 #if defined (__linux__)
-    ioh = new EpollIOHandler();                                  //TODO: have a default value and possibility to change for iohandler.
+    ioh = new EpollIOHandler();
 #else
 #error unsupported system: only __linux__ supported at this moment
 #endif
