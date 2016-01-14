@@ -78,7 +78,7 @@ class IOHandler{
     std::once_flag io_once_flag;
 
     static void io_once_function(){
-        //IOHandler::ioUT->start(IOHandler::ioCluster, (ptr_t)IOHandler::defaultIOFunc, nullptr, nullptr, nullptr);
+        IOHandler::ioUT->start(IOHandler::ioCluster, (ptr_t)IOHandler::defaultIOFunc, nullptr, nullptr, nullptr);
     }
 
 protected:
