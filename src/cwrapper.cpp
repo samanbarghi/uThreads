@@ -11,7 +11,7 @@
 #include "runtime/uThreadPool.h"
 #include "runtime/kThread.h"
 #include "io/Network.h"
-#ifdef never_run
+
 #ifdef __cplusplus
 extern "C"{
 #endif
@@ -72,5 +72,4 @@ void uthreadpool_execute(WuThreadPool* utp, WCluster* cluster, void *(*start_rou
 
 #ifdef __cplusplus
 }
-#endif
 #endif
