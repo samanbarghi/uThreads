@@ -5,8 +5,8 @@
  *      Author: Saman Barghi
  */
 
-#ifndef INCLUDE_NETWORK_H_
-#define INCLUDE_NETWORK_H_
+#ifndef UTHREADS_INCLUDE_NETWORK_H_
+#define UTHREADS_INCLUDE_NETWORK_H_
 #include "io/IOHandler.h"
 
 class Connection{
@@ -57,4 +57,4 @@ public:
 
 
 
-#endif /* INCLUDE_NETWORK_H_ */
+#endif /* UTHREADS_INCLUDE_NETWORK_H_ */

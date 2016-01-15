@@ -5,7 +5,9 @@
  *      Author: Saman Barghi
  */
 
-#pragma once
+#ifndef UTHREADS_BLOKING_SYNC_H
+#define UTHREADS_BLOKING_SYNC_H
+
 #include "generic/IntrusiveContainers.h"
 #include "runtime/kThread.h"
 #include <cassert>
@@ -180,3 +182,5 @@ public:
         mutex.release();
     }
 };
+
+#endif /* UTHREADS_BLOKING_SYNC_H */

@@ -4,7 +4,9 @@
  *  Created on: Oct 23, 2014
  *      Author:  Saman Barghi
  */
-#pragma once
+#ifndef UTHREADS_UTHREAD_H_
+#define UTHREADS_UTHREAD_H_
+
 #include <mutex>
 #include <atomic>
 #include "generic/basics.h"
@@ -112,3 +114,5 @@ public:
 	uint64_t getUthreadId() const               { return uThreadID;}
 	uThread* currentUThread() const;
 };
+
+#endif /* UTHREADS_UTHREAD_H_ */

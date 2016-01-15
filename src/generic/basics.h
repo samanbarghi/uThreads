@@ -5,7 +5,9 @@
  *      Author: Saman Barghi
  */
 
-#pragma once
+#ifndef UTHREADS_BASICS_H_
+#define UTHREADS_BASICS_H_
+
 #include <stdint.h>
 
 #if defined(__linux__)
@@ -46,3 +48,4 @@ enum pollingFlags {
 #error undefined platform: only __linux__ supported at this time
 #endif
 
+#endif /* UTHREADS_BASICS_H_*/

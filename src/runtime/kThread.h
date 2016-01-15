@@ -5,7 +5,9 @@
  *      Author: Saman Barghi
  */
 
-#pragma once
+#ifndef UTHREADS_KTHREADS_H_
+#define UTHREADS_KTHREADS_H_
+
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -61,3 +63,5 @@ public:
 	std::thread::native_handle_type getThreadNativeHandle();
 	std::thread::id	getThreadID();
 };
+
+#endif /* UTHREADS_KTHREADS_H_ */

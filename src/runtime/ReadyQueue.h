@@ -5,7 +5,9 @@
  *      Author: Saman Barghi
  */
 
-#pragma once
+#ifndef UTHREADS_READY_QUEUE_H_
+#define UTHREADS_READY_QUEUE_H_
+
 #include "generic/IntrusiveContainers.h"
 #include "kThread.h"
 
@@ -150,3 +152,5 @@ private:
         return queue.empty();
     }
 };
+
+#endif /* UTHREADS_READY_QUEUE_H_ */

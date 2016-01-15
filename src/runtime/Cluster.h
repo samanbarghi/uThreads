@@ -5,7 +5,9 @@
  *      Author: Saman Barghi
  */
 
-#pragma once
+#ifndef UTHREADS_CLUSTER_H_
+#define UTHREADS_CLUSTER_H_
+
 #include <mutex>
 #include <atomic>
 #include <iostream>
@@ -51,3 +53,5 @@ public:
     size_t  getNumberOfkThreads() const { return numberOfkThreads.load();};
 
 };
+
+#endif /* UTHREADS_CLUSTER_H_ */

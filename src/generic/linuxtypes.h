@@ -5,7 +5,9 @@
  *      Author: Saman Barghi
  */
 
-#pragma once
+#ifndef UTHREADS_LINUX_TYPES_H_
+#define UTHREADS_LINUX_TYPES_H_
+
 #include <cstddef>
 #include <cstdint>
 #if defined (__x86_64__)
@@ -24,3 +26,5 @@ typedef void (*funcvoid3_t)(ptr_t, ptr_t, ptr_t);
 #else
 #error unsupported architecture: only __x86_64__ supported at this time
 #endif
+
+#endif /* UTHREADS_LINUX_TYPES_H_ */

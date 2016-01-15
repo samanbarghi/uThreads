@@ -5,7 +5,9 @@
  *      Author: Saman Barghi
  */
 
-#pragma once
+#ifndef UTHREADS_CACHE_H_
+#define UTHREADS_CACHE_H_
+
 #include <mutex>
 #include "generic/IntrusiveContainers.h"
 #include "uThread.h"
@@ -39,3 +41,5 @@ public:
         return ut;
     }
 };
+
+#endif /* UTHREADS_CACHE_H_ */

@@ -5,7 +5,9 @@
  *      Author: Saman Barghi
  */
 
-#pragma once
+#ifndef UTHREADS_UTHREAD_POOL_H_
+#define UTHREADS_UTHREAD_POOL_H_
+
 #include <atomic>
 #include <queue>
 #include "BlockingSync.h"
@@ -41,3 +43,5 @@ public:
    void uThreadExecute(funcvoid1_t, void*, Cluster&);
 
 };
+
+#endif /* UTHREADS_UTHREAD_POOL_H_ */

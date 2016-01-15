@@ -5,8 +5,8 @@
  *      Author: Saman Barghi
  */
 
-#ifndef IOHANDLER_H_
-#define IOHANDLER_H_
+#ifndef UTHREADS_IOHANDLER_H_
+#define UTHREADS_IOHANDLER_H_
 
 #include <unordered_map>
 #include <vector>
