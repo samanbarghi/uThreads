@@ -123,7 +123,7 @@ private:
                     ktStack.push_back(*kThread::currentKT);
                 }
                 kThread::currentKT->cv.wait(mlock);}
-            //if another thread did not wake us up
+            //if another thread did not unblock current kThread
             //Remove ourselves from the stack
             if(!kThread::currentKT->cv_flag){
                 ktStack.remove(*kThread::currentKT);
