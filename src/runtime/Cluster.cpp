@@ -38,6 +38,11 @@ void Cluster::schedule(uThread* ut) {
 	readyQueue->push(ut);								//Scheduling uThread
 }
 
+void Cluster::scheduleMany(IntrusiveList<uThread>& queue, size_t count){
+    assert(!queue.empty());
+    readyQueue->pushMany(queue, count);
+}
+
 uThread* Cluster::tryGetWork(){return readyQueue->tryPop();}
 
 //pop more than one uThread from the ready queue and push into the kthread local ready queue
