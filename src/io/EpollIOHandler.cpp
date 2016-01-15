@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-EpollIOHandler::EpollIOHandler() : IOHandler() {
+EpollIOHandler::EpollIOHandler(Cluster& cluster) : IOHandler(cluster) {
     epoll_fd = epoll_create1 (EPOLL_CLOEXEC);               //Assuming kernel version >= 2.9
     														//TODO: Make sure this is backward compatible with kernel < 2.9
     if (epoll_fd == -1){
@@ -80,7 +80,6 @@ void EpollIOHandler::_Poll(int timeout){
     }
 
 }
-
 
 EpollIOHandler::~EpollIOHandler() {
     ::close(epoll_fd);

@@ -7,7 +7,6 @@
 
 #include "kThread.h"
 #include "BlockingSync.h"
-#include <iostream>
 #include <unistd.h>
 
 std::atomic_uint kThread::totalNumberofKTs(0);

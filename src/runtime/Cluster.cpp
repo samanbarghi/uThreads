@@ -8,11 +8,14 @@
 #include "Cluster.h"
 #include "kThread.h"
 #include "ReadyQueue.h"
-#include <iostream>
+#include "io/IOHandler.h"
 
 std::atomic_ushort Cluster::clusterMasterID(0);
 
 Cluster::Cluster(): numberOfkThreads(0) {
+    //TODO: IO handler should be only applicable for IO Clusters
+    //or be created with the first IO call
+    iohandler  = IOHandler::create(*this);
     readyQueue = new ReadyQueue();
 	initialSynchronization();
 }

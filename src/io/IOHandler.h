@@ -13,14 +13,12 @@
 #include <sys/socket.h>
 #include <mutex>
 #include "runtime/uThread.h"
+#include "runtime/kThread.h"
 
 #define POLL_READY  ((uThread*)1)
 #define POLL_WAIT   ((uThread*)2)
 
-
 class Connection;
-class kThread;
-
 /*
  * Include poll data
  */
@@ -67,34 +65,22 @@ class IOHandler{
     virtual void _Poll(int timeout)=0;                ///
 
 
-
     void block(PollData &pd, bool isRead);
     void unblock(PollData *pd, bool isRead);
 
+    Cluster*    localCluster;       //Cluster that this Handler belongs to
+    kThread     ioKT;               //IO kThread
+    uThread*    ioUT;              //IO uThread
 
-    static Cluster ioCluster;           //default IO Cluster
-    static kThread  ioKT;               //default IO kThread
-	static uThread*  ioUT;               //default IO uThread
-	    std::once_flag io_once_flag;
-
-    static void io_once_function(){
-        IOHandler::ioUT->start(IOHandler::ioCluster, (ptr_t)IOHandler::defaultIOFunc, nullptr, nullptr, nullptr);
-    }
+    //Polling IO Function
+   static void pollerFunc(void*) __noreturn;
 
 protected:
-    IOHandler(){
-        std::call_once(io_once_flag, io_once_function);
-    };
+    IOHandler(Cluster&);
     void PollReady(PollData* pd, int flag);                   //When there is notification update pollData and unblock the related ut
+   ~IOHandler(){};  //should be protected
 
 public:
-   ~IOHandler(){};  //should be protected
-   /*
-	 * For now ioHanlder has a single instance
-	 * later this should be per Cluster
-	 */
-	static IOHandler* ioHandler;            //Thread local iohandler (epoll, poll, select wrapper)
-
     /* public interfaces */
    void open(PollData &pd);
    int close(PollData &pd);
@@ -103,15 +89,14 @@ public:
    void reset(PollData &pd);
    //dealing with uThreads
 
-   //IO function for dedicated kThread
-   static void defaultIOFunc(void*) __noreturn;
 
    //create an instance of IOHandler based on the platform
-   static IOHandler* createIOHandler();
+   static IOHandler* create(Cluster&);
 };
 
 /* epoll wrapper */
 class EpollIOHandler : public IOHandler {
+    friend IOHandler;
 private:
     static const int MAXEVENTS  = 1024;                           //Maximum number of events this thread can monitor, TODO: do we want this to be modified?
     int epoll_fd = -1;
@@ -120,10 +105,10 @@ private:
     int _Open(int fd, PollData* pd);
     int  _Close(int fd);
     void _Poll(int timeout);
-public:
-    EpollIOHandler();
+
+protected:
+    EpollIOHandler(Cluster&);
     virtual ~EpollIOHandler();
 };
-
 
 #endif /* IOHANDLER_H_ */

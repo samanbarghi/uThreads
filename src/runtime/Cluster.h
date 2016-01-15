@@ -10,7 +10,6 @@
 
 #include <mutex>
 #include <atomic>
-#include <iostream>
 #include <condition_variable>
 #include <thread>
 #include <assert.h>
@@ -19,10 +18,12 @@
 
 class uThread;
 class ReadyQueue;
+class IOHandler;
 
 class Cluster {
     friend class kThread;
     friend class uThread;
+    friend class Connection;
 private:
     ReadyQueue* readyQueue;                              //There is one ready queue per cluster
     std::atomic_uint  numberOfkThreads;                 //Number of kThreads in this Cluster
@@ -38,7 +39,7 @@ private:
     uThread* tryGetWork();                                      //Get a unit of work from the ready queue
     ssize_t tryGetWorks(IntrusiveList<uThread>&);               //Get as many uThreads as possible from the readyQueue and move them to local queue
 
-
+    IOHandler* iohandler;
 public:
     Cluster();
     virtual ~Cluster();

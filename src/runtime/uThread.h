@@ -112,7 +112,7 @@ public:
 	const Cluster& getCurrentCluster() const    {return *currentCluster;}
 	static uint64_t getTotalNumberofUTs()       {return totalNumberofUTs.load();}
 	uint64_t getUthreadId() const               { return uThreadID;}
-	uThread* currentUThread() const;
+	static uThread* currentUThread();
 };
 
 #endif /* UTHREADS_UTHREAD_H_ */

@@ -7,20 +7,20 @@
 #include "IOHandler.h"
 #include "Network.h"
 #include "runtime/kThread.h"
-#include "runtime/uThread.h"
 #include <unistd.h>
 #include <sys/types.h>
+#include <iostream>
 
+IOHandler::IOHandler(Cluster& cluster): ioKT(cluster){
+    localCluster = &cluster;
+    ioUT = uThread::create();
+    ioUT->start(cluster, (ptr_t)IOHandler::pollerFunc, this, nullptr, nullptr);
+}
 
-Cluster IOHandler::ioCluster;
-kThread IOHandler::ioKT(IOHandler::ioCluster);
-uThread* IOHandler::ioUT = uThread::create(defaultStackSize);
-IOHandler* IOHandler::ioHandler = IOHandler::createIOHandler();
-
-IOHandler* IOHandler::createIOHandler(){
+IOHandler* IOHandler::create(Cluster& cluster){
     IOHandler* ioh = nullptr;
 #if defined (__linux__)
-    ioh = new EpollIOHandler();
+    ioh = new EpollIOHandler(cluster);
 #else
 #error unsupported system: only __linux__ supported at this moment
 #endif
@@ -53,7 +53,7 @@ void IOHandler::block(PollData &pd, bool isRead){
             //set the state to Waiting
             *utp = POLL_WAIT;
     else
-        std::cout << "Exception on open rut" << std::endl;
+        std::cerr << "Exception on open rut" << std::endl;
 
     pdlock.unlock();
 
@@ -68,7 +68,7 @@ void IOHandler::block(PollData &pd, bool isRead){
             else if(*utp == POLL_WAIT)
                 *utp = old;
             else
-                std::cout << "Exception on rut"<< std::endl;
+                std::cerr << "Exception on rut"<< std::endl;
     });
     std::function<void()> f(std::cref(lambda));
     kThread::currentKT->currentUT->suspend(f); //ask for immediate suspension so the possible closing/notifications do not get lost
@@ -123,13 +123,14 @@ void IOHandler::PollReady(PollData* pd, int flag){
     if(flag & UT_IOWRITE) unblock(pd, false);
 }
 
-void IOHandler::defaultIOFunc(void*){
+void IOHandler::pollerFunc(void* ioh){
     //wait for IO
     //TODO: fix this
     usleep(10000);
+    IOHandler* cioh = (IOHandler*)ioh;
     while(true){
 //       std::cout << "Waiting ... " << std::endl;
-       IOHandler::ioHandler->poll(-1, 0);
+       cioh->poll(-1, 0);
    }
 }
 

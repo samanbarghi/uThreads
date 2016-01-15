@@ -12,10 +12,9 @@
 #include <mutex>
 #include <condition_variable>
 
-#include "../generic/basics.h"
+#include "generic/basics.h"
 #include "runtime/Cluster.h"
 #include "runtime/uThread.h"
-#include "io/IOHandler.h"
 
 
 class kThread : public IntrusiveList<kThread>::Link {

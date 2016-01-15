@@ -24,10 +24,17 @@ private:
         this->fd = fd;
         this->pd.fd = fd;
     }
+
+    IOHandler* ioh;
 public:
 
-    Connection(): fd(-1){}
-    Connection(int fd) : fd(fd){ init(fd, true);};
+    Connection(): fd(-1){
+        ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
+    }
+    Connection(int fd) : fd(fd){
+        ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
+        init(fd, true);
+    };
     ~Connection();
 
     void pollOpen();
