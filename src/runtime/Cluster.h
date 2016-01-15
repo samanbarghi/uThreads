@@ -24,6 +24,7 @@ class Cluster {
     friend class kThread;
     friend class uThread;
     friend class Connection;
+    friend class IOHandler;
 private:
     ReadyQueue* readyQueue;                              //There is one ready queue per cluster
     std::atomic_uint  numberOfkThreads;                 //Number of kThreads in this Cluster

@@ -76,7 +76,7 @@ void EpollIOHandler::_Poll(int timeout){
         if(ev->events & (EPOLLOUT|EPOLLHUP|EPOLLERR))
             mode |= UT_IOWRITE;
         if(mode)
-            this->PollReady((PollData*) ev->data.ptr , mode);
+            this->PollReadyBulk((PollData*) ev->data.ptr , mode, i==n-1);
     }
 
 }
