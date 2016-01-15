@@ -115,7 +115,14 @@ private:
             //Push the kThread to the stack before waiting on it's cv
             ktStack.push_back(*kThread::currentKT);
             kThread::currentKT->cv_flag = false;                                //Set the cv_flag so we can identify spurious wakeup from notifies
-            while (size == 0 ) {kThread::currentKT->cv.wait(mlock);}
+            while (size == 0 ) {
+
+                //if the kThread were unblocked by another thread
+                //it's been removed from the stack, so put it back on the stack
+                if(kThread::currentKT->cv_flag){
+                    ktStack.push_back(*kThread::currentKT);
+                }
+                kThread::currentKT->cv.wait(mlock);}
             //if another thread did not wake us up
             //Remove ourselves from the stack
             if(!kThread::currentKT->cv_flag){
