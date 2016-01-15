@@ -12,6 +12,7 @@
 #include <iostream>
 
 IOHandler::IOHandler(Cluster& cluster): ioKT(cluster){
+    //TODO: kThread should only run this ioUT otherwise it can block some other uThreads
     localCluster = &cluster;
     ioUT = uThread::create();
     ioUT->start(cluster, (ptr_t)IOHandler::pollerFunc, this, nullptr, nullptr);
