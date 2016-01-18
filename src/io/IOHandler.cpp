@@ -11,12 +11,7 @@
 #include <sys/types.h>
 #include <iostream>
 
-IOHandler::IOHandler(Cluster& cluster): ioKT(cluster){
-    //TODO: kThread should only run this ioUT otherwise it can block some other uThreads
-    localCluster = &cluster;
-    ioUT = uThread::create();
-    ioUT->start(cluster, (ptr_t)IOHandler::pollerFunc, this, nullptr, nullptr);
-}
+IOHandler::IOHandler(Cluster& cluster): ioKT(nullptr), bulkCounter(0), localCluster(&cluster){}
 
 IOHandler* IOHandler::create(Cluster& cluster){
     IOHandler* ioh = nullptr;
@@ -30,6 +25,8 @@ IOHandler* IOHandler::create(Cluster& cluster){
 
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
+    if(slowpath(ioKT == nullptr))
+        ioKT = new kThread(*localCluster, &IOHandler::pollerFunc, (ptr_t)this);
 
     int res = _Open(pd.fd, &pd);
     //TODO: handle epoll errors
@@ -60,7 +57,7 @@ void IOHandler::block(PollData &pd, bool isRead){
 
     uThread* old = kThread::currentKT->currentUT;
 //    MapAndUnlock<int, PollData>* mau = new MapAndUnlock<int,PollData>(&this->IOTable, fd, pd, sndMutex);
-    //TODO:decrease the capture list to avoid hitting the hip
+    //TODO:decrease the capture list to avoid hitting the heap
     auto lambda([&pd, &utp, &old](){
         if(pd.closing) return;
         std::lock_guard<std::mutex> pdlock(pd.mtx);
@@ -139,7 +136,6 @@ void IOHandler::unblockBulk(PollData* pd, bool isRead, bool isLast){
         localCluster->scheduleMany(bulkQueue, bulkCounter);
         bulkCounter =0;
     }
-
 }
 
 void IOHandler::PollReady(PollData* pd, int flag){
@@ -155,6 +151,9 @@ void IOHandler::PollReadyBulk(PollData* pd, int flag, bool isLast){
 
     uThread *rut = nullptr, *wut = nullptr;
 
+    //if it's ready for both read and write, avoid putting it multiple
+    //times on the local queue. For now there is no way a uThread can
+    //be blocked on both read and write, so the following is safe.
     if(flag & UT_IOREAD) unblockBulk(pd, true, isLast);
     if(flag & UT_IOWRITE) unblockBulk(pd, false, isLast);
 }

@@ -22,11 +22,11 @@ class kThread : public IntrusiveList<kThread>::Link {
 	friend class uThread;
 	friend class Cluster;
 	friend class ReadyQueue;
-	friend class LibInitializer;
+	friend class IOHandler;
 
 private:
 	kThread(bool);                          //This is only for the initial kThread
-	kThread(Cluster&, std::function<void()>); //This constructor is used to create kThreads that runs a single uThread with the assigned function
+	kThread(Cluster&, std::function<void(ptr_t)>, ptr_t); //This constructor is used to create kThreads that runs a single uThread with the assigned function
 	std::thread threadSelf;                //pthread related to the current thread
 	uThread* mainUT;                        //Each kThread has a default uThread that is used when there is no work available
 
@@ -40,6 +40,7 @@ private:
 	bool cv_flag;                                           //A flag to track the state of kThread on CV stack
 
 	void run();                         //The run function for the thread.
+	void runWithFunc(std::function<void(ptr_t)>, ptr_t);
 	void initialize(bool);              //Initialization function for kThread
 	static inline void postSwitchFunc(uThread*, void*) __noreturn;
 
