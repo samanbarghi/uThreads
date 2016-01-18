@@ -33,7 +33,7 @@ void uThread::reset(){
 void uThread::destory(bool force=false) {
     //check whether we should cache it or not
     totalNumberofUTs--;
-    if(force || (utCache.push(this)<0)){
+    if(slowpath(force) || (utCache.push(this)<0)){
         free((ptr_t)(stackBottom));                              //Free the allocated memory for stack
     }
 }
@@ -86,7 +86,7 @@ void uThread::yield(){
 
 void uThread::migrate(Cluster* cluster){
 	assert(cluster != nullptr);
-	if(kThread::currentKT->localCluster == cluster)     //no need to migrate
+	if(slowpath(kThread::currentKT->localCluster == cluster))     //no need to migrate
 		return;
 	kThread::currentKT->currentUT->currentCluster= cluster;
 	kThread::currentKT->currentUT->state = MIGRATE;
@@ -99,7 +99,7 @@ void uThread::suspend(std::function<void()>& func) {
 }
 
 void uThread::resume(){
-    if(state== WAITING || state== INITIALIZED || state == MIGRATE || state == YIELD){
+    if(fastpath(state== WAITING || state== INITIALIZED || state == MIGRATE || state == YIELD)){
         state = READY;
         currentCluster->schedule(this);          //Put thread back to readyqueue
     }

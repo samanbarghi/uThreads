@@ -45,7 +45,7 @@ void IOHandler::block(PollData &pd, bool isRead){
     {
         *utp = nullptr;  //consume the notification and return;
         return;
-    }else if(*utp == nullptr)
+    }else if(fastpath(*utp == nullptr))
             //set the state to Waiting
             *utp = POLL_WAIT;
     else
@@ -54,7 +54,6 @@ void IOHandler::block(PollData &pd, bool isRead){
     pdlock.unlock();
 
     uThread* old = kThread::currentKT->currentUT;
-//    MapAndUnlock<int, PollData>* mau = new MapAndUnlock<int,PollData>(&this->IOTable, fd, pd, sndMutex);
     //TODO:decrease the capture list to avoid hitting the heap
     auto lambda([&pd, &utp, &old](){
         if(pd.closing) return;
@@ -68,7 +67,6 @@ void IOHandler::block(PollData &pd, bool isRead){
     });
     std::function<void()> f(std::cref(lambda));
     kThread::currentKT->currentUT->suspend(f); //ask for immediate suspension so the possible closing/notifications do not get lost
-//    std::cout << "Wake up from suspension" << std::endl;
     //when epoll returns this ut will be back on readyQueue and pick up from here
 }
 int IOHandler::close(PollData &pd){
@@ -93,13 +91,13 @@ void IOHandler::reset(PollData& pd){
 
 void IOHandler::unblock(PollData* pd, bool isRead){
     //if closing is set no need to process
-    if(pd->closing.load())  return;
+    if(slowpath(pd->closing.load()))  return;
 
     std::lock_guard<std::mutex> pdlock(pd->mtx);
     uThread** ut = isRead ? &pd->rut : &pd->wut;
     uThread* old = *ut;
 
-    if(old == POLL_READY)
+    if(slowpath(old == POLL_READY))
         return;
     if(old == nullptr || old == POLL_WAIT)
        *ut = POLL_READY;
@@ -117,8 +115,8 @@ void IOHandler::unblockBulk(PollData* pd, bool isRead, bool isLast){
     uThread* old = *ut;
 
     //if closing is set no need to process
-    if(pd->closing.load());
-    else if(old == POLL_READY);
+    if(slowpath(pd->closing.load()));
+    else if(slowpath(old == POLL_READY));
     else if(old == nullptr || old == POLL_WAIT)
        *ut = POLL_READY;
     else if(old > POLL_WAIT){
@@ -130,7 +128,7 @@ void IOHandler::unblockBulk(PollData* pd, bool isRead, bool isLast){
 
     //if this is the last item return by the poller
     //Bulk push everything to the related cluster ready Queue
-    if(isLast && bulkCounter >0){
+    if(slowpath(isLast && bulkCounter >0)){
         localCluster->scheduleMany(bulkQueue, bulkCounter);
         bulkCounter =0;
     }

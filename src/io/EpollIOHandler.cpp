@@ -31,8 +31,8 @@ int EpollIOHandler::_Open(int fd, PollData *pd){
     ev.data.ptr = (void*)pd;
 
     int res = epoll_ctl(epoll_fd,EPOLL_CTL_ADD, fd, &ev);
-    if(res < 0)
-        std::cout << "EPOLL ADD ERROR: " << errno << std::endl;
+    if(slowpath(res < 0))
+        std::cerr<< "EPOLL ADD ERROR: " << errno << std::endl;
     return res;
 }
 
@@ -41,13 +41,13 @@ int EpollIOHandler::_Close(int fd){
    int res;
 
   res = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, &ev);
-  if(res < 0 && errno != 2)
-      std::cout << "EPOLL DEL ERROR: " << errno << std::endl;
+  if(slowpath(res < 0 && errno != 2))
+      std::cerr<< "EPOLL DEL ERROR: " << errno << std::endl;
   return res;
 }
 
 void EpollIOHandler::_Poll(int timeout){
-    if(!epoll_fd)
+    if(slowpath(!epoll_fd))
         return;
 
     int32_t n, mode;
@@ -62,20 +62,20 @@ void EpollIOHandler::_Poll(int timeout){
     }
 
     //timeout
-    if(n == 0 )
+    if(slowpath(n == 0 ))
         return;
 
     for(int i = 0; i < n; i++) {
         ev = &events[i];
         //std::cout << "FD(" << ev->data.fd << ") EPOLL RETURN RESULT" << std::endl;
-        if(ev->events == 0)
+        if(slowpath(ev->events == 0))
             continue;
         mode = 0;
         if(ev->events & (EPOLLIN|EPOLLRDHUP|EPOLLHUP|EPOLLERR))
             mode |= UT_IOREAD;
         if(ev->events & (EPOLLOUT|EPOLLHUP|EPOLLERR))
             mode |= UT_IOWRITE;
-        if(mode)
+        if(fastpath(mode))
             this->PollReadyBulk((PollData*) ev->data.ptr , mode, i==n-1);
     }
 

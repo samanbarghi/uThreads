@@ -111,7 +111,7 @@ private:
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         spinLock(mlock);
         //if spin was not enough, simply block
-        if (size == 0) {
+        if (fastpath(size == 0)) {
             //Push the kThread to the stack before waiting on it's cv
             ktStack.push_back(*kThread::currentKT);
             kThread::currentKT->cv_flag = false;                                //Set the cv_flag so we can identify spurious wakeup from notifies

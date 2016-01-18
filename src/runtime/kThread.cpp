@@ -78,7 +78,7 @@ void kThread::switchContext(void* args){
 	}else{													//If empty try to fill
 
 	    localCluster->tryGetWorks(*ktrq);				//Try to fill the local queue
-		if(!ktrq->empty()){									//If there is more work start using it
+		if(!ktrq->empty()){								//If there is more work start using it
 			ut = ktrq->front();
 			ktrq->pop_front();
 		}else{												//If no work is available, Switch to defaultUt
@@ -94,7 +94,7 @@ void kThread::initialize(bool isDefaultKT) {
 	kThread::currentKT		=	this;											//Set the thread_locl pointer to this thread, later we can find the executing thread by referring to this
 	kThread::ktReadyQueue = new IntrusiveList<uThread>();
 
-	if(isDefaultKT){
+	if(slowpath(isDefaultKT)){
 	    mainUT = uThread::create(defaultStackSize);
         mainUT->start(*localCluster, (ptr_t)kThread::defaultRun, this, nullptr, nullptr); //if defaultKT, then create a stack for mainUT cause pthread stack is assigned to initUT
     }
@@ -125,7 +125,7 @@ void kThread::defaultRun(void* args) {
 void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 
     kThread* ck = kThread::currentKT;
-	if(ck->currentUT != kThread::currentKT->mainUT){			//DefaultUThread do not need to be managed here
+	if(fastpath(ck->currentUT != kThread::currentKT->mainUT)){			//DefaultUThread do not need to be managed here
 		switch (ck->currentUT->state) {
 			case TERMINATED:
 				ck->currentUT->destory(false);
