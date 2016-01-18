@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <iostream>
 
-IOHandler::IOHandler(Cluster& cluster): ioKT(nullptr), bulkCounter(0), localCluster(&cluster){}
+IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this){}
 
 IOHandler* IOHandler::create(Cluster& cluster){
     IOHandler* ioh = nullptr;
@@ -25,8 +25,6 @@ IOHandler* IOHandler::create(Cluster& cluster){
 
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
-    if(slowpath(ioKT == nullptr))
-        ioKT = new kThread(*localCluster, &IOHandler::pollerFunc, (ptr_t)this);
 
     int res = _Open(pd.fd, &pd);
     //TODO: handle epoll errors
