@@ -11,6 +11,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <functional>
 
 #include "generic/basics.h"
 #include "runtime/Cluster.h"
@@ -24,11 +25,12 @@ class kThread : public IntrusiveList<kThread>::Link {
 	friend class LibInitializer;
 
 private:
-	kThread(bool);							//This is only for the initial kThread
-	std::thread *threadSelf;				//pthread related to the current thread
-	uThread* mainUT;						//Each kThread has a default uThread that is used when there is no work available
+	kThread(bool);                          //This is only for the initial kThread
+	kThread(Cluster&, std::function<void()>); //This constructor is used to create kThreads that runs a single uThread with the assigned function
+	std::thread threadSelf;                //pthread related to the current thread
+	uThread* mainUT;                        //Each kThread has a default uThread that is used when there is no work available
 
-	static kThread defaultKT;				//default main thread of the application
+	static kThread defaultKT;               //default main thread of the application
 	/* make user create the kernel thread for ths syscalls as required */
 
 	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread

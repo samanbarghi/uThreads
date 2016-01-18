@@ -16,25 +16,27 @@ __thread IntrusiveList<uThread>* kThread::ktReadyQueue  = nullptr;
 //__thread uThread* kThread::currentUT = nullptr;
 
 
-kThread::kThread(bool initial) : cv_flag(true){       //This is only for initial kThread
-	threadSelf = new std::thread();                                     //For default kThread threadSelf should be initialized to current thread
+kThread::kThread(bool initial) : cv_flag(true), threadSelf(){       //This is only for initial kThread
 	localCluster = &Cluster::defaultCluster;
 	initialize(true);
 	uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
-	currentUT = uThread::initUT;                                        //Current running uThread is the initial one
+	currentUT = uThread::initUT;                                                //Current running uThread is the initial one
 
 	initialSynchronization();
 }
+kThread::kThread(Cluster& cluster, std::function<void()> func) : localCluster(&cluster), threadSelf(&kThread::run, this){
+	threadSelf.detach();                                                       //Detach the thread from the running thread
+	initialSynchronization();
 
-kThread::kThread(Cluster& cluster) : localCluster(&cluster), cv_flag(false){
-	threadSelf = new std::thread(&kThread::run, this);
-	threadSelf->detach();                                                       //Detach the thread from the running thread
+}
+
+kThread::kThread(Cluster& cluster) : localCluster(&cluster), cv_flag(false), threadSelf(&kThread::run, this){
+	threadSelf.detach();                                                       //Detach the thread from the running thread
 	initialSynchronization();
 }
 
-kThread::kThread() : localCluster(&Cluster::defaultCluster){
-	threadSelf = new std::thread(&kThread::run, this);
-	threadSelf->detach();                                                       //Detach the thread from the running thread
+kThread::kThread() : localCluster(&Cluster::defaultCluster), threadSelf(&kThread::run, this){
+	threadSelf.detach();                                                       //Detach the thread from the running thread
 	initialSynchronization();
 }
 
@@ -55,6 +57,7 @@ void kThread::initialSynchronization(){
 void kThread::run() {
 	initialize(false);
 	defaultRun(this);
+
 }
 
 void kThread::switchContext(uThread* ut,void* args) {
@@ -147,11 +150,9 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args=nullptr) {
 }
 
 std::thread::native_handle_type kThread::getThreadNativeHandle() {
-	assert(threadSelf != nullptr);
-	return threadSelf->native_handle();
+	return threadSelf.native_handle();
 }
 
 std::thread::id kThread::getThreadID() {
-	assert(threadSelf != nullptr);
-	return threadSelf->get_id();
+	return threadSelf.get_id();
 }
