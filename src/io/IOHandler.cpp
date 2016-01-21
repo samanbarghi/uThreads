@@ -58,11 +58,12 @@ void IOHandler::block(PollData &pd, bool isRead){
     auto lambda([&pd, &utp, &old](){
         if(pd.closing) return;
         std::lock_guard<std::mutex> pdlock(pd.mtx);
-          if(*utp == POLL_READY)
+          if(*utp == POLL_READY){
+                *utp = nullptr;         //consume the notification and resume
                 old->resume();
-            else if(*utp == POLL_WAIT)
+          }else if(*utp == POLL_WAIT){
                 *utp = old;
-            else
+          }else
                 std::cerr << "Exception on rut"<< std::endl;
     });
     std::function<void()> f(std::cref(lambda));
