@@ -35,6 +35,9 @@ private:
      * user-level under no contention). However, it might be necessary
      * to change it to a compare-and-swap or reader/writer lock if this
      * ever needed to be portable.
+     * Another reason for lack of contention is that epoll is used in
+     * edge-triggered and it is usually the case that either the poller
+     * or the requesting uThread is updating the semaphore.
      */
 
     std::mutex mtx;                                     //Mutex that protects this  PollData
