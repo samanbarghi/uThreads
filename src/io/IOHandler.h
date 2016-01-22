@@ -27,6 +27,16 @@ class PollData{
     friend IOHandler;
 private:
 
+    /*
+     * Potentially there is only the poller thread and maximum two
+     * other uThreads (one for read, one for write) can contend for
+     * this mutex, the overhead of acquiring and releasing this
+     * mutex under linux is not that high (due to futex operating in
+     * user-level under no contention). However, it might be necessary
+     * to change it to a compare-and-swap or reader/writer lock if this
+     * ever needed to be portable.
+     */
+
     std::mutex mtx;                                     //Mutex that protects this  PollData
     int fd = -1;                                       //file descriptor
 
@@ -35,8 +45,6 @@ private:
 
     std::atomic<bool> closing;
 
-    //TODO: in case of multiple epollfd's, this structure can include
-    //a pointer to the related epollfd that is being used on.
     void reset(){
        std::lock_guard<std::mutex> pdlock(this->mtx);
        rut = nullptr;
