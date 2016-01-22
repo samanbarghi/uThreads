@@ -109,24 +109,37 @@ void IOHandler::unblock(PollData &pd, bool isRead){
 
 }
 
-void IOHandler::unblockBulk(PollData &pd, bool isRead, bool isLast){
+void IOHandler::unblockBulk(PollData &pd, int flag, bool isLast){
 
-    std::lock_guard<std::mutex> pdlock(pd.mtx);
-    uThread** ut = isRead ? &pd.rut : &pd.wut;
-    uThread* old = *ut;
+    //if it's closing no need to process
+    if(fastpath(!pd.closing.load())){
+        std::lock_guard<std::mutex> pdlock(pd.mtx);
+        uThread **rut = &pd.rut, **wut = &pd.wut;
+        uThread *rold = *rut, *wold = *wut;
 
-    //if closing is set no need to process
-    if(slowpath(old == POLL_READY));
-    else if(slowpath(pd.closing.load()));
-    else if(old == nullptr || old == POLL_WAIT)
-       *ut = POLL_READY;
-    else if(old > POLL_WAIT){
-        *ut = nullptr;
-        old->state = READY;
-        bulkQueue.push_back(*old);
-        bulkCounter++;
+        if(flag & UT_IOREAD){
+            if(rold == POLL_READY);
+            else if(rold == nullptr || rold == POLL_WAIT)
+               *rut = POLL_READY;
+            else if(rold > POLL_WAIT){
+                *rut = nullptr;
+                rold->state = READY;
+                bulkQueue.push_back(*rold);
+                bulkCounter++;
+            }
+        }
+        if(flag & UT_IOWRITE){
+            if(wold == POLL_READY);
+            else if(wold == nullptr || wold == POLL_WAIT)
+               *wut = POLL_READY;
+            else if(wold > POLL_WAIT){
+                *wut = nullptr;
+                wold->state = READY;
+                bulkQueue.push_back(*wold);
+                bulkCounter++;
+            }
+        }
     }
-
     //if this is the last item return by the poller
     //Bulk push everything to the related cluster ready Queue
     if(slowpath(isLast && bulkCounter >0)){
@@ -136,16 +149,11 @@ void IOHandler::unblockBulk(PollData &pd, bool isRead, bool isLast){
 }
 
 void IOHandler::PollReady(PollData &pd, int flag){
-
     if(flag & UT_IOREAD) unblock(pd, true);
     if(flag & UT_IOWRITE) unblock(pd, false);
 }
 void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
-    //if it's ready for both read and write, avoid putting it multiple
-    //times on the local queue. For now there is no way a uThread can
-    //be blocked on both read and write, so the following is safe.
-    if(flag & UT_IOREAD) unblockBulk(pd, true, isLast);
-    if(flag & UT_IOWRITE) unblockBulk(pd, false, isLast);
+        unblockBulk(pd, flag, isLast);
 }
 
 void IOHandler::pollerFunc(void* ioh){
