@@ -165,12 +165,8 @@ void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
 }
 
 void IOHandler::pollerFunc(void* ioh){
-    //wait for IO
-    //TODO: fix this
-    usleep(10000);
     IOHandler* cioh = (IOHandler*)ioh;
     while(true){
-//       std::cout << "Waiting ... " << std::endl;
        cioh->poll(-1, 0);
    }
 }
