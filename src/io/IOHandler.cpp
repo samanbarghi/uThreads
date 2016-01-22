@@ -109,42 +109,36 @@ void IOHandler::unblock(PollData &pd, bool isRead){
 
 }
 
-void IOHandler::unblockBulk(PollData &pd, int flag, bool isLast){
+void IOHandler::unblockBulk(PollData &pd, int flag){
 
     //if it's closing no need to process
-    if(fastpath(!pd.closing.load())){
-        std::lock_guard<std::mutex> pdlock(pd.mtx);
-        uThread **rut = &pd.rut, **wut = &pd.wut;
-        uThread *rold = *rut, *wold = *wut;
+    if(slowpath(pd.closing.load())) return;
 
-        if(flag & UT_IOREAD){
-            if(rold == POLL_READY);
-            else if(rold == nullptr || rold == POLL_WAIT)
-               *rut = POLL_READY;
-            else if(rold > POLL_WAIT){
-                *rut = nullptr;
-                rold->state = READY;
-                bulkQueue.push_back(*rold);
-                bulkCounter++;
-            }
-        }
-        if(flag & UT_IOWRITE){
-            if(wold == POLL_READY);
-            else if(wold == nullptr || wold == POLL_WAIT)
-               *wut = POLL_READY;
-            else if(wold > POLL_WAIT){
-                *wut = nullptr;
-                wold->state = READY;
-                bulkQueue.push_back(*wold);
-                bulkCounter++;
-            }
+    std::lock_guard<std::mutex> pdlock(pd.mtx);
+    uThread **rut = &pd.rut, **wut = &pd.wut;
+    uThread *rold = *rut, *wold = *wut;
+
+    if(flag & UT_IOREAD){
+        //if(rold == POLL_READY) //do nothing
+        if(rold == nullptr || rold == POLL_WAIT)
+           *rut = POLL_READY;
+        else if(rold > POLL_WAIT){
+            *rut = nullptr;
+            rold->state = READY;
+            bulkQueue.push_back(*rold);
+            bulkCounter++;
         }
     }
-    //if this is the last item return by the poller
-    //Bulk push everything to the related cluster ready Queue
-    if(slowpath(isLast && bulkCounter >0)){
-        localCluster->scheduleMany(bulkQueue, bulkCounter);
-        bulkCounter =0;
+    if(flag & UT_IOWRITE){
+        //if(wold == POLL_READY) do nothing
+        if(wold == nullptr || wold == POLL_WAIT)
+           *wut = POLL_READY;
+        else if(wold > POLL_WAIT){
+            *wut = nullptr;
+            wold->state = READY;
+            bulkQueue.push_back(*wold);
+            bulkCounter++;
+        }
     }
 }
 
@@ -153,7 +147,13 @@ void IOHandler::PollReady(PollData &pd, int flag){
     if(flag & UT_IOWRITE) unblock(pd, false);
 }
 void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
-        unblockBulk(pd, flag, isLast);
+    unblockBulk(pd, flag);
+    //if this is the last item return by the poller
+    //Bulk push everything to the related cluster ready Queue
+    if(slowpath(isLast) && bulkCounter >0){
+        localCluster->scheduleMany(bulkQueue, bulkCounter);
+        bulkCounter =0;
+    }
 }
 
 void IOHandler::pollerFunc(void* ioh){

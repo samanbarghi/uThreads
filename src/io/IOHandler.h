@@ -76,8 +76,8 @@ class IOHandler{
 
 
     void block(PollData &pd, bool isRead);
-    void unblock(PollData &pd, bool isRead);
-    void unblockBulk(PollData &pd, int flag, bool isLast);
+    void inline unblock(PollData &pd, bool isRead);
+    void inline unblockBulk(PollData &pd, int flag);
 
     Cluster*    localCluster;       //Cluster that this Handler belongs to
     kThread    ioKT;               //IO kThread
