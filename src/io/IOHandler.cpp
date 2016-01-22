@@ -149,6 +149,10 @@ void IOHandler::unblockBulk(PollData &pd, int flag){
             bulkCounter++;
         }
     }
+    /* It is the responsibility of the caller function
+     * to call scheduleMany to schedule the piled-up
+     * uThreads on the related cluster.
+     */
 }
 
 void IOHandler::PollReady(PollData &pd, int flag){
@@ -170,4 +174,3 @@ void IOHandler::pollerFunc(void* ioh){
        cioh->poll(-1, 0);
    }
 }
-
