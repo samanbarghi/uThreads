@@ -90,12 +90,12 @@ void IOHandler::reset(PollData& pd){
     pd.reset();
 }
 
-void IOHandler::unblock(PollData* pd, bool isRead){
+void IOHandler::unblock(PollData &pd, bool isRead){
     //if closing is set no need to process
-    if(slowpath(pd->closing.load()))  return;
+    if(slowpath(pd.closing.load()))  return;
 
-    std::lock_guard<std::mutex> pdlock(pd->mtx);
-    uThread** ut = isRead ? &pd->rut : &pd->wut;
+    std::lock_guard<std::mutex> pdlock(pd.mtx);
+    uThread** ut = isRead ? &pd.rut : &pd.wut;
     uThread* old = *ut;
 
     if(slowpath(old == POLL_READY))
@@ -109,14 +109,14 @@ void IOHandler::unblock(PollData* pd, bool isRead){
 
 }
 
-void IOHandler::unblockBulk(PollData* pd, bool isRead, bool isLast){
+void IOHandler::unblockBulk(PollData &pd, bool isRead, bool isLast){
 
-    std::lock_guard<std::mutex> pdlock(pd->mtx);
-    uThread** ut = isRead ? &pd->rut : &pd->wut;
+    std::lock_guard<std::mutex> pdlock(pd.mtx);
+    uThread** ut = isRead ? &pd.rut : &pd.wut;
     uThread* old = *ut;
 
     //if closing is set no need to process
-    if(slowpath(pd->closing.load()));
+    if(slowpath(pd.closing.load()));
     else if(slowpath(old == POLL_READY));
     else if(old == nullptr || old == POLL_WAIT)
        *ut = POLL_READY;
@@ -135,19 +135,12 @@ void IOHandler::unblockBulk(PollData* pd, bool isRead, bool isLast){
     }
 }
 
-void IOHandler::PollReady(PollData* pd, int flag){
-    assert(pd != nullptr);
-
-    uThread *rut = nullptr, *wut = nullptr;
+void IOHandler::PollReady(PollData &pd, int flag){
 
     if(flag & UT_IOREAD) unblock(pd, true);
     if(flag & UT_IOWRITE) unblock(pd, false);
 }
-void IOHandler::PollReadyBulk(PollData* pd, int flag, bool isLast){
-    assert(pd != nullptr);
-
-    uThread *rut = nullptr, *wut = nullptr;
-
+void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
     //if it's ready for both read and write, avoid putting it multiple
     //times on the local queue. For now there is no way a uThread can
     //be blocked on both read and write, so the following is safe.

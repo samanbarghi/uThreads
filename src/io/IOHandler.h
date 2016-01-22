@@ -68,8 +68,8 @@ class IOHandler{
 
 
     void block(PollData &pd, bool isRead);
-    void unblock(PollData *pd, bool isRead);
-    void unblockBulk(PollData *pd, bool isRead, bool isLast);
+    void unblock(PollData &pd, bool isRead);
+    void unblockBulk(PollData &pd, bool isRead, bool isLast);
 
     Cluster*    localCluster;       //Cluster that this Handler belongs to
     kThread    ioKT;               //IO kThread
@@ -84,8 +84,8 @@ class IOHandler{
 
 protected:
     IOHandler(Cluster&);
-    void PollReady(PollData* pd, int flag);                   //When there is notification update pollData and unblock the related ut
-    void PollReadyBulk(PollData* pd, int flag, bool isLast);                   //When there is notification update pollData and unblock the related ut
+    void PollReady(PollData &pd, int flag);                   //When there is notification update pollData and unblock the related ut
+    void PollReadyBulk(PollData &pd, int flag, bool isLast);                   //When there is notification update pollData and unblock the related ut
    ~IOHandler(){};  //should be protected
 
 public:
