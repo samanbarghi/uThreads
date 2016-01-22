@@ -116,8 +116,8 @@ void IOHandler::unblockBulk(PollData &pd, bool isRead, bool isLast){
     uThread* old = *ut;
 
     //if closing is set no need to process
-    if(slowpath(pd.closing.load()));
-    else if(slowpath(old == POLL_READY));
+    if(slowpath(old == POLL_READY));
+    else if(slowpath(pd.closing.load()));
     else if(old == nullptr || old == POLL_WAIT)
        *ut = POLL_READY;
     else if(old > POLL_WAIT){
