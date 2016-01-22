@@ -76,7 +76,7 @@ class IOHandler{
 
 
     void block(PollData &pd, bool isRead);
-    void inline unblock(PollData &pd, bool isRead);
+    void inline unblock(PollData &pd, int flag);
     void inline unblockBulk(PollData &pd, int flag);
 
     Cluster*    localCluster;       //Cluster that this Handler belongs to

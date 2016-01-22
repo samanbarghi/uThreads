@@ -90,23 +90,32 @@ void IOHandler::reset(PollData& pd){
     pd.reset();
 }
 
-void IOHandler::unblock(PollData &pd, bool isRead){
-    //if closing is set no need to process
-    if(slowpath(pd.closing.load()))  return;
+void IOHandler::unblock(PollData &pd, int flag){
+    //if it's closing no need to process
+    if(slowpath(pd.closing.load())) return;
 
     std::lock_guard<std::mutex> pdlock(pd.mtx);
-    uThread** ut = isRead ? &pd.rut : &pd.wut;
-    uThread* old = *ut;
+    uThread **rut = &pd.rut, **wut = &pd.wut;
+    uThread *rold = *rut, *wold = *wut;
 
-    if(slowpath(old == POLL_READY))
-        return;
-    if(old == nullptr || old == POLL_WAIT)
-       *ut = POLL_READY;
-    else if(old > POLL_WAIT){
-        *ut = nullptr;
-        old->resume();
+    if(flag & UT_IOREAD){
+        //if(rold == POLL_READY) //do nothing
+        if(rold == nullptr || rold == POLL_WAIT)
+           *rut = POLL_READY;
+        else if(rold > POLL_WAIT){
+            *rut = nullptr;
+            rold->resume();
+        }
     }
-
+    if(flag & UT_IOWRITE){
+        //if(wold == POLL_READY) do nothing
+        if(wold == nullptr || wold == POLL_WAIT)
+           *wut = POLL_READY;
+        else if(wold > POLL_WAIT){
+            *wut = nullptr;
+            wold->resume();
+        }
+    }
 }
 
 void IOHandler::unblockBulk(PollData &pd, int flag){
@@ -143,8 +152,7 @@ void IOHandler::unblockBulk(PollData &pd, int flag){
 }
 
 void IOHandler::PollReady(PollData &pd, int flag){
-    if(flag & UT_IOREAD) unblock(pd, true);
-    if(flag & UT_IOWRITE) unblock(pd, false);
+    unblock(pd, flag);
 }
 void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
     unblockBulk(pd, flag);
