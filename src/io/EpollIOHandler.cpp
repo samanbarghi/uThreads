@@ -46,6 +46,16 @@ int EpollIOHandler::_Close(int fd){
   return res;
 }
 
+/*
+ * Since epoll events are in edge-triggered mode for performance
+ * reasons the event contains both EPOLLIN and EPOLLOUT. This can
+ * cause unnecessary events being triggered for write or read when
+ * not needed. e.g., when read reaches EAGAIN but there is no interest
+ * for write readiness, epoll returns both EPOLLIN and EPOLLOUT for the
+ * specified file descriptor. Thus, in processing the returned events in
+ * IOHandeler, it is important to make sure this does not add extra overhead.
+ */
+
 void EpollIOHandler::_Poll(int timeout){
     if(slowpath(!epoll_fd))
         return;
