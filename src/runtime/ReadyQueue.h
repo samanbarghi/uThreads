@@ -26,16 +26,20 @@ private:
     std::mutex mtx;
     volatile unsigned int  size;
 
+    size_t lastPopNum;
 
-    ReadyQueue() : size(0) {};
+
+    ReadyQueue() : size(0), lastPopNum(0) {};
     virtual ~ReadyQueue() {};
 
     ssize_t removeMany(IntrusiveList<uThread> &nqueue){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
         size_t numkt = kThread::currentKT->localCluster->getNumberOfkThreads();
-        assert(numkt != 0);
-        size_t popnum = (size / numkt) ? (size / numkt) : 1; //TODO: This number exponentially decreases, any better way to handle this?
+        size_t popnum = (size / numkt) ? (size / numkt) : 1;
+        popnum = (popnum < lastPopNum)? lastPopNum : popnum;
+        popnum = (popnum > size)      ? size       : popnum;
+        lastPopNum = popnum;
 
         uThread* ut;
         ut = queue.front();
