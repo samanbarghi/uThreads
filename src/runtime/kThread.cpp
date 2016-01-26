@@ -25,17 +25,14 @@ kThread::kThread(bool initial) : cv_flag(true), threadSelf(){       //This is on
 	initialSynchronization();
 }
 kThread::kThread(Cluster& cluster, std::function<void(ptr_t)> func, ptr_t args) : localCluster(&cluster), threadSelf(&kThread::runWithFunc, this, func, args){
-	threadSelf.detach();                                                       //Detach the thread from the running thread
 	initialSynchronization();
 }
 
 kThread::kThread(Cluster& cluster) : localCluster(&cluster), cv_flag(false), threadSelf(&kThread::run, this){
-	threadSelf.detach();                                                       //Detach the thread from the running thread
 	initialSynchronization();
 }
 
 kThread::kThread() : localCluster(&Cluster::defaultCluster), threadSelf(&kThread::run, this){
-	threadSelf.detach();                                                       //Detach the thread from the running thread
 	initialSynchronization();
 }
 
