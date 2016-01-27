@@ -62,22 +62,22 @@ class Cluster {
     friend class Connection;
     friend class IOHandler;
 private:
-    ReadyQueue* readyQueue;                              //There is one ready queue per cluster
-    std::atomic_uint  numberOfkThreads;                 //Number of kThreads in this Cluster
+    ReadyQueue* readyQueue;                             //There is one ready queue per cluster
+    std::atomic_uint numberOfkThreads;                  //Number of kThreads in this Cluster
 
     static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
     uint64_t clusterID;                                 //Current Cluster ID
 
     void initialSynchronization();
 
-    void schedule(uThread*);                                    //Put uThread in the ready queue to be picked up by related kThreads
-    void scheduleMany(IntrusiveList<uThread>&, size_t );        //Schedule many uThreads
+    void schedule(uThread*);                            //Put uThread in the ready queue to be picked up by related kThreads
+    void scheduleMany(IntrusiveList<uThread>&, size_t); //Schedule many uThreads
 
-    ssize_t getWork(IntrusiveList<uThread>&);                   //Get a unit of work or if not available sleep till there is one
-    uThread* tryGetWork();                                      //Get a unit of work from the ready queue
-    ssize_t tryGetWorks(IntrusiveList<uThread>&);               //Get as many uThreads as possible from the readyQueue and move them to local queue
+    ssize_t getWork(IntrusiveList<uThread>&);           //Get a unit of work or if not available sleep till there is one
+    uThread* tryGetWork();                              //Get a unit of work from the ready queue
+    ssize_t tryGetWorks(IntrusiveList<uThread>&);       //Get as many uThreads as possible from the readyQueue and move them to local queue
 
-    static void invoke(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn;        //Function to invoke the run function of a uThread
+    static void invoke(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn; //Function to invoke the run function of a uThread
 
     IOHandler* iohandler;
 public:
@@ -104,18 +104,23 @@ public:
      * @copybrief Cluster::defaultCluster
      * @return defaultCluster
      */
-    Cluster& getDefaultCluster() const {return defaultCluster;}
+    Cluster& getDefaultCluster() const {
+        return defaultCluster;
+    }
     /**
      * @brief Get the ID of Cluster
      * @return The ID of the cluster
      */
-    uint64_t getClusterID() const {return clusterID;};
+    uint64_t getClusterID() const {
+        return clusterID;
+    }
     /**
      * @brief Total number of kThreads belonging to this cluster
      * @return Total number of kThreads belonging to this cluster
      */
-    size_t  getNumberOfkThreads() const { return numberOfkThreads.load();};
-
+    size_t getNumberOfkThreads() const {
+        return numberOfkThreads.load();
+    }
 };
 
 #endif /* UTHREADS_CLUSTER_H_ */
