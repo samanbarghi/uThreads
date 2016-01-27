@@ -27,58 +27,196 @@
 #include "runtime/Cluster.h"
 #include "runtime/uThread.h"
 
-
-class kThread : public IntrusiveList<kThread>::Link {
-	friend class uThread;
-	friend class Cluster;
-	friend class ReadyQueue;
-	friend class IOHandler;
-
+/**
+ * @class kThread
+ * @brief Object to represent kernel threads
+ *
+ * kThread is an interface for underlying kernel threads. kThreads
+ * are pulling and pushing uThreads from ReadyQueue provided by the Cluster
+ * and context switch to them and execute them. Each kThread belongs to
+ * only and only one Cluster and it can only pull uThreads from the ReadyQueue
+ * of that Cluster. However, kThreads can push uThreads to the ReadyQueue
+ * of any cluster.
+ *
+ * defaultKT is the first kernel thread that executes and is responsible for
+ * running the main() function. defaultKT is created when the program starts.
+ *
+ * Each kThread has a mainUT which is a uThread used when the ReadyQueue
+ * is empty. mainUT is used to switch out the previous uThread and either
+ * pull uThreads from the ReadyQueue if it's not empty, or block on a
+ * condition variable waiting for uThreads to be pushed to the queue.
+ *
+ * kThreads can be created by passing a Cluster to the constructor of
+ * the kThread.
+ */
+class kThread: public IntrusiveList<kThread>::Link {
+    friend class uThread;
+    friend class Cluster;
+    friend class ReadyQueue;
+    friend class IOHandler;
 private:
-	kThread(bool);                          //This is only for the initial kThread
-	kThread(Cluster&, std::function<void(ptr_t)>, ptr_t); //This constructor is used to create kThreads that runs a single uThread with the assigned function
-	std::thread threadSelf;                //pthread related to the current thread
-	uThread* mainUT;                        //Each kThread has a default uThread that is used when there is no work available
+    //Only used for defaultKT
+    kThread();
+    /*
+     * Create kThreads that runs a single uThread
+     * with the assigned function. These kThreads do
+     * not consumer from the ReadyQueu or switch context
+     * to another uThread.
+     */
+    kThread(Cluster&, std::function<void(ptr_t)>, ptr_t);
 
-	static kThread defaultKT;               //default main thread of the application
-	/* make user create the kernel thread for ths syscalls as required */
+    /*
+     * The actual kernel thread behind this kThread.
+     * on Linux it will be a pthread.
+     */
+    std::thread threadSelf;
+     /* Holds the id of the underlying kernel thread */
+    std::thread::id threadID;
 
-	Cluster* localCluster;					//Pointer to the cluster that provides jobs for this kThread
+    /*
+     * Each kThread has a main uThread that is
+     * only used when there is no uThread available
+     * on the ReadyQueue. kThread then switches to
+     * this uThread and block on the ReadyQueue waiting
+     * for more uThreads to arrive.
+     */
+    uThread* mainUT;
 
-	static __thread IntrusiveList<uThread>* ktReadyQueue;	//internal readyQueue for kThread, to avoid locking and unlocking the cluster ready queue
-	std::condition_variable   cv;                           //condition variable to be used by ready queue in the Cluster
-	bool cv_flag;                                           //A flag to track the state of kThread on CV stack
+    /*
+     * defaultKT represents the main thread
+     * when program starts. This is the thread
+     * responsible for running the main function.
+     * defaultKT is created at the start of the
+     * program and cannot be accessed by user.
+     */
+    static kThread defaultKT;
 
-	void run();                         //The run function for the thread.
-	void runWithFunc(std::function<void(ptr_t)>, ptr_t);
-	void initialize(bool);              //Initialization function for kThread
-	static inline void postSwitchFunc(uThread*, void*) __noreturn;
+    /*
+     * Pointer to the cluster this kThread
+     * belongs to. Each kThread only belongs to
+     * one Cluster and can pull uThreads from
+     * the ReadyQueue of that Cluster. kThreads
+     * can however push uThreads to ReadyQueue
+     * of other clusters upon uThread migration.
+     */
+    Cluster* localCluster;
+    /*
+     * local readyQueue for kThread which is only
+     * accessible by this kThread (thus thread local).
+     * This is used to bulk pull uThreads from the central
+     * ReadyQueue. The bulk operation lowers the overhead
+     * of pulling threads and accessing the central ReadyQueue
+     * as the central ReadyQueue i protected by a mutex.
+     */
+    static __thread IntrusiveList<uThread>* ktReadyQueue;
+
+    /*
+     *  Condition variable to be used by Cluster's
+     *  ReadyQueue. Each kThread provides its own CV
+     *  in order to provide a LIFO blocking order.
+     */
+    std::condition_variable cv;
+    /*
+     * cv_flag is used to detect spurious
+     * wake ups.
+     */
+    bool cv_flag;
+
+    /*
+     * Pointer to the current running uThread
+     */
+    uThread* currentUT;
+
+    /*
+     * Pointer to the current kThread. This thread local variable
+     * is used by running uThreads to identify the current
+     * kThread that they are being executed over.
+     */
+    static __thread kThread* currentKT;
+
+    static std::atomic_uint totalNumberofKTs;
+    /*
+     * This function initializes the required
+     * variables for the kThread and then call
+     * defaultRun.
+     */
+    void run();
+    /*
+     * The main loop of the kThread. This function
+     * is only used by mainUT of the kThread. It loops
+     * and pulls uThreads from the ReadyQueue or
+     * blocks until uThreads are available.
+     */
+    static void defaultRun(void*) __noreturn;
+    /*
+     * Same as run() but instead of running the defaultRun
+     * run the passed function. It is used to create kThreads
+     * that do not get involved with the ReadyQueue such as
+     * IOHandler thread.
+     */
+    void runWithFunc(std::function<void(ptr_t)>, ptr_t);
+    //Initialization function for kThread
+    void initialize(bool);
+     //Switch the context to the passed uThread.
+    void switchContext(uThread*, void* args = nullptr);
+    //Pull a uThread from readyQueue and switch the context
+    void switchContext(void* args = nullptr);
+
+    /*
+     * This function is called after context of the uThread
+     * is switched. It is necessary in order to schedule the
+     * previous thread or perform the required maintentance
+     * before gonig forward.
+     */
+    static inline void postSwitchFunc(uThread*, void*) __noreturn;
 
     void initialSynchronization();
 
+
 public:
     //TODO: add a function to create multiple kThreads on a given cluster
-	kThread();                              //Create a kThread on defaultCluster
-	kThread(Cluster&);                      //Create a single kThread on cluster
-	virtual ~kThread();
+    /**
+     * @brief Create a kThread on the passed cluster
+     * @param The Cluster this kThread belongs to.
+     */
+    kThread(Cluster&);
+    virtual ~kThread();
 
     ///kThread cannot be copied or assigned.
-    Cluster(const Cluster&) = delete;
+    kThread(const kThread&) = delete;
     /// @copydoc kThread(const kThread&)
-    const Cluster& operator=(const Cluster&) = delete;
+    const kThread& operator=(const kThread&) = delete;
 
-	uThread* currentUT;						//Pointer to the current running ut
-	static __thread kThread* currentKT;
+    /**
+     * @brief return the native hanlde for the kernel thread
+     * @return native handle for the kThread
+     *
+     * In linux this is pthread_t representation of the thread.
+     */
+    std::thread::native_handle_type getThreadNativeHandle();
+    /**
+     * @brief returns the kernel thread ID
+     * @return the kThread ID
+     *
+     * The returned type depends on the platform.
+     */
+    std::thread::id getThreadID();
 
-	static std::atomic_uint totalNumberofKTs;
+    /**
+     * @brief Get the pointer to the current kThread
+     * @return current kThread
+     *
+     * This is necessary when a uThread wants to find which
+     * kThread it is being executed over.
+     */
+    static kThread* currentkThread(){return kThread::currentKT;}
 
-	void switchContext(uThread*,void* args = nullptr);			//Put current uThread in ready Queue and run the passed uThread
-	void switchContext(void* args = nullptr);					//Put current uThread in readyQueue and pop a new uThread to run
-	static void defaultRun(void*) __noreturn;
-
-
-	std::thread::native_handle_type getThreadNativeHandle();
-	std::thread::id	getThreadID();
+    /**
+     *
+     * @return total number of kThreads running under
+     * the program.
+     */
+    static uint getTotalNumberOfkThreads(){return totalNumberofKTs.load();}
 };
 
 #endif /* UTHREADS_KTHREADS_H_ */
