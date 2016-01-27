@@ -15,6 +15,7 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 
+#include <stdlib.h>
 #include "Cluster.h"
 #include "kThread.h"
 #include "ReadyQueue.h"
@@ -31,7 +32,10 @@ Cluster::Cluster(): numberOfkThreads(0) {
 }
 
 void Cluster::initialSynchronization(){
-    clusterID = clusterMasterID++;
+    if(clusterMasterID +1 < UINTMAX_MAX)
+        clusterID = clusterMasterID++;
+    else
+        exit(EXIT_FAILURE);
 }
 
 Cluster::~Cluster() {}
