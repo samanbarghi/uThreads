@@ -62,6 +62,11 @@ public:
 	kThread(Cluster&);                      //Create a single kThread on cluster
 	virtual ~kThread();
 
+    ///kThread cannot be copied or assigned.
+    Cluster(const Cluster&) = delete;
+    /// @copydoc kThread(const kThread&)
+    const Cluster& operator=(const Cluster&) = delete;
+
 	uThread* currentUT;						//Pointer to the current running ut
 	static __thread kThread* currentKT;
 
