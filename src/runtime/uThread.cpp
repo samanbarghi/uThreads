@@ -31,7 +31,7 @@ std::atomic_ulong uThread::uThreadMasterID(0);
 uThreadCache uThread::utCache;
 Cluster Cluster::defaultCluster;
 uThread* uThread::initUT = nullptr;
-kThread kThread::defaultKT(true);
+kThread kThread::defaultKT;
 
 /******************************************/
 void uThread::reset(){
