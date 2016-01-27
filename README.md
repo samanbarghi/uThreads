@@ -12,5 +12,5 @@ A concurrent user-level thread library implemented in C++. uThreads only support
 
 # Usage
 
-Link your program with uThreads library (-luThreads). You can find examples under `test` directory. Perform `make test` to compile them and the binary will be created under bin directory. 
+Include "uThreads/uThreads.h" in your source file. Link your program with uThreads library (-luThreads). You can find examples under `test` directory. Perform `make test` to compile them and the binary will be created under bin directory. 
 
