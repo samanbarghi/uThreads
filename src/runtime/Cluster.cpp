@@ -26,26 +26,27 @@ Cluster::Cluster(): numberOfkThreads(0) {
     //TODO: IO handler should be only applicable for IO Clusters
     //or be created with the first IO call
     readyQueue = new ReadyQueue();
-	initialSynchronization();
+    initialSynchronization();
     iohandler  = IOHandler::create(*this);
 }
 
 void Cluster::initialSynchronization(){
-	clusterID = clusterMasterID++;
+    clusterID = clusterMasterID++;
 }
 
 Cluster::~Cluster() {}
 
 void Cluster::invoke(funcvoid3_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3) {
-	func(arg1, arg2, arg3);
-	kThread::currentKT->currentUT->state	= TERMINATED;
-	kThread::currentKT->switchContext();
-	//Context will be switched in kThread
+    func(arg1, arg2, arg3);
+    kThread::currentKT->currentUT->state	= TERMINATED;
+    kThread::currentKT->switchContext();
+    //Context will be switched in kThread
 }
 
 void Cluster::schedule(uThread* ut) {
-	assert(ut != nullptr);
-	readyQueue->push(ut);								//Scheduling uThread
+    assert(ut != nullptr);
+    //Scheduling uThread
+    readyQueue->push(ut);
 }
 
 void Cluster::scheduleMany(IntrusiveList<uThread>& queue, size_t count){
@@ -55,11 +56,14 @@ void Cluster::scheduleMany(IntrusiveList<uThread>& queue, size_t count){
 
 uThread* Cluster::tryGetWork(){return readyQueue->tryPop();}
 
-//pop more than one uThread from the ready queue and push into the kthread local ready queue
+/*
+ * iPull multiple uThreads from the ready queue and
+ * push into the kThread local queue. This is nonblocking.
+ */
 ssize_t Cluster::tryGetWorks(IntrusiveList<uThread> &queue){
-	return readyQueue->tryPopMany(queue);
+    return readyQueue->tryPopMany(queue);
 }
 
 ssize_t Cluster::getWork(IntrusiveList<uThread> &queue) {
-	return readyQueue->popMany(queue);
+    return readyQueue->popMany(queue);
 }

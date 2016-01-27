@@ -29,7 +29,33 @@
 class uThread;
 class ReadyQueue;
 class IOHandler;
-
+/**
+ * @class Cluster
+ * @brief Scheduler and Cluster of kThreads.
+ *
+ * Cluster is an entity that contains multiple kernel threads (kThread).
+ * Each cluster is responsible for maintaining a ready queue
+ * and performing basic scheduling tasks. Programs can have as many Clusters
+ * as is necessary.
+ * The Cluster's ReadyQueue is a multiple-producer multiple-consumer queue where
+ * consumers are only kThreads belonging to that Cluster, and producers can be any
+ * running kThread. kThreads constantly push and pull uThreads to/from the ReadyQueue.
+ * Cluster is an interface between kThreads and the ReadyQueue,
+ * and also provides the means to group kThreads together.
+ *
+ * Each Cluster has its own IOHandler. IOHandler is responsible for
+ * providing asynchronous nonblocking access to IO devices. For now each
+ * instance of an IOHandler has its own dedicated poller thread, which
+ * means each cluster has a dedicated IO poller thread when it is created.
+ * This might change in the future.
+ * Each uThread that requires access to IO uses the IOHandler to avoid blocking
+ * the kThread, if the device is ready for read or write, the uThread continues
+ * otherwise it blocks until it is ready, and the kThread execute another uThread
+ * from the ReadyQueue.
+ *
+ * When the program starts a defaultCluster is created for the kernel thread that
+ * runs the _main_ function. defaultCluster can be used like any other clusters.
+ */
 class Cluster {
     friend class kThread;
     friend class uThread;
@@ -46,22 +72,48 @@ private:
 
     void schedule(uThread*);                                    //Put uThread in the ready queue to be picked up by related kThreads
     void scheduleMany(IntrusiveList<uThread>&, size_t );        //Schedule many uThreads
+
     ssize_t getWork(IntrusiveList<uThread>&);                   //Get a unit of work or if not available sleep till there is one
     uThread* tryGetWork();                                      //Get a unit of work from the ready queue
     ssize_t tryGetWorks(IntrusiveList<uThread>&);               //Get as many uThreads as possible from the readyQueue and move them to local queue
+
+    static void invoke(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn;        //Function to invoke the run function of a uThread
 
     IOHandler* iohandler;
 public:
     Cluster();
     virtual ~Cluster();
 
+    /**
+     * Cluster cannot be copied or assigned.
+     */
     Cluster(const Cluster&) = delete;
+    /// @copydoc Cluster(const Cluster&)
     const Cluster& operator=(const Cluster&) = delete;
 
-    static Cluster defaultCluster;                                          //Default cluster
-    static void invoke(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn;        //Function to invoke the run function of a uThread
-
-    uint64_t getClusterID() const {return clusterID;};                      //Get the ID of current Cluster
+    /**
+     * @brief defaultCluster includes the main thread.
+     * This cluster is created before the program starts.
+     * The first kernel thread that runs the main function
+     * (defaultKT) belongs to this cluster. It is static
+     * and can be reached either through Cluster::defaultCluster
+     * or getDefaultCluster() function.
+     */
+    static Cluster defaultCluster;
+    /**
+     * @copybrief Cluster::defaultCluster
+     * @return defaultCluster
+     */
+    Cluster& getDefaultCluster() const {return defaultCluster;}
+    /**
+     * @brief Get the ID of Cluster
+     * @return The ID of the cluster
+     */
+    uint64_t getClusterID() const {return clusterID;};
+    /**
+     * @brief Total number of kThreads belonging to this cluster
+     * @return Total number of kThreads belonging to this cluster
+     */
     size_t  getNumberOfkThreads() const { return numberOfkThreads.load();};
 
 };
