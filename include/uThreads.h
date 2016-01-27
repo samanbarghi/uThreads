@@ -14,12 +14,6 @@
  *     You should have received a copy of the GNU General Public License
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
-/*
- * uThreads.h
- *
- *  Created on: Jan 5, 2016
- *      Author: Saman Barghi
- */
 
 #ifndef SRC_INCLUDE_UTHREADS_H_
 #define SRC_INCLUDE_UTHREADS_H_
