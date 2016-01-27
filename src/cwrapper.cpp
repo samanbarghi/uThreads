@@ -29,16 +29,16 @@ extern "C"{
 WCluster* cluster_create(){  return reinterpret_cast<WCluster*>( new Cluster( ) );}
 void cluster_destroy(WCluster* cluster){ delete reinterpret_cast<Cluster*>(cluster); }
 WCluster* cluster_get_default(){ return reinterpret_cast<WCluster*>(&Cluster::defaultCluster);}
-WCluster* cluster_get_current(){ return reinterpret_cast<WCluster*>(const_cast<Cluster*>(&kThread::currentKT->currentUT->getCurrentCluster()));}
+WCluster* cluster_get_current(){ return reinterpret_cast<WCluster*>(const_cast<Cluster*>(&uThread::currentUThread()->getCurrentCluster()));}
 uint64_t cluster_get_id(WCluster* cluster){ return reinterpret_cast<Cluster*>(cluster)->getClusterID();}
 /**********************************/
 
 /*************kThread**************/
 WkThread* kThread_create(WCluster* cluster){  return reinterpret_cast<WkThread*>( new kThread( *reinterpret_cast<Cluster*>(cluster) ) );}
 void WkThread_destroy(WkThread* kt){ delete reinterpret_cast<kThread*>(kt); }
-pthread_t kThread_get_current_pthread_id(){ return kThread::currentKT->getThreadNativeHandle(); }
+pthread_t kThread_get_current_pthread_id(){ return kThread::currentkThread()->getThreadNativeHandle(); }
 pthread_t kThread_get_pthread_id(WkThread* kt){ return (reinterpret_cast<kThread*>(kt))->getThreadNativeHandle(); }
-uint64_t kThread_count(){ return kThread::totalNumberofKTs.load(); }
+uint64_t kThread_count(){ return kThread::getTotalNumberOfkThreads(); }
 /**********************************/
 
 
@@ -51,9 +51,9 @@ WuThread* uThread_create_with_cluster(WCluster* cluster, void *(*start_routine) 
     ut->start(*reinterpret_cast<Cluster*>(cluster), (ptr_t)start_routine, arg );
     return reinterpret_cast<WuThread*>( ut);
 }
-void uThread_migrate(WCluster* cluster){ kThread::currentKT->currentUT->migrate(reinterpret_cast<Cluster*>(cluster)); }
+void uThread_migrate(WCluster* cluster){ uThread::currentUThread()->migrate(reinterpret_cast<Cluster*>(cluster)); }
 void uThread_destroy(WuThread* ut){ delete reinterpret_cast<uThread*>(ut); }
-void uThread_yield(){ kThread::currentKT->currentUT->yield(); }
+void uThread_yield(){ uThread::currentUThread()->yield(); }
 /**********************************/
 
 

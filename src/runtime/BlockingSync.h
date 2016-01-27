@@ -71,8 +71,8 @@ protected:
     bool internalAcquire(mword timeout) {
 
         lock.lock();
-        assert(OL || owner != kThread::currentKT->currentUT);//Mutex cannot have recursive locking
-        if fastpath(owner != nullptr && (!OL || owner != kThread::currentKT->currentUT)) {
+        assert(OL || owner != uThread::currentUThread());//Mutex cannot have recursive locking
+        if fastpath(owner != nullptr && (!OL || owner != uThread::currentUThread())) {
             return bq.suspend(lock); // release lock, false: timeout
         } else {
             /*
@@ -82,7 +82,7 @@ protected:
              * 		+ The type is OwnlerLock and the calling thread is holding the lock
              * Otherwise, block and wait for the lock
              */
-            owner = kThread::currentKT->currentUT;
+            owner = uThread::currentUThread();
             lock.unlock();
             return true;
         }
@@ -106,7 +106,7 @@ public:
 
     void release() {
         lock.lock();
-        assert(owner == kThread::currentKT->currentUT);//Attempt to release lock by non-owner
+        assert(owner == uThread::currentUThread());//Attempt to release lock by non-owner
         internalRelease();
     }
 };
@@ -129,7 +129,7 @@ public:
 //  }
     mword release() {
         lock.lock();
-        assert(owner == kThread::currentKT->currentUT); //, "attempt to release lock by non-owner");
+        assert(owner == uThread::currentUThread()); //, "attempt to release lock by non-owner");
         if (--counter == 0)
             internalRelease();
         else

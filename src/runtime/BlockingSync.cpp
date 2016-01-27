@@ -21,22 +21,22 @@ bool BlockingQueue::suspend(std::mutex& lock) {
 
 	IntrusiveList<uThread>* lqueue = &(this->queue);
 	auto lambda([&, this](){
-	    this->queue.push_back(*kThread::currentKT->currentUT);
+	    this->queue.push_back(*uThread::currentUThread());
 	    lock.unlock();
 	});
 	std::function<void()> f(std::cref(lambda));
-    kThread::currentKT->currentUT->suspend(f);
+	uThread::currentUThread()->suspend(f);
     //TODO: we do not have any cancellation yet, so this line will not be reached at all
     return true;
 }
 
 bool BlockingQueue::suspend(Mutex& mutex) {
 	auto lambda([&, this](){
-	        this->queue.push_back(*kThread::currentKT->currentUT);
+	        this->queue.push_back(*uThread::currentUThread());
 	        mutex.release();
 	    });
 	    std::function<void()> f(std::cref(lambda));
-	    kThread::currentKT->currentUT->suspend(f);
+	    uThread::currentUThread()->suspend(f);
     return true;
 }
 
