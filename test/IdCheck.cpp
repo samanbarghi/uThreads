@@ -23,7 +23,7 @@
 using namespace std;
 static void voidrun(void* args){
 
-	cout << "uThreadID : " << kThread::currentKT->currentUT->getUthreadId() << " | Total uts: " << kThread::currentKT->currentUT->getTotalNumberofUTs() << endl;
+	cout << "uThreadID : " << uThread::currentUThread()->getUthreadId() << " | Total uts: " << uThread::currentUThread()->getTotalNumberofUTs() << endl;
 	uThread::terminate();
 }
 
@@ -32,8 +32,8 @@ static void run(void* args){
 	int value = *(int*)args;
 
 	uThread* ut = uThread::create();
-	ut->start(kThread::currentKT->currentUT->getCurrentCluster(), (ptr_t)voidrun, &value);
-	cout << "uThreadID : " << kThread::currentKT->currentUT->getUthreadId() << " | Total uts: " << kThread::currentKT->currentUT->getTotalNumberofUTs() << endl;
+	ut->start(uThread::currentUThread()->getCurrentCluster(), (ptr_t)voidrun, &value);
+	cout << "uThreadID : " << uThread::currentUThread()->getUthreadId() << " | Total uts: " << uThread::currentUThread()->getTotalNumberofUTs() << endl;
 	uThread::terminate();
 }
 int main(){

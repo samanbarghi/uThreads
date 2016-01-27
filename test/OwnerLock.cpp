@@ -28,7 +28,7 @@ static void run(void* args){
 	int value = *(int*)args;
 
 	mtx.acquire();
-	cout << kThread::currentKT->currentUT->getCurrentCluster().getClusterID() << ":uThreadID: " << kThread::currentKT->currentUT->getUthreadId() << ": This is run #" <<  value << " - counter #" << counter++ << endl;
+	cout << uThread::currentUThread()->getCurrentCluster().getClusterID() << ":uThreadID: " << uThread::currentUThread()->getUthreadId() << ": This is run #" <<  value << " - counter #" << counter++ << endl;
 	mtx.release();
 }
 int main(){
