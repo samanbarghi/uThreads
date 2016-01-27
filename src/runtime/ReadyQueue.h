@@ -1,4 +1,4 @@
-/*******************************************************************************
+/* *****************************************************************************
  *     Copyright © 2015, 2016 Saman Barghi
  *
  *     This program is free software: you can redistribute it and/or modify
@@ -26,22 +26,44 @@ class uThread;
 class ReadyQueue {
     friend class Cluster;
 private:
-    IntrusiveList<uThread> queue;           //The main producer-consumer queue to keep track of uThreads in the Cluster
+    std::mutex mtx;//mutex to protect the queue
+    volatile unsigned int  size;//keep track of the size of the queue
     /*
-     * One of the goals is to use a LIFO ordering
-     * for kThreads, so the queue can self-adjust
-     * itself based on the workload
+     * The main producer-consumer queue
+     * to keep track of uThreads in the Cluster
      */
-    IntrusiveList<kThread> ktStack;         //an stack to keep track of blocked kThreads on the queue
-    std::mutex mtx;
-    volatile unsigned int  size;
-
+    IntrusiveList<uThread> queue;
+    /*
+     * The goal is to use a LIFO ordering
+     * for kThreads, so the queue can self-adjust
+     * itself based on the workload. Thus, a stack
+     * is used to keep track of kThreads blocked on
+     * an empty queue.
+     */
+    IntrusiveList<kThread> ktStack;
+    /*
+     * This variable is used to keep
+     * a history of the latest number
+     * of uThreads popped from the queue.
+     * This will be used to calculate the
+     * new number.
+     */
     size_t lastPopNum;
-
 
     ReadyQueue() : size(0), lastPopNum(0) {};
     virtual ~ReadyQueue() {};
 
+    /*
+     * Remove multiple uThreads from the queue
+     * all at once. 'popnum' is calcluated
+     * everytime based on the last popnum, size
+     * of the queue and number of kThreads in
+     * the cluster.
+     * All uThreads are directly moved to the
+     * local queue of the kThread (nqueue) passed
+     * to the function in bulk. This saves a lot
+     * of overhead.
+     */
     ssize_t removeMany(IntrusiveList<uThread> &nqueue){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
@@ -58,6 +80,14 @@ private:
         return popnum;
     }
 
+    /*
+     * Unblock a kThread that is waiting for
+     * uThreads to arrive. Each kThread has its
+     * own Condition Variable, and since kThreads
+     * are lining up in LIFO order in ktStack, thus
+     * this code pops a kThread and unblock it through
+     * sending a notificiation on its CV.
+     */
     inline void unBlock(){
          if(!ktStack.empty()){
             kThread* kt = ktStack.back();
@@ -97,10 +127,20 @@ private:
             }
         }
     }
+    /*
+     * Try popping one item and do not block.
+     * give up immediately if cannot acquire
+     * the mutex or the queue is empty.
+     */
 
     uThread* tryPop() {                     //Try to pop one item, or return null
         uThread* ut = nullptr;
-        std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);              //Do not block on the lock, return immediately to switch to mainUT
+        /*
+         * Do not block on the lock,
+         * return immediately.
+         */
+        std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
+        // no uThreads, or could not acquire the lock
         if (mlock.owns_lock() && size != 0) {
             ut = queue.front();
             queue.pop_front();
@@ -109,14 +149,31 @@ private:
         return ut;
     }
 
-    ssize_t tryPopMany(IntrusiveList<uThread> &nqueue) {//Try to pop ReadyQueueSize/#kThreads in cluster from the ready Queue
+    /*
+     * Try popping multiple items and do not block.
+     * give up immediately if cannot acquire
+     * the mutex or the queue is empty.
+     */
+    ssize_t tryPopMany(IntrusiveList<uThread> &nqueue) {
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
-        if(!mlock.owns_lock() || size == 0) return -1; // There is no uThreads
+        if(!mlock.owns_lock() || size == 0) return -1;
         return removeMany(nqueue);
     }
 
+    /*
+     * Pop multiple items from the queue and block
+     * if the queue is empty.
+     */
     ssize_t popMany(IntrusiveList<uThread> &nqueue) {//Pop with condition variable
-        //Spin before blocking
+        /*
+         * Spin before blocking to avoid the
+         * system call overhead of cv wait on
+         * the consumer and cv wake up on the
+         * producer.
+         * TODO: This was added before spin-block
+         * functionality of mutex, might not be
+         * needed anymore.
+         */
         for (int spin = 1; spin < 52 * 1024; spin++) {
             if (size > 0) break;
             asm volatile("pause");
@@ -124,21 +181,34 @@ private:
 
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         spinLock(mlock);
-        //if spin was not enough, simply block
         if (fastpath(size == 0)) {
-            //Push the kThread to the stack before waiting on it's cv
+            //Push the kThread to stack before waiting on it's cv
             ktStack.push_back(*kThread::currentKT);
-            kThread::currentKT->cv_flag = false;                                //Set the cv_flag so we can identify spurious wakeup from notifies
+            /*
+             * Set the cv_flag so we can identify
+             * spurious wake ups from notifies
+             */
+            kThread::currentKT->cv_flag = false;
             while (size == 0 ) {
-
-                //if the kThread were unblocked by another thread
-                //it's been removed from the stack, so put it back on the stack
+                /*
+                 * cv_flag can be true if the kThread were unblocked
+                 * by another thread but by the time it acquires the
+                 * mutex the queue is empty again. If so the kThread
+                 * has been removed from the stack, thus put it back
+                 * on the stack
+                 */
                 if(kThread::currentKT->cv_flag){
                     ktStack.push_back(*kThread::currentKT);
                 }
-                kThread::currentKT->cv.wait(mlock);}
-            //if another thread did not unblock current kThread
-            //Remove ourselves from the stack
+                kThread::currentKT->cv.wait(mlock);
+            }
+            /*
+             * If cv_flag is not true, it means the kThread
+             * experienced a spurious wake up and thus
+             * has not been removed from the stack. Since
+             * ktStack is intrusive the kThread can remove
+             * itself from the stack.
+             */
             if(!kThread::currentKT->cv_flag){
                 ktStack.remove(*kThread::currentKT);
             }
@@ -146,7 +216,7 @@ private:
         ssize_t res = removeMany(nqueue);
         /*
          * Each kThread unblocks the next kThread in case
-         * PushMany was called. First, only one kThread can always hold
+         * PushMany was called. Only one kThread can always hold
          * the lock, so there is no benefit in unblocking all kThreads just
          * for them to be blocked by the mutex.
          * Chaining the unblocking has the benefit of distributing the cost
@@ -157,6 +227,10 @@ private:
         return res;
     }
 
+    /*
+     * Push a single uThread to the queue and
+     * wake one kThread up.
+     */
     void push(uThread* ut) {
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         spinLock(mlock);
@@ -165,7 +239,13 @@ private:
         unBlock();
     }
 
-    //Push multiple uThreads in the ready Queue
+    /*
+     * Push multiple uThreads to the queue, and wake one
+     * kThread up. That kThread then wakes up another kThread
+     * if there are still uThreads left in the queue.
+     * uThreads are copied directly from the passed container
+     * to the queue in bulk to avoid the overhead.
+     */
     void pushMany(IntrusiveList<uThread>& utList, size_t count){
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         spinLock(mlock);
@@ -174,6 +254,9 @@ private:
         unBlock();
     }
 
+    /*
+     * Whether the queue is empty or not.
+     */
     bool empty() const {
         return queue.empty();
     }
