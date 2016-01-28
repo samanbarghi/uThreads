@@ -19,59 +19,151 @@
 #define UTHREADS_INCLUDE_NETWORK_H_
 #include "io/IOHandler.h"
 
-class Connection{
+/**
+ * @class Connection
+ * @brief Represents a network connection
+ *
+ * Connection class is a wrapper around socket and
+ * provides the ability to do nonblocking read/write on sockets, and nonblocking
+ * accept. It first tries to read/write/accept and if the fd is not ready
+ * uses the underlying polling structure to wait for the fd to be ready. Thus,
+ * the uThread that is calling these functions are blocked.
+ */
+class Connection {
     friend IOHandler;
 private:
+    /* used whith polling */
     PollData pd;
-    int fd = -1;             //related file descriptor
+    //related file descriptor
+    int fd = -1;
+
+    /* The underlying polling structure */
+    IOHandler* ioh;
+    /**
+     * @brief Initialize the Connection
+     * @param fd the File Descriptor
+     * @param poll Whether to add this to the underlying polling structure or not
+     */
     void init(int fd, bool poll);
+    Connection(int fd, bool poll) :
+            fd(fd) {
+        init(fd, poll);
+    }
+    ;
 
-    Connection(int fd, bool poll): fd(fd){init(fd, poll);};
-
-
-    //set
-    void setFD(int fd){
+    void setFD(int fd) {
         this->fd = fd;
         this->pd.fd = fd;
     }
 
-    IOHandler* ioh;
 public:
 
-    Connection(): fd(-1){
+    /**
+     * @brief Create a Connection that does not have
+     *
+     * This is useful for accept or socket functions that require
+     * a Connection object without fd being set
+     */
+    Connection() :
+            fd(-1) {
         ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
     }
-    Connection(int fd) : fd(fd){
+    /**
+     * @brief Create a connection object with the provided fd
+     * @param fd
+     *
+     * If the connection is already established by other means, set the
+     * fd and add it to the polling structure
+     */
+    Connection(int fd) :
+            fd(fd) {
         ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
         init(fd, true);
-    };
+    }
+    ;
     ~Connection();
 
+    ///If the fd has not been added to the poller, do it with PollOpen
     void pollOpen();
+
+    ///Reset the underlying PollData structure
     void pollReset();
 
-    //IO functions
-    ssize_t recv(void *buf, size_t len, int flags);
-    ssize_t recvfrom(void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
-    ssize_t send(const void *buf, size_t len, int flags);
-    ssize_t sendmsg(const struct msghdr *msg, int flags);
+    /**
+     * @brief nonblocking accept syscall and updating the passed Connection
+     * object
+     * @param conn Pointer to a Connection object that is not initialized
+     * @return same as accept system call
+     *
+     */
+    int accept(Connection &conn, struct sockaddr *addr, socklen_t *addrlen);
 
+    /**
+     * @brief Same as socket syscall, set the fd for current connection
+     * @return same as socket syscall
+     */
+    int socket(int domain, int type, int protocol);
+
+    /**
+     * @brief Same as listen syscall on current fd
+     * @return Same as listen syscall
+     */
+    int listen(int backlog);
+
+
+    /**
+     * @brief Call the underlying system call on Connection's file descriptor
+     * @return Same as what the related systemcall returns
+     *
+     * This function calls the system call with the same name. If the socket is
+     * ready for the required function it returns immediately, otherwise it
+     * blocks in the user-level (blocks uThread not kThread), and polls the
+     * file descriptor until it becomes ready.
+     *
+     * The return results is the same as the underlying system call except that
+     * the following condition is never true when the function returns:
+     *  (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)
+     *
+     *  which means the Connection object does the polling and only returns
+     *  when an error occurs or the socket is ready.
+     */
+    ssize_t recv(void *buf, size_t len, int flags);
+    /// @copydoc recv
+    ssize_t recvfrom(void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
+    /// @copydoc recv(void *buf, size_t len, int flags)
+    ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+    /// @copydoc recv(void *buf, size_t len, int flags)
+    int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+                 unsigned int flags, struct timespec *timeout);
+
+    /// @copydoc recv(void *buf, size_t len, int flags)
+    ssize_t send(const void *buf, size_t len, int flags);
+    /// @copydoc recv(void *buf, size_t len, int flags)
+    ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
+            const struct sockaddr *dest_addr, socklen_t addrlen);
+    /// @copydoc recv(void *buf, size_t len, int flags)
+    ssize_t sendmsg(const struct msghdr *msg, int flags);
+    /// @copydoc recv(void *buf, size_t len, int flags)
+    int sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
+                 unsigned int flags);
+
+    /// @copydoc recv(void *buf, size_t len, int flags)
     ssize_t read(void *buf, size_t count);
+    /// @copydoc recv(void *buf, size_t len, int flags)
     ssize_t write(const void *buf, size_t count);
 
-    int accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen);
-    int socket(int domain, int type, int protocol);
-    int listen(int backlog);
+    /**
+     * @brief closes the socket
+     * @return the same as close system call
+     */
     int close();
 
-    //getters
-    int getFd() const {
-        return fd;
-    }
+    /**
+     * @brief return the Connection's file descriptor
+     * @return file descriptor
+     */
+    int getFd() const {return fd;}
 
 };
-
-
-
 
 #endif /* UTHREADS_INCLUDE_NETWORK_H_ */
