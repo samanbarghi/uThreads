@@ -68,6 +68,17 @@ private:
     static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
     uint64_t clusterID;                                 //Current Cluster ID
 
+    /**
+     * @brief defaultCluster includes the main thread.
+     * This cluster is created before the program starts.
+     * The first kernel thread that runs the main function
+     * (defaultKT) belongs to this cluster. It is static
+     * and can be reached either through Cluster::defaultCluster
+     * or getDefaultCluster() function.
+     */
+    static Cluster defaultCluster;
+
+
     void initialSynchronization();
 
     void schedule(uThread*);                            //Put uThread in the ready queue to be picked up by related kThreads
@@ -91,25 +102,19 @@ public:
     /// @copydoc Cluster(const Cluster&)
     const Cluster& operator=(const Cluster&) = delete;
 
-    /**
-     * @brief defaultCluster includes the main thread.
-     * This cluster is created before the program starts.
-     * The first kernel thread that runs the main function
-     * (defaultKT) belongs to this cluster. It is static
-     * and can be reached either through Cluster::defaultCluster
-     * or getDefaultCluster() function.
-     */
-    static Cluster defaultCluster;
-    /**
+   /**
      * @copybrief Cluster::defaultCluster
      * @return defaultCluster
+     *
+     * @copydetails defaultCluster
      */
-    Cluster& getDefaultCluster() const {
+    static Cluster& getDefaultCluster(){
         return defaultCluster;
     }
     /**
      * @brief Get the ID of Cluster
      * @return The ID of the cluster
+     *
      */
     uint64_t getClusterID() const {
         return clusterID;
