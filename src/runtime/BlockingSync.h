@@ -31,7 +31,6 @@ class BlockingQueue {
     friend class Mutex;
     friend class ConditionVariable;
     friend class Semaphore;
-    template<typename Buffer> friend class MessageQueue;
     IntrusiveList<uThread> queue;
 
     bool suspend(std::mutex& lock);
