@@ -25,7 +25,6 @@
 #include <iostream>
 
 class Mutex;
-template<typename Buffer> class MessageQueue;
 
 class BlockingQueue {
     friend class uThread;
