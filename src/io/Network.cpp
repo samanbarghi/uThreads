@@ -66,7 +66,7 @@ int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrl
     int sockfd = ::accept4(this->fd, addr, addrlen, SOCK_NONBLOCK );
     while( (sockfd == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
         //User level blocking using nonblocking io
-        ioh->block(this->pd, UT_IOREAD);
+        ioh->block(this->pd, IOHandler::Flag::UT_IOREAD);
         sockfd = ::accept4(this->fd, addr, addrlen, SOCK_NONBLOCK );
     }
     //otherwise return the result
@@ -84,7 +84,7 @@ ssize_t Connection::recv(void *buf, size_t len, int flags){
     ssize_t res = ::recv(this->fd, (void*)buf, len, flags);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
            //User level blocking using nonblocking io
-           ioh->block(this->pd, UT_IOREAD);
+           ioh->block(this->pd, IOHandler::Flag::UT_IOREAD);
            res = ::recv(this->fd, buf, len, flags);
     }
     return res;
@@ -96,7 +96,7 @@ ssize_t Connection::recvfrom(void *buf, size_t len, int flags, struct sockaddr *
     ssize_t res = ::recvfrom(this->fd, (void*)buf, len, flags, src_addr, addrlen);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
            //User level blocking using nonblocking io
-           ioh->block(this->pd, UT_IOREAD);
+           ioh->block(this->pd, IOHandler::Flag::UT_IOREAD);
            res = ::recvfrom(this->fd, buf, len, flags, src_addr, addrlen);
     }
     return res;
@@ -107,7 +107,7 @@ ssize_t Connection::send(const void *buf, size_t len, int flags){
 
     ssize_t res = ::send(this->fd, buf, len, flags);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        ioh->block(this->pd, UT_IOWRITE);
+        ioh->block(this->pd, IOHandler::Flag::UT_IOWRITE);
         res = ::send(this->fd, buf, len, flags);
     }
     return res;
@@ -117,7 +117,7 @@ ssize_t Connection::sendmsg(const struct msghdr *msg, int flags){
 
     ssize_t res = ::sendmsg(this->fd, msg, flags);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        ioh->block(this->pd, UT_IOWRITE);
+        ioh->block(this->pd, IOHandler::Flag::UT_IOWRITE);
         res = ::sendmsg(this->fd, msg, flags);
     }
     return res;
@@ -130,7 +130,7 @@ ssize_t Connection::read(void *buf, size_t count){
     ssize_t res = ::read(this->fd, (void*)buf, count);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
            //User level blocking using nonblocking io
-           ioh->block(this->pd, UT_IOREAD);
+           ioh->block(this->pd, IOHandler::Flag::UT_IOREAD);
            res = ::read(this->fd, buf, count);
     }
     return res;
@@ -141,7 +141,7 @@ ssize_t Connection::write(const void *buf, size_t count){
 
     ssize_t res = ::write(this->fd, buf, count);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        ioh->block(this->pd, UT_IOWRITE);
+        ioh->block(this->pd, IOHandler::Flag::UT_IOWRITE);
         res = ::write(this->fd, buf, count);
     }
     return res;

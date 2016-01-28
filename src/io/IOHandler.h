@@ -83,6 +83,13 @@ class IOHandler{
     friend class Cluster;
     friend class ReadyQueue;
 
+protected:
+    /* polling flags */
+    enum Flag {
+        UT_IOREAD    = 1 << 0,                           //READ
+        UT_IOWRITE   = 1 << 1                            //WRITE
+    };
+
     virtual int _Open(int fd, PollData *pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
     virtual int  _Close(int fd) = 0;
     virtual void _Poll(int timeout)=0;                ///
@@ -103,7 +110,6 @@ class IOHandler{
    IntrusiveList<uThread> bulkQueue;
    size_t bulkCounter;
 
-protected:
     IOHandler(Cluster&);
     void PollReady(PollData &pd, int flag);                   //When there is notification update pollData and unblock the related ut
     void PollReadyBulk(PollData &pd, int flag, bool isLast);                   //When there is notification update pollData and unblock the related ut

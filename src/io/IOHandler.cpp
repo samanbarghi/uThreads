@@ -42,8 +42,8 @@ void IOHandler::open(PollData &pd){
 }
 void IOHandler::wait(PollData& pd, int flag){
     assert(pd.fd > 0);
-    if(flag & UT_IOREAD) block(pd, true);
-    if(flag & UT_IOWRITE) block(pd, false);
+    if(flag & Flag::UT_IOREAD) block(pd, true);
+    if(flag & Flag::UT_IOWRITE) block(pd, false);
 
 }
 void IOHandler::block(PollData &pd, bool isRead){
@@ -109,7 +109,7 @@ void IOHandler::unblock(PollData &pd, int flag){
     uThread **rut = &pd.rut, **wut = &pd.wut;
     uThread *rold = *rut, *wold = *wut;
 
-    if(flag & UT_IOREAD){
+    if(flag & Flag::UT_IOREAD){
         //if(rold == POLL_READY) //do nothing
         if(rold == nullptr || rold == POLL_WAIT)
            *rut = POLL_READY;
@@ -118,7 +118,7 @@ void IOHandler::unblock(PollData &pd, int flag){
             rold->resume();
         }
     }
-    if(flag & UT_IOWRITE){
+    if(flag & Flag::UT_IOWRITE){
         //if(wold == POLL_READY) do nothing
         if(wold == nullptr || wold == POLL_WAIT)
            *wut = POLL_READY;
@@ -138,24 +138,24 @@ void IOHandler::unblockBulk(PollData &pd, int flag){
     uThread **rut = &pd.rut, **wut = &pd.wut;
     uThread *rold = *rut, *wold = *wut;
 
-    if(flag & UT_IOREAD){
+    if(flag & Flag::UT_IOREAD){
         //if(rold == POLL_READY) //do nothing
         if(rold == nullptr || rold == POLL_WAIT)
            *rut = POLL_READY;
         else if(rold > POLL_WAIT){
             *rut = nullptr;
-            rold->state = READY;
+            rold->state = uThread::State::READY;
             bulkQueue.push_back(*rold);
             bulkCounter++;
         }
     }
-    if(flag & UT_IOWRITE){
+    if(flag & Flag::UT_IOWRITE){
         //if(wold == POLL_READY) do nothing
         if(wold == nullptr || wold == POLL_WAIT)
            *wut = POLL_READY;
         else if(wold > POLL_WAIT){
             *wut = nullptr;
-            wold->state = READY;
+            wold->state = uThread::State::READY;
             bulkQueue.push_back(*wold);
             bulkCounter++;
         }
