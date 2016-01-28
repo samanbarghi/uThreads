@@ -29,8 +29,11 @@
 #define POLL_WAIT   ((uThread*)2)
 
 class Connection;
-/*
- * Include poll data
+/**
+ * @cond  HIDDEN_SYMBOLS
+ * @class PollData
+ * @brief Used to maintain file descriptor status while polling for activity
+ *
  */
 class PollData{
     friend Connection;
@@ -50,14 +53,32 @@ private:
      * or the requesting uThread is updating the semaphore.
      */
 
-    std::mutex mtx;                                     //Mutex that protects this  PollData
-    int fd = -1;                                       //file descriptor
+    //Mutex that protects this  PollData
+    std::mutex mtx;
+    //file descriptor
+    int fd = -1;
 
+    /**
+     * These semaphores are used to keep track of the state at which
+     * the file descriptor is in. They can be in four modes:
+     *
+     * 1- nullptr: there is no activity nor any interest in the fd
+     * 2- POLL_READY:  the underlying poller indicated that the fd is ready for
+     *                  read or write.
+     * 3- POLL_WAIT: uThread is trying to read/write and is not parked yet
+     * 4- uThread*: uThread is parked and is waiting on fd to become ready
+     *              for read/write
+     */
     uThread* rut = nullptr;
-    uThread* wut = nullptr;                             //read and write uThreads
+    uThread* wut = nullptr;
 
+    /** Whether the fd is closing or not */
     std::atomic<bool> closing;
 
+    /**
+     * Reset the variables. Used when PollData is recycled to be used
+     * for the same FD.
+     */
     void reset(){
        std::lock_guard<std::mutex> pdlock(this->mtx);
        rut = nullptr;
@@ -66,7 +87,17 @@ private:
     };
 
 public:
+    /**
+     * @brief Create a PollData structure with the assigned fd
+     * @param fd file descriptor
+     */
     PollData( int fd) : fd(fd), closing(false){};
+
+    /**
+     * @brief Create a PollData structure but do not assign any fd
+     *
+     * Usually used before accept
+     */
     PollData(): closing(false){};
     ~PollData(){};
 
@@ -146,4 +177,5 @@ protected:
     virtual ~EpollIOHandler();
 };
 
+/** @endcond */
 #endif /* IOHANDLER_H_ */

@@ -23,19 +23,17 @@
 #include <unistd.h>
 
 EpollIOHandler::EpollIOHandler(Cluster& cluster) : IOHandler(cluster) {
-    epoll_fd = epoll_create1 (EPOLL_CLOEXEC);               //Assuming kernel version >= 2.9
-    														//TODO: Make sure this is backward compatible with kernel < 2.9
+    //Assuming kernel version >= 2.9
+    epoll_fd = epoll_create1 (EPOLL_CLOEXEC);
+   	//TODO: Make sure this is backward compatible with kernel < 2.9
     if (epoll_fd == -1){
         std::cerr << "epoll_create: " << errno << std::endl;
         exit(EXIT_FAILURE);
     }
-//    std::cout << "EPOLL_FD" << epoll_fd << std::endl;
-
     events = (epoll_event*)calloc(MAXEVENTS, sizeof(struct epoll_event));
 }
 
 int EpollIOHandler::_Open(int fd, PollData *pd){
-//    std::cout << "FD (" << fd << "): EPOLL OPEN" << std::endl;
     struct epoll_event ev;
     ev.events = EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET;
     ev.data.ptr = (void*)pd;
@@ -87,7 +85,6 @@ void EpollIOHandler::_Poll(int timeout){
 
     for(int i = 0; i < n; i++) {
         ev = &events[i];
-        //std::cout << "FD(" << ev->data.fd << ") EPOLL RETURN RESULT" << std::endl;
         if(slowpath(ev->events == 0))
             continue;
         mode = 0;
