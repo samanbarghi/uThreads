@@ -30,32 +30,62 @@ class IOHandler;
 class Cluster;
 class uThreadCache;
 
-
+/**
+ * @class uThread
+ * @brief user-level threads (fiber)
+ *
+ * uThreads are building blocks of this library. They are lightweight
+ * threads and do not have the same context switch overhead as kernel threads.
+ * Each uThread is an execution unit provided to run small tasks. uThreads are
+ * being managed cooperatively and there is no preemption involved. uThreads
+ * either yield, migrate, or blocked and giving way to other uThreads to get a
+ * chance to run.
+ *
+ * Due to the cooperative nature of uThreads, it is recommended that
+ * uThreads do not block the underlying kernel thread for a long time. However,
+ * since there can be multiple kernel threads (kThread) in the program, if one
+ * or more uThreads block underlying kThreads for small amount of time the
+ * execution of the program does not stop and other kThreads keep executing.
+ *
+ * Another pitfall can be when all uThreads are blocked and each waiting for an
+ * event to occurs which can cause deadlocks. It is programmer's responsibility
+ * to make sure this never happens. Although it never happens unless a uThread
+ * is blocked without a reason (not waiting on a lock or IO), otherwise there is
+ * always an event (another uThread or polling structure) that unblock the
+ * uThread.
+ *
+ * Each uThread has its own stack which is very smaller than kernel thread's
+ * stack. This stack is allocated when uThread is created.
+ */
 
 class uThread: public IntrusiveList<uThread>::Link {
     friend class uThreadCache;
     friend class kThread;
     friend class Cluster;
-    friend class LibInitializer;
     friend class BlockingQueue;
     friend class IOHandler;
 private:
-    /**
-     * @enum hold various states that uThread can go through
-     */
+     /* hold various states that uThread can go through */
     enum class State : std::uint8_t {
-        INITIALIZED,                                    ///<uThread is initialized
-        READY,                                      ///<uThread is in a ReadyQueue
-        RUNNING,                                            ///<uThread is Running
-        YIELD,                                             ///<uThread is Yielding
-        MIGRATE,                                  ///<Migrating to another cluster
-        WAITING,                                            ///<uThread is Blocked
-        TERMINATED                    ///<uThread is done and should be terminated
+        INITIALIZED,                                    //uThread is initialized
+        READY,                                      //uThread is in a ReadyQueue
+        RUNNING,                                           //<uThread is Running
+        YIELD,                                             //uThread is Yielding
+        MIGRATE,                                  //Migrating to another cluster
+        WAITING,                                            //uThread is Blocked
+        TERMINATED                    //uThread is done and should be terminated
     };
 
     //TODO: Add a function to check uThread's stack for overflow ! Prevent overflow or throw an exception or error?
     //TODO: Add a debug object to project, or a dtrace or lttng functionality
 
+    /**
+     * The main and only constructor for uThread. uThreads are not supposed to
+     * be created by using the constructor. The memory used to save the uThread
+     * object is allocated at the beginning of its own stack. Thus, by freeing
+     * the stack memory uThread object is being destroyed as well. Therefore,
+     * the implicit destructor is not necessary.
+     */
     uThread(vaddr sb, size_t ss) :
             stackPointer(vaddr(this)), stackBottom(sb), stackSize(ss), state(
                     State::INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(
@@ -63,76 +93,186 @@ private:
         totalNumberofUTs++;
     }
 
-    static uThread* createMainUT(Cluster&); //Only to create init and main uThreads
+     /* This is only used to create mainUT for kThreads */
+    static uThread* createMainUT(Cluster&);
 
-    static uThread* initUT;            //initial uT that is associated with main
+    /*
+     * initUT is the initial uThread that is created when program starts.
+     * initUT holds the context that runs the main thread. It does not have
+     * a separate stack and takes over the underlying kThread(defaultKT)
+     * stack to be able to take control of the main function.
+     */
+    static uThread* initUT;
 
-    static vaddr createStack(size_t);   //Create a stack with given size
+    /* Create a stack with the given size */
+    static vaddr createStack(size_t);
 
+    /* in order to avoid allocating memory over and over again, uThreads
+     * are not completely destroyed after termination and are pushed to
+     * a uThreadCache container. When the program asks for a new uThread
+     * this cache is checked, if there is cached uThreads it will be used
+     * instead of allocating new memory.
+     */
     static uThreadCache utCache;        //data structure to cache uThreads
 
     /*
      * Statistics variables
      */
     //TODO: Add more variables, number of suspended, number of running ...
-    static std::atomic_ulong totalNumberofUTs;//Total number of existing uThreads
-    static std::atomic_ulong uThreadMasterID;			//The main ID counter
-    uint64_t uThreadID;							//unique Id for this uthread
+    static std::atomic_ulong totalNumberofUTs;  //Total number of existing uThreads
+    static std::atomic_ulong uThreadMasterID;   //The main ID counter
+    uint64_t uThreadID;                         //unique Id for this uThread
 
     /*
      * Thread variables
      */
-    State state;	//Current state of the uThread, should be private only friend classes can change this
-    Cluster* currentCluster;//This will be used for migrating to a new Cluster
+    /* Current state of the uThread */
+    State state;
+
+    /*
+     * Current Cluster that uThread is executed on.
+     * This variable is used for migrating to another Cluster.
+     */
+    Cluster* currentCluster;
 
     /*
      * Stack Boundary
      */
-    size_t stackSize;
-    vaddr stackPointer;			// holds stack pointer while thread inactive
-    vaddr stackBottom;			//Bottom of the stack
+    size_t stackSize;           //Size of the stack of the current uThread
+    vaddr stackPointer;         // holds stack pointer while thread inactive
+    vaddr stackBottom;          //Bottom of the stack
 
     /*
-     * general functions
+     * Destroys the uThread by freeing the memory allocated on the stack.
+     * Since uThread object is saved on its own stack it destroys the uThread
+     * object as well.
+     * If the uThreadCache is not full, this function do not destroy the
+     * object and push it to the uThreadCache.
+     * The object is destroyed either due to the cache being full, or the bool
+     * parameter pass to it, which means force destroying the object, is true.
      */
-    void destory(bool);           //destroy the stack which destroys the uThread
-    void reset();                       //reset stack pointers
+    void destory(bool);
+
+    /*
+     * This function is used to recycle the uThread as it is pushed in
+     * uThreadCache. It causes the stack pointer points to the beginning of
+     * the stack and change the status of the uThread to INITIALIZED.
+     */
+    void reset();
+
+    /*
+     * Used to suspend the uThread. The function passed to
+     * the suspend function is called after the context switch is happened.
+     * It is normally the case that the uThread needs to hold on to a lock
+     * or perform some maintenance jobs after the context is switched.
+     */
     void suspend(std::function<void()>&);
 public:
-
+    /// uThread cannot be copied or assigned
     uThread(const uThread&) = delete;
+
+    /// @copydetails uThread(const uThread&)
     const uThread& operator=(const uThread&) = delete;
 
-    /*
-     * Thread management functions
+    /// @copydetails uThread(vaddr sb, size_t ss)
+    ~uThread() = delete;
+
+
+    /**
+     * @brief Create a uThread with a given stack size
+     * @param ss stack size
+     * @return a pointer to the newly initialized uThread
+     *
+     * This function relies on a uThreadCache structure
+     * and does not always allocate the stack.
      */
     static uThread* create(size_t ss);
+
+    /**
+     * @brief Create a uThread with default stack size
+     * @return
+     */
     static uThread* create() {
         return create(defaultStackSize);
     }
 
+    /**
+     * @brief start the uThread by calling the function passed to it
+     * @param cluster The cluster that function belongs to.
+     * @param func a pointer to a function that should be executed by the uThread.
+     * @param arg1 first argument of the function (can be nullptr)
+     * @param arg2 second argument of the function (can be nullptr)
+     * @param arg3 third argument of the function (can be nullptr)
+     *
+     * After creating the uThread and allocating the stack, the start() function
+     * should be called to get the uThread going.
+     */
     void start(const Cluster& cluster, ptr_t func, ptr_t arg1 = nullptr,
             ptr_t arg2 = nullptr, ptr_t arg3 = nullptr);
-    void start(ptr_t func, ptr_t arg1 = nullptr, ptr_t arg2 = nullptr,
-            ptr_t arg3 = nullptr);
 
+    /**
+     * @brief Causes uThread to yield
+     *
+     * uThread give up the execution context and place itself back on the
+     * ReadyQueue of the Cluster. If there is no other uThreads available to
+     * switch to, the current uThread continues execution.
+     */
     static void yield();
+
+    /**
+     * @brief Terminates the uThread
+     *
+     * By calling this function uThread is being terminated and uThread object
+     * is either destroyed or put back into the cache.
+     */
     static void terminate();
-    void migrate(Cluster*);				//Migrate the thread to a new Cluster
+
+    /**
+     * @brief Move the uThread to the provided cluster
+     * @param cluster
+     *
+     * This function is used to migrate the uThread to another Cluster.
+     * Migration is useful specially if clusters form a pipeline of execution.
+     */
+    static void migrate(Cluster*);
+
+    /**
+     * @brief Resumes the uThread. If uThread is blocked or is waiting on IO
+     * it will be placed back on the ReadyQueue.
+     */
     void resume();
 
-    /*
-     * general functions
+
+    /**
+     * @brief return the current Cluster uThread is executed on
+     * @return the current Cluster uThread is executed on
      */
     const Cluster& getCurrentCluster() const {
         return *currentCluster;
     }
+
+    /**
+     *
+     * @return Total number of uThreads in the program
+     *
+     * This number does not include mainUT or IOUTs
+     */
     static uint64_t getTotalNumberofUTs() {
         return totalNumberofUTs.load();
     }
+
+    /**
+     * @brief get the ID of this uThread
+     * @return ID of the uThread
+     */
     uint64_t getUthreadId() const {
         return uThreadID;
     }
+
+    /**
+     * @brief Get a pointer to the current running uThread
+     * @return pointer to the current uThread
+     */
     static uThread* currentUThread();
 };
 
