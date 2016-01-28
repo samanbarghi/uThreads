@@ -44,8 +44,8 @@ Cluster::~Cluster() {
 
 void Cluster::invoke(funcvoid3_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3) {
     func(arg1, arg2, arg3);
-    kThread::currentKT->currentUT->state = uThread::State::TERMINATED;
-    kThread::currentKT->switchContext();
+    uThread::currentUThread()->state = uThread::State::TERMINATED;
+    kThread::currentkThread()->switchContext();
     //Context will be switched in kThread
 }
 
