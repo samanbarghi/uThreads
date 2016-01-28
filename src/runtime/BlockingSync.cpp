@@ -42,11 +42,11 @@ bool BlockingQueue::suspend(Mutex& mutex) {
 
 bool BlockingQueue::signal(std::mutex& lock, uThread*& owner) {
     //TODO: handle cancellation
-    if (queue.front() != queue.fence()) {//Fetch one thread and put it back to ready queue
-        owner = queue.front();					//FIFO?
+    //Fetch one thread and put it back to ready queue
+    if (queue.front() != queue.fence()) {
+        owner = queue.front();//FIFO?
         queue.pop_front();
         lock.unlock();
-//		printAll();
         owner->resume();
         return true;
     }
@@ -56,8 +56,9 @@ bool BlockingQueue::signal(std::mutex& lock, uThread*& owner) {
 bool BlockingQueue::signal(Mutex& mutex) {
     //TODO: handle cancellation
     uThread* owner = nullptr;
-    if (!queue.empty()) {	//Fetch one thread and put it back to ready queue
-        owner = queue.front();					//FIFO?
+    //Fetch one thread and put it back to ready queue
+    if (!queue.empty()) {
+        owner = queue.front();//FIFO?
         queue.pop_front();
         mutex.release();
         owner->resume();
@@ -72,7 +73,7 @@ void BlockingQueue::signalAll(Mutex& mutex) {
     for (;;) {
         if (slowpath(ut == queue.fence())) break;
         queue.remove(*ut);
-        ut->resume();						//Send ut back to the ready queue
+        ut->resume();
         ut = queue.front();
     }
     mutex.release();
