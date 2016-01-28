@@ -49,7 +49,7 @@ int main(){
 	    ut = uThread::create();
 		value[i] = i;
 		if(i%2 == 0)    ut->start(cluster, (ptr_t)run, &value[i]);
-		else    ut->start((ptr_t)run, &value[i]);
+		else    ut->start(Cluster::getDefaultCluster(), (ptr_t)run, &value[i]);
 	}
 
 	while(uThread::getTotalNumberofUTs() > 1){
