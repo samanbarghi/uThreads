@@ -28,7 +28,7 @@ extern "C"{
 /**************Cluster*************/
 WCluster* cluster_create(){  return reinterpret_cast<WCluster*>( new Cluster( ) );}
 void cluster_destroy(WCluster* cluster){ delete reinterpret_cast<Cluster*>(cluster); }
-WCluster* cluster_get_default(){ return reinterpret_cast<WCluster*>(&Cluster::defaultCluster);}
+WCluster* cluster_get_default(){ return reinterpret_cast<WCluster*>(&Cluster::getDefaultCluster());}
 WCluster* cluster_get_current(){ return reinterpret_cast<WCluster*>(const_cast<Cluster*>(&uThread::currentUThread()->getCurrentCluster()));}
 uint64_t cluster_get_id(WCluster* cluster){ return reinterpret_cast<Cluster*>(cluster)->getClusterID();}
 /**********************************/
@@ -43,16 +43,13 @@ uint64_t kThread_count(){ return kThread::getTotalNumberOfkThreads(); }
 
 
 /*************uThread**************/
-WuThread* uThread_create(void *(*start_routine) (void *), void *arg){ uThread* ut = uThread::create();
-    ut->start((ptr_t)start_routine, arg);
-    return reinterpret_cast<WuThread*>( ut); }
-WuThread* uThread_create_with_cluster(WCluster* cluster, void *(*start_routine) (void *), void *arg){
+WuThread* uThread_create(WCluster* cluster, void *(*start_routine) (void *), void *arg){
     uThread* ut = uThread::create();
     ut->start(*reinterpret_cast<Cluster*>(cluster), (ptr_t)start_routine, arg );
     return reinterpret_cast<WuThread*>( ut);
 }
 void uThread_migrate(WCluster* cluster){ uThread::currentUThread()->migrate(reinterpret_cast<Cluster*>(cluster)); }
-void uThread_destroy(WuThread* ut){ delete reinterpret_cast<uThread*>(ut); }
+void uThread_terminate(WuThread* ut){  reinterpret_cast<uThread*>(ut)->terminate(); }
 void uThread_yield(){ uThread::currentUThread()->yield(); }
 /**********************************/
 
