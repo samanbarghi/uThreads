@@ -30,100 +30,110 @@ class IOHandler;
 class Cluster;
 class uThreadCache;
 
-//Thread states
-enum uThreadState {
-    INITIALIZED,                                                    //uThread is initialized
-    READY,                                                          //uThread is in a ReadyQueue
-    RUNNING,                                                        //uThread is Running
-    YIELD,                                                          //uThread Yields
-    MIGRATE,                                                        //Migrate to another cluster
-    WAITING,                                                        //uThread is in waiting mode
-    IOBLOCK,                                                        //uThread is blocked on IO
-    TERMINATED                                                      //uThread is done and should be terminated
-};
 
 
-class uThread : public IntrusiveList<uThread>::Link{
+class uThread: public IntrusiveList<uThread>::Link {
     friend class uThreadCache;
-	friend class kThread;
-	friend class Cluster;
-	friend class LibInitializer;
-	friend class BlockingQueue;
-	friend class IOHandler;
+    friend class kThread;
+    friend class Cluster;
+    friend class LibInitializer;
+    friend class BlockingQueue;
+    friend class IOHandler;
 private:
+    /**
+     * @enum hold various states that uThread can go through
+     */
+    enum class State : std::uint8_t {
+        INITIALIZED,                                    ///<uThread is initialized
+        READY,                                      ///<uThread is in a ReadyQueue
+        RUNNING,                                            ///<uThread is Running
+        YIELD,                                             ///<uThread is Yielding
+        MIGRATE,                                  ///<Migrating to another cluster
+        WAITING,                                            ///<uThread is Blocked
+        TERMINATED                    ///<uThread is done and should be terminated
+    };
 
-	//TODO: Add a function to check uThread's stack for overflow ! Prevent overflow or throw an exception or error?
-	//TODO: Add a debug object to project, or a dtrace or lttng functionality
-	//TODO: Check all functions and add assertions wherever it is necessary
+    //TODO: Add a function to check uThread's stack for overflow ! Prevent overflow or throw an exception or error?
+    //TODO: Add a debug object to project, or a dtrace or lttng functionality
 
+    uThread(vaddr sb, size_t ss) :
+            stackPointer(vaddr(this)), stackBottom(sb), stackSize(ss), state(
+                    State::INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(
+                    nullptr) {
+        totalNumberofUTs++;
+    }
 
-	uThread(vaddr sb, size_t ss) :
-	stackPointer(vaddr(this)), stackBottom(sb), stackSize(ss),
-	state(INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(nullptr){
-	    totalNumberofUTs++;
-	}
+    static uThread* createMainUT(Cluster&); //Only to create init and main uThreads
 
-	static uThread* createMainUT(Cluster&);      //Only to create init and main uThreads
+    static uThread* initUT;            //initial uT that is associated with main
 
-	static uThread*	initUT;             //initial uT that is associated with main
+    static vaddr createStack(size_t);   //Create a stack with given size
 
-	static vaddr createStack(size_t);   //Create a stack with given size
+    static uThreadCache utCache;        //data structure to cache uThreads
 
-	static uThreadCache utCache;        //data structure to cache uThreads
+    /*
+     * Statistics variables
+     */
+    //TODO: Add more variables, number of suspended, number of running ...
+    static std::atomic_ulong totalNumberofUTs;//Total number of existing uThreads
+    static std::atomic_ulong uThreadMasterID;			//The main ID counter
+    uint64_t uThreadID;							//unique Id for this uthread
 
-	/*
-	 * Statistics variables
-	 */
-	//TODO: Add more variables, number of suspended, number of running ...
-	static std::atomic_ulong totalNumberofUTs;			//Total number of existing uThreads
-	static std::atomic_ulong uThreadMasterID;			//The main ID counter
-	uint64_t uThreadID;							//unique Id for this uthread
+    /*
+     * Thread variables
+     */
+    State state;	//Current state of the uThread, should be private only friend classes can change this
+    Cluster* currentCluster;//This will be used for migrating to a new Cluster
 
-	/*
-	 * Thread variables
-	 */
-	uThreadState state;				//Current state of the uThread, should be private only friend classes can change this
-	Cluster*	currentCluster;			//This will be used for migrating to a new Cluster
+    /*
+     * Stack Boundary
+     */
+    size_t stackSize;
+    vaddr stackPointer;			// holds stack pointer while thread inactive
+    vaddr stackBottom;			//Bottom of the stack
 
-	/*
-	 * Stack Boundary
-	 */
-	size_t		stackSize;
-	vaddr 		stackPointer;			// holds stack pointer while thread inactive
-	vaddr		stackBottom;			//Bottom of the stack
-
-	/*
-	 * general functions
-	 */
-	void destory(bool);                     //destroy the stack which destroys the uThread
-	void reset();                       //reset stack pointers
-	void suspend(std::function<void()>&);
+    /*
+     * general functions
+     */
+    void destory(bool);           //destroy the stack which destroys the uThread
+    void reset();                       //reset stack pointers
+    void suspend(std::function<void()>&);
 public:
 
-	uThread(const uThread&) = delete;
-	const uThread& operator=(const uThread&) = delete;
+    uThread(const uThread&) = delete;
+    const uThread& operator=(const uThread&) = delete;
 
-	/*
-	 * Thread management functions
-	 */
+    /*
+     * Thread management functions
+     */
     static uThread* create(size_t ss);
-    static uThread* create(){ return create(defaultStackSize);}
+    static uThread* create() {
+        return create(defaultStackSize);
+    }
 
-	void start(const Cluster& cluster, ptr_t func, ptr_t arg1=nullptr, ptr_t arg2=nullptr, ptr_t arg3=nullptr);
-	void start(ptr_t func, ptr_t arg1=nullptr, ptr_t arg2=nullptr, ptr_t arg3=nullptr);
+    void start(const Cluster& cluster, ptr_t func, ptr_t arg1 = nullptr,
+            ptr_t arg2 = nullptr, ptr_t arg3 = nullptr);
+    void start(ptr_t func, ptr_t arg1 = nullptr, ptr_t arg2 = nullptr,
+            ptr_t arg3 = nullptr);
 
-	static void yield();
-	static void terminate();
-	void migrate(Cluster*);				//Migrate the thread to a new Cluster
-	void resume();
+    static void yield();
+    static void terminate();
+    void migrate(Cluster*);				//Migrate the thread to a new Cluster
+    void resume();
 
-	/*
-	 * general functions
-	 */
-	const Cluster& getCurrentCluster() const    {return *currentCluster;}
-	static uint64_t getTotalNumberofUTs()       {return totalNumberofUTs.load();}
-	uint64_t getUthreadId() const               { return uThreadID;}
-	static uThread* currentUThread();
+    /*
+     * general functions
+     */
+    const Cluster& getCurrentCluster() const {
+        return *currentCluster;
+    }
+    static uint64_t getTotalNumberofUTs() {
+        return totalNumberofUTs.load();
+    }
+    uint64_t getUthreadId() const {
+        return uThreadID;
+    }
+    static uThread* currentUThread();
 };
 
 #endif /* UTHREADS_UTHREAD_H_ */

@@ -37,7 +37,7 @@ kThread kThread::defaultKT;
 void uThread::reset(){
    stackPointer = (vaddr)this;                //reset stack pointer
    currentCluster = nullptr;
-   state=INITIALIZED;
+   state=State::INITIALIZED;
 }
 
 void uThread::destory(bool force=false) {
@@ -90,7 +90,7 @@ void uThread::yield(){
     kThread* ck = kThread::currentKT;
     assert(ck != nullptr);
     assert(ck->currentUT != nullptr);
-	ck->currentUT->state = YIELD;
+	ck->currentUT->state = State::YIELD;
 	ck->switchContext();
 }
 
@@ -99,24 +99,24 @@ void uThread::migrate(Cluster* cluster){
 	if(slowpath(kThread::currentKT->localCluster == cluster))     //no need to migrate
 		return;
 	kThread::currentKT->currentUT->currentCluster= cluster;
-	kThread::currentKT->currentUT->state = MIGRATE;
+	kThread::currentKT->currentUT->state = State::MIGRATE;
 	kThread::currentKT->switchContext();
 }
 
 void uThread::suspend(std::function<void()>& func) {
-	state = WAITING;
+	state = State::WAITING;
 	kThread::currentKT->switchContext(&func);
 }
 
 void uThread::resume(){
-    if(fastpath(state== WAITING || state== INITIALIZED || state == MIGRATE || state == YIELD)){
-        state = READY;
+    if(fastpath(state== State::WAITING || state== State::INITIALIZED || state == State::MIGRATE || state == State::YIELD)){
+        state = State::READY;
         currentCluster->schedule(this);          //Put thread back to readyqueue
     }
 }
 
 void uThread::terminate(){
-	kThread::currentKT->currentUT->state = TERMINATED;
+	kThread::currentKT->currentUT->state = State::TERMINATED;
 	kThread::currentKT->switchContext();                //It's scheduler job to switch to another context and terminate this thread
 }
 

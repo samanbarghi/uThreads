@@ -107,7 +107,7 @@ void kThread::switchContext(void* args) {
             ut = ktrq->front();
             ktrq->pop_front();
         } else {        //If no work is available, Switch to defaultUt
-            if (kThread::currentKT->currentUT->state == YIELD)
+            if (kThread::currentKT->currentUT->state == uThread::State::YIELD)
                 return; //if the running uThread yielded, continue running it
             ut = mainUT;
         }
@@ -142,7 +142,7 @@ void kThread::initialize(bool isDefaultKT) {
 
     //Default uThreads are not being counted
     uThread::totalNumberofUTs--;
-    mainUT->state = READY;
+    mainUT->state = uThread::State::READY;
     currentUT = mainUT;
 }
 
@@ -167,17 +167,17 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args = nullptr) {
     //mainUT does not need to be managed here
     if (fastpath(ck->currentUT != kThread::currentKT->mainUT)) {
         switch (ck->currentUT->state) {
-        case TERMINATED:
+        case uThread::State::TERMINATED:
             ck->currentUT->destory(false);
             break;
-        case YIELD:
+        case uThread::State::YIELD:
             ck->currentUT->resume();
             ;
             break;
-        case MIGRATE:
+        case uThread::State::MIGRATE:
             ck->currentUT->resume();
             break;
-        case WAITING: {
+        case uThread::State::WAITING: {
             assert(args != nullptr);
             std::function<void()>* func = (std::function<void()>*) args;
             (*func)();
@@ -189,7 +189,7 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args = nullptr) {
     }
     //Change the current thread to the next
     ck->currentUT = nextuThread;
-    nextuThread->state = RUNNING;
+    nextuThread->state = uThread::State::RUNNING;
 }
 
 //TODO: How can I make this work for defaultKT?
