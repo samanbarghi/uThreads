@@ -27,7 +27,8 @@
  * provides the ability to do nonblocking read/write on sockets, and nonblocking
  * accept. It first tries to read/write/accept and if the fd is not ready
  * uses the underlying polling structure to wait for the fd to be ready. Thus,
- * the uThread that is calling these functions are blocked.
+ * the uThread that is calling these functions is blocked if the fd is not
+ * ready, and kThread never blocks.
  */
 class Connection {
     friend IOHandler;
@@ -130,26 +131,26 @@ public:
     ssize_t recv(void *buf, size_t len, int flags);
     /// @copydoc recv
     ssize_t recvfrom(void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
-    /// @copydoc recv(void *buf, size_t len, int flags)
+    /// @copydoc recv
     ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
-    /// @copydoc recv(void *buf, size_t len, int flags)
+    /// @copydoc recv
     int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
                  unsigned int flags, struct timespec *timeout);
 
-    /// @copydoc recv(void *buf, size_t len, int flags)
+    /// @copydoc recv
     ssize_t send(const void *buf, size_t len, int flags);
-    /// @copydoc recv(void *buf, size_t len, int flags)
+    /// @copydoc recv
     ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
             const struct sockaddr *dest_addr, socklen_t addrlen);
-    /// @copydoc recv(void *buf, size_t len, int flags)
+    /// @copydoc recv
     ssize_t sendmsg(const struct msghdr *msg, int flags);
-    /// @copydoc recv(void *buf, size_t len, int flags)
+    /// @copydoc recv
     int sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
                  unsigned int flags);
 
-    /// @copydoc recv(void *buf, size_t len, int flags)
+    /// @copydoc recv
     ssize_t read(void *buf, size_t count);
-    /// @copydoc recv(void *buf, size_t len, int flags)
+    /// @copydoc recv
     ssize_t write(const void *buf, size_t count);
 
     /**
