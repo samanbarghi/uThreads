@@ -30,7 +30,7 @@ Connection::Connection(int domain, int type, int protocol)
     if(sockfd != -1){
         ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
         fd = sockfd;
-        pd.fd = sockfd;
+        init(sockfd, true);
     }else{
         throw std::system_error(EFAULT, std::system_category());
     }
@@ -60,7 +60,7 @@ int Connection::socket(int domain, int type, int protocol){
     int sockfd = ::socket(domain, type | SOCK_NONBLOCK, protocol);
     if(sockfd != -1){
         fd = sockfd;
-        pd.fd = sockfd;
+        init(sockfd, true);
     }
     return sockfd;
 }
@@ -71,7 +71,6 @@ int Connection::listen(int backlog){
 
     int res = ::listen(fd, backlog);
     //on success add to poll
-    if(res == 0)    ioh->open(pd);
     return res;
 }
 
@@ -125,7 +124,6 @@ int Connection::connect(const struct sockaddr *addr,socklen_t addrlen){
     assert(fd > 0);
     int optval;
     uint optlen = sizeof(optval);
-    ioh->open(pd);
     int res = ::connect(fd, addr, addrlen);
     while( (res == -1) && (errno == EINPROGRESS )){
         ioh->block(pd, IOHandler::Flag::UT_IOWRITE);
