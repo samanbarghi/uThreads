@@ -81,7 +81,19 @@ public:
         ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
         init(fd, true);
     }
-    ;
+
+    /**
+     * @brief Same as socket syscall adds | SOCK_NONBLOCK to type
+     * @return same as socket syscall
+     *
+     * Throws a std::system_error exception. Do not call from C code.
+     * The unerlying socket is always nonbelocking. This is achieved
+     * by adding a  (| SOCK_NONBLOCK) to type, thus requires
+     * linux kernels > 2.6.27
+     *
+     */
+    Connection(int domain, int type, int protocol) throw(std::system_error);
+
     ~Connection();
 
     ///If the fd has not been added to the poller, do it with PollOpen
@@ -96,12 +108,26 @@ public:
      * @param conn Pointer to a Connection object that is not initialized
      * @return same as accept system call
      *
+     *  This format is used for compatibility with C
      */
-    int accept(Connection &conn, struct sockaddr *addr, socklen_t *addrlen);
+    int accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen);
+
+    /**
+     * @brief Accept a connection and returns a connection object
+     * @return Newly created connection
+     *
+     * Throws a std::system_error exception on error. Never call from C.
+     */
+    Connection* accept(struct sockaddr *addr, socklen_t *addrlen) throw(std::system_error);
+
 
     /**
      * @brief Same as socket syscall, set the fd for current connection
      * @return same as socket syscall
+     * The unerlying socket is always nonbelocking. This is achieved
+     * by adding a  (| SOCK_NONBLOCK) to type, thus requires
+     * linux kernels > 2.6.27
+
      */
     int socket(int domain, int type, int protocol);
 
@@ -111,7 +137,18 @@ public:
      */
     int listen(int backlog);
 
+    /**
+     * @brief Same as bind syscall
+     * @return Same as bind syscall
+     */
+    int bind(const struct sockaddr *addr,
+             socklen_t addrlen);
 
+    /**
+     * @brief Same as connect syscall
+     * @return Same as connect syscall
+     */
+    int connect(const struct sockaddr *addr,socklen_t addrlen);
     /**
      * @brief Call the underlying system call on Connection's file descriptor
      * @return Same as what the related systemcall returns

@@ -20,7 +20,21 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <cassert>
-//TODO: Make this independent of the single instance of IOHandler
+#include <iostream>
+Connection::Connection(int domain, int type, int protocol)
+                        throw(std::system_error){
+
+    //Make sure to create a nonblocking socket for the connection
+    // kernels > 2.6.27
+    int sockfd = ::socket(domain, type | SOCK_NONBLOCK, protocol);
+    if(sockfd != -1){
+        ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
+        fd = sockfd;
+        pd.fd = sockfd;
+    }else{
+        throw std::system_error(EFAULT, std::system_category());
+    }
+}
 
 void Connection::init(int fd, bool poll){
     //TODO:throw an exception if fd <= 0
@@ -43,13 +57,13 @@ int Connection::socket(int domain, int type, int protocol){
 
     //An active connection cannot be changed
     if(fd != -1) return -1;
-    int sockfd = ::socket(domain, type, protocol);
+    int sockfd = ::socket(domain, type | SOCK_NONBLOCK, protocol);
     if(sockfd != -1){
         fd = sockfd;
         pd.fd = sockfd;
     }
     return sockfd;
-};
+}
 
 int Connection::listen(int backlog){
     assert(fd > 0);
@@ -61,8 +75,10 @@ int Connection::listen(int backlog){
     return res;
 }
 
-int Connection::accept(Connection &conn, struct sockaddr *addr, socklen_t *addrlen){
+
+int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen){
     assert(fd != -1);
+    assert(fd == pd.fd);
     //check connection queue for wating connetions
     //Set the fd as nonblocking
     int sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
@@ -73,10 +89,54 @@ int Connection::accept(Connection &conn, struct sockaddr *addr, socklen_t *addrl
     }
     //otherwise return the result
     if(sockfd > 0){
-        conn.setFD(sockfd);
-        ioh->open(conn.pd);
+        conn->setFD(sockfd);
+        ioh->open(conn->pd);
     }
     return sockfd;
+}
+
+Connection* Connection::accept(struct sockaddr *addr, socklen_t *addrlen)
+                                throw(std::system_error){
+    assert(fd != -1);
+    assert(fd == pd.fd);
+    //check connection queue for wating connetions
+    //Set the fd as nonblocking
+    int sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
+    while( (sockfd == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
+        //User level blocking using nonblocking io
+        ioh->block(pd, IOHandler::Flag::UT_IOREAD);
+        sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
+    }
+    //otherwise return the result
+    if(sockfd > 0){
+        return new Connection(sockfd);
+    }else{
+        throw std::system_error(EFAULT, std::system_category());
+        return nullptr;
+    }
+
+}
+int Connection::bind(const struct sockaddr *addr, socklen_t addrlen){
+    assert(fd > 0);
+    return ::bind(fd, addr, addrlen);
+}
+
+int Connection::connect(const struct sockaddr *addr,socklen_t addrlen){
+    assert(fd > 0);
+    int optval;
+    uint optlen = sizeof(optval);
+    ioh->open(pd);
+    int res = ::connect(fd, addr, addrlen);
+    while( (res == -1) && (errno == EINPROGRESS )){
+        ioh->block(pd, IOHandler::Flag::UT_IOWRITE);
+        ::getsockopt(fd,SOL_SOCKET, SO_ERROR, (void*)&optval, &optlen);
+
+        if(optval ==0)
+            res =0;
+        else
+            errno = optval;
+    }
+    return res;
 }
 
 ssize_t Connection::recv(void *buf, size_t len, int flags){
