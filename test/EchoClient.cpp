@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <iostream>
+#include <algorithm>
 
 
 using namespace std;
@@ -27,34 +28,52 @@ int main(int argc, char* argv[]){
     server.sin_family = AF_INET;
     server.sin_port = htons( 8888 );
 
-    char msg[1024], reply[2048];
+    std::string msg;
+    std::vector<char>  reply(1025);
+
+    int res, count = 0;
 
     try{
         Connection cconn(AF_INET , SOCK_STREAM , 0);
         if(cconn.connect((struct sockaddr *)&server, sizeof(server)) < 0){
-           cerr << "Failed to connect to the server!" << errno << endl;
+           cerr << "Failed to connect to the server! : " << errno << endl;
            return 1;
         }
         for(;;){
-            cout << "Enter a message:" ;
-            cin >> msg;
 
-            if(cconn.send(msg, strlen(msg), 0) < 0){
+            count = 0;
+            cout << "Enter a message:" ;
+            getline(cin, msg);
+
+            if(cconn.send(msg.c_str(), msg.length(), 0) < 0){
                 cerr << "Failed to send the message" << endl;
                 return 1;
             }
 
-            if(cconn.recv(reply, 2048, MSG_WAITALL) < 0){
-               cerr << "Failed to receive the message from the server" << endl;
+            while( (res = cconn.recv(reply.data(), reply.size(), 0)) > 0){
+                for(auto i = reply.begin(); i < reply.begin()+res; i++) cout << *i;
+                count += res;
+
+                if(count >= msg.length())
+                    break;
+            }
+            if(res ==0){
+                cerr << "Server Closed the connection !" << endl;
+                cconn.close();
+               return 1;
+
+            }
+            if(res < 0){
+               cerr << "Failed to receive the message from the server: " << errno << endl;
+               cconn.close();
+               return 1;
             }
 
-            cout << "Server says: " << reply << endl;
-            std::fill(msg, msg+strlen(msg), 0);
-            std::fill(reply, reply+strlen(reply), 0);
+            cout << endl;
         }
 
     }catch (std::system_error& error){
-        std::cout << "Error: " << error.code() << " - " << error.what() << '\n';
+        std::cout << "Error: " << error.code() << " - " << error.what() << endl;
     }
 
     return 0;

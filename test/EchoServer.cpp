@@ -13,15 +13,15 @@
 #include <iostream>
 
 using namespace std;
+
 void echo(void* c){
 
      Connection* cconn = (Connection*)c;
-     char msg[1024];
+     std::vector<char>  msg(1025);
      int res;
 
-     while( res = cconn->recv(msg, 1024, 0) > 0){
-         cconn->write((void*)msg, strlen(msg));
-         std::fill(msg, msg+strlen(msg), 0);
+     while( (res = cconn->recv(msg.data(), msg.size(), 0)) > 0){
+         cconn->write(msg.data(), res);
      }
      if(res == 0){
          cout << "Client closed the connection" << endl;
