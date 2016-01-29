@@ -98,6 +98,7 @@ void IOHandler::poll(int timeout, int flag){
 }
 
 void IOHandler::reset(PollData& pd){
+    std::lock_guard<std::mutex> pdlock(pd.mtx);
     pd.reset();
 }
 

@@ -77,10 +77,10 @@ private:
 
     /**
      * Reset the variables. Used when PollData is recycled to be used
-     * for the same FD.
+     * for the same FD. The mutex should always be acquired before calling
+     * this function.
      */
     void reset(){
-       std::lock_guard<std::mutex> pdlock(this->mtx);
        rut = nullptr;
        wut = nullptr;
        closing = false;
