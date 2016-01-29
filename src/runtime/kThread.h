@@ -156,7 +156,9 @@ private:
      */
     void runWithFunc(std::function<void(ptr_t)>, ptr_t);
     //Initialization function for kThread
-    void initialize(bool);
+    void initialize();
+    //Initialize mainUT
+    void initializeMainUT(bool);
      //Switch the context to the passed uThread.
     void switchContext(uThread*, void* args = nullptr);
     //Pull a uThread from readyQueue and switch the context

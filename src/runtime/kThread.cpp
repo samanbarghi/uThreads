@@ -30,7 +30,8 @@ __thread IntrusiveList<uThread>* kThread::ktReadyQueue = nullptr;
 kThread::kThread() :
         cv_flag(true), threadSelf() {
     localCluster = &Cluster::defaultCluster;
-    initialize(true);
+    initialize();
+    initializeMainUT(true);
     uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
     /*
      * Since this is for defaultKT, current running uThread
@@ -48,7 +49,6 @@ kThread::kThread(Cluster& cluster, std::function<void(ptr_t)> func, ptr_t args) 
 
 kThread::kThread(Cluster& cluster) :
         localCluster(&cluster), cv_flag(false), threadSelf(&kThread::run, this) {
-
     initialSynchronization();
 }
 
@@ -78,11 +78,13 @@ void kThread::initialSynchronization() {
 }
 
 void kThread::run() {
-    initialize(false);
+    initialize();
+    initializeMainUT(true);
     defaultRun(this);
 }
 void kThread::runWithFunc(std::function<void(ptr_t)> func, ptr_t args) {
-    initialize(false);
+    initialize();
+    //There is no need for a mainUT to be created
     func(args);
 }
 
@@ -116,7 +118,7 @@ void kThread::switchContext(void* args) {
     switchContext(ut, args);
 }
 
-void kThread::initialize(bool isDefaultKT) {
+void kThread::initialize() {
     /*
      * Set the thread_local pointer to this thread, later we can
      * find the executing thread by referring to this.
@@ -124,6 +126,8 @@ void kThread::initialize(bool isDefaultKT) {
     kThread::currentKT = this;
     kThread::ktReadyQueue = new IntrusiveList<uThread>();
 
+}
+void kThread::initializeMainUT(bool isDefaultKT) {
     /*
      * if defaultKT, then create a stack for mainUT.
      * kernel thread's stack is assigned to initUT.
