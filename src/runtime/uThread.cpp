@@ -46,7 +46,7 @@ void uThread::destory(bool force = false) {
     //check whether we should cache it or not
     totalNumberofUTs--;
     if (slowpath(force) || (utCache.push(this) < 0)) {
-        munmap((ptr_t) (stackBottom), stackSize);       //Free the allocated memory for stack
+        free((ptr_t) (stackBottom));       //Free the allocated memory for stack
     }
 }
 
