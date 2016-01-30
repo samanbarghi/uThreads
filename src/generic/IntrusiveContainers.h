@@ -265,6 +265,17 @@ public:
     T* last = el.remove(*first, count);
     splice_back(*first, *last);
   }
+
+  void transferAllFrom(IntrusiveList& el) {
+    GENASSERT1(!el.empty(), FmtHex(&el));
+    T* first = el.front();
+    T* last = el.back();
+    first->Link::prev->Link::next = last->Link::next;
+    last->Link::next->Link::prev = first->Link::prev;
+    first->Link::prev = nullptr;
+    last->Link::next = nullptr;
+    splice_back(*first, *last);
+  }
 } __packed;
 
 #endif /* _IntrusiveContainer_h_ */
