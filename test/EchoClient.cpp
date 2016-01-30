@@ -42,8 +42,16 @@ int main(int argc, char* argv[]){
         for(;;){
 
             count = 0;
-            cout << "Enter a message:" ;
+            cout << "Enter a message (type EXIT to exit):" << endl ;
             getline(cin, msg);
+            if(msg.length() == 0)
+                continue;
+            if(msg.compare("EXIT") == 0)
+            {
+                cconn.close();
+                return 0;
+            }
+
 
             if(cconn.send(msg.c_str(), msg.length(), 0) < 0){
                 cerr << "Failed to send the message" << endl;
