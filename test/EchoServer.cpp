@@ -51,7 +51,10 @@ int main(int argc, char* argv[]) {
     //Creating the socket
     try{
         Connection sconn(AF_INET, SOCK_STREAM , 0);
-        sconn.bind((struct sockaddr *) &servaddr, sizeof(servaddr));
+        if( sconn.bind((struct sockaddr *) &servaddr, sizeof(servaddr)) < 0){
+            cerr << "Could not bind to 8888" << endl;
+            return 1;
+        }
         sconn.listen(10);
         for(;;){
             Connection* cconn  = sconn.accept((struct sockaddr*)nullptr, nullptr);
