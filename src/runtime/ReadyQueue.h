@@ -249,7 +249,7 @@ private:
     void pushMany(IntrusiveList<uThread>& utList, size_t count){
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         spinLock(mlock);
-        queue.transferFrom(utList, count);
+        queue.transferAllFrom(utList);
         size+=count;
         unBlock();
     }
