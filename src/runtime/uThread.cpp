@@ -51,9 +51,16 @@ void uThread::destory(bool force = false) {
 }
 
 vaddr uThread::createStack(size_t ssize) {
-    ptr_t st = malloc(ssize);
-    if (st == nullptr)
-        exit(-1); //TODO: Proper exception
+#if defined(__linux__)
+    ptr_t st = mmap(nullptr,ssize, PROT_WRITE | PROT_READ, MAP_ANONYMOUS | MAP_PRIVATE | MAP_GROWSDOWN, -1, 0);
+    if(st == MAP_FAILED)
+    {
+        std::cerr << "Error allocating memory for stack" << std::endl;
+        exit(1);
+    }
+#else
+#error undefined platform: only __linux__ supported at this time
+#endif
     return ((vaddr) st);
 }
 

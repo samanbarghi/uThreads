@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 #if defined(__linux__)
+#include <sys/mman.h>
 
 #define fastpath(x)  (__builtin_expect((bool(x)),true))
 #define slowpath(x)  (__builtin_expect((bool(x)),false))
