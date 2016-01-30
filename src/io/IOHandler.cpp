@@ -84,7 +84,7 @@ void IOHandler::block(PollData &pd, bool isRead){
 int IOHandler::close(PollData &pd){
 
     std::lock_guard<std::mutex> pdlock(pd.mtx);
-    assert(pd.rut < POLL_WAIT && pd.wut < POLL_WAIT);
+    assert(pd.rut > POLL_WAIT && pd.wut > POLL_WAIT);
     //remove from underlying poll structure
     int res = _Close(pd.fd);
 
