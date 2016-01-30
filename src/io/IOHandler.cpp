@@ -37,7 +37,7 @@ IOHandler* IOHandler::create(Cluster& cluster){
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
 
-    int res = _Open(pd.fd, &pd);
+    int res = _Open(pd.fd, pd);
     //TODO: handle epoll errors
 }
 void IOHandler::wait(PollData& pd, int flag){

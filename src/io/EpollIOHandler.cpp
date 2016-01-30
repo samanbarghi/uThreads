@@ -33,10 +33,10 @@ EpollIOHandler::EpollIOHandler(Cluster& cluster) : IOHandler(cluster) {
     events = (epoll_event*)calloc(MAXEVENTS, sizeof(struct epoll_event));
 }
 
-int EpollIOHandler::_Open(int fd, PollData *pd){
+int EpollIOHandler::_Open(int fd, PollData &pd){
     struct epoll_event ev;
     ev.events = EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET;
-    ev.data.ptr = (void*)pd;
+    ev.data.ptr = (void*)&pd;
 
     int res = epoll_ctl(epoll_fd,EPOLL_CTL_ADD, fd, &ev);
     if(slowpath(res < 0))

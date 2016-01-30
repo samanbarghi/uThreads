@@ -99,6 +99,8 @@ public:
      * Usually used before accept
      */
     PollData(): closing(false){};
+    PollData(const PollData&) = delete;
+    const PollData& operator=(const PollData&) = delete;
     ~PollData(){};
 
 };
@@ -121,7 +123,7 @@ protected:
         UT_IOWRITE   = 1 << 1                            //WRITE
     };
 
-    virtual int _Open(int fd, PollData *pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
+    virtual int _Open(int fd, PollData &pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
     virtual int  _Close(int fd) = 0;
     virtual void _Poll(int timeout)=0;                ///
 
@@ -168,7 +170,7 @@ private:
     int epoll_fd = -1;
     struct epoll_event* events;
 
-    int _Open(int fd, PollData* pd);
+    int _Open(int fd, PollData& pd);
     int  _Close(int fd);
     void _Poll(int timeout);
 
