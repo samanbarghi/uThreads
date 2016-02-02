@@ -34,7 +34,7 @@ class Connection {
     friend IOHandler;
 private:
     /* used whith polling */
-    PollData pd;
+    PollData* pd;
     //related file descriptor
     int fd = -1;
 
@@ -54,7 +54,7 @@ private:
 
     void setFD(int fd) {
         this->fd = fd;
-        this->pd.fd = fd;
+        this->pd->fd = fd;
     }
 
 public:

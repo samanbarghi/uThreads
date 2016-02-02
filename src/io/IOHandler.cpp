@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <iostream>
+#include <sstream>
 
 IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this){}
 
@@ -37,6 +38,7 @@ IOHandler* IOHandler::create(Cluster& cluster){
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
 
+    std::unique_lock<std::mutex> pdlock(pd.mtx);
     int res = _Open(pd.fd, pd);
     //TODO: handle epoll errors
 }
@@ -63,6 +65,7 @@ void IOHandler::block(PollData &pd, bool isRead){
         std::cerr << "Exception on open rut" << std::endl;
 
     pdlock.unlock();
+    pdlock.release();
 
     uThread* old = kThread::currentKT->currentUT;
     //TODO:decrease the capture list to avoid hitting the heap
@@ -93,11 +96,14 @@ int IOHandler::close(PollData &pd){
 
     if(flag)
         unblock(pd, flag);
+
+    pd.closing = true;
     //remove from underlying poll structure
     int res = _Close(pd.fd);
 
-    pd.reset();
+    //pd.reset();
     //TODO: handle epoll errors
+    pollCache.pushPollData(&pd);
     return res;
 }
 
@@ -111,10 +117,11 @@ void IOHandler::reset(PollData& pd){
 }
 
 void IOHandler::unblock(PollData &pd, int flag){
-    //if it's closing no need to process
-    if(slowpath(pd.closing.load())) return;
 
     std::lock_guard<std::mutex> pdlock(pd.mtx);
+    //if it's closing no need to process
+    if(slowpath(pd.closing)) return;
+
     uThread **rut = &pd.rut, **wut = &pd.wut;
     uThread *rold = *rut, *wold = *wut;
 
@@ -140,10 +147,10 @@ void IOHandler::unblock(PollData &pd, int flag){
 
 void IOHandler::unblockBulk(PollData &pd, int flag){
 
-    //if it's closing no need to process
-    if(slowpath(pd.closing.load())) return;
-
     std::lock_guard<std::mutex> pdlock(pd.mtx);
+    //if it's closing no need to process
+    if(slowpath(pd.closing)) return;
+
     uThread **rut = &pd.rut, **wut = &pd.wut;
     uThread *rold = *rut, *wold = *wut;
 

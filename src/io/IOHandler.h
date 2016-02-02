@@ -35,9 +35,9 @@ class Connection;
  * @brief Used to maintain file descriptor status while polling for activity
  *
  */
-class PollData{
-    friend Connection;
+class PollData : public IntrusiveQueue<PollData>::Link{
     friend IOHandler;
+    friend Connection;
 private:
 
     /*
@@ -73,7 +73,7 @@ private:
     uThread* wut = nullptr;
 
     /** Whether the fd is closing or not */
-    std::atomic<bool> closing;
+    bool closing;
 
     /**
      * Reset the variables. Used when PollData is recycled to be used
@@ -104,6 +104,31 @@ public:
     ~PollData(){};
 
 };
+class PollCache{
+    friend class IOHandler;
+    friend class Connection;
+protected:
+    IntrusiveQueue<PollData> cache;
+    std::mutex mtx;
+
+    PollData* getPollData(){
+        std::unique_lock<std::mutex> mlock(mtx);
+        if(cache.empty()){
+            for(int i=0 ; i < 16; i++){
+               PollData* pd = new PollData();
+               cache.push(*pd);
+            }
+        }
+        PollData* pd = cache.front();
+        cache.pop();
+        return pd;
+    }
+
+    void pushPollData(PollData* pd){
+        std::unique_lock<std::mutex> mlock(mtx);
+        cache.push(*pd);
+    }
+};
 /*
  * This class is a virtual class to provide nonblocking I/O
  * to uThreads. select/poll/epoll or other type of nonblocking
@@ -122,6 +147,8 @@ protected:
         UT_IOREAD    = 1 << 0,                           //READ
         UT_IOWRITE   = 1 << 1                            //WRITE
     };
+
+    PollCache pollCache;
 
     virtual int _Open(int fd, PollData &pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
     virtual int  _Close(int fd) = 0;
@@ -166,7 +193,7 @@ public:
 class EpollIOHandler : public IOHandler {
     friend IOHandler;
 private:
-    static const int MAXEVENTS  = 1024;                           //Maximum number of events this thread can monitor, TODO: do we want this to be modified?
+    static const int MAXEVENTS  = 1;                           //Maximum number of events this thread can monitor, TODO: do we want this to be modified?
     int epoll_fd = -1;
     struct epoll_event* events;
 

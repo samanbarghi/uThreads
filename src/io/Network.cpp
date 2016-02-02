@@ -38,19 +38,20 @@ Connection::Connection(int domain, int type, int protocol)
 
 void Connection::init(int fd, bool poll){
     //TODO:throw an exception if fd <= 0
-     pd.fd = fd;
+     pd = ioh->pollCache.getPollData();
+     pd->fd = fd;
      //if user is providing fd,
      //add this to the underlying polling structure
      if(poll)
-         ioh->open(pd);
+         pollOpen();
 }
 
 void Connection::pollOpen(){
-    ioh->reset(pd);
-    ioh->open(pd);
+    ioh->reset(*pd);
+    ioh->open(*pd);
 }
 void Connection::pollReset(){
-    ioh->reset(pd);
+    ioh->reset(*pd);
 }
 
 int Connection::socket(int domain, int type, int protocol){
@@ -67,7 +68,7 @@ int Connection::socket(int domain, int type, int protocol){
 
 int Connection::listen(int backlog){
     assert(fd > 0);
-    assert(fd == pd.fd);
+    assert(fd == pd->fd);
 
     int res = ::listen(fd, backlog);
     //on success add to poll
@@ -77,19 +78,20 @@ int Connection::listen(int backlog){
 
 int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen){
     assert(fd != -1);
-    assert(fd == pd.fd);
+    assert(fd == pd->fd);
     //check connection queue for wating connetions
     //Set the fd as nonblocking
     int sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
     while( (sockfd == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
         //User level blocking using nonblocking io
-        ioh->wait(pd, IOHandler::Flag::UT_IOREAD);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOREAD);
         sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
     }
     //otherwise return the result
     if(sockfd > 0){
         conn->setFD(sockfd);
-        ioh->open(conn->pd);
+        ioh->reset(*conn->pd);
+        ioh->open(*conn->pd);
     }
     return sockfd;
 }
@@ -97,13 +99,13 @@ int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrl
 Connection* Connection::accept(struct sockaddr *addr, socklen_t *addrlen)
                                 throw(std::system_error){
     assert(fd != -1);
-    assert(fd == pd.fd);
+    assert(fd == pd->fd);
     //check connection queue for wating connetions
     //Set the fd as nonblocking
     int sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
     while( (sockfd == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
         //User level blocking using nonblocking io
-        ioh->wait(pd, IOHandler::Flag::UT_IOREAD);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOREAD);
         sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
     }
     //otherwise return the result
@@ -126,7 +128,7 @@ int Connection::connect(const struct sockaddr *addr,socklen_t addrlen){
     uint optlen = sizeof(optval);
     volatile int res = ::connect(fd, addr, addrlen);
     if( (res == -1) && (errno == EINPROGRESS )){
-        ioh->wait(pd, IOHandler::Flag::UT_IOWRITE);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOWRITE);
         ::getsockopt(fd,SOL_SOCKET, SO_ERROR, (void*)&optval, &optlen);
 
         if(optval ==0)
@@ -146,7 +148,7 @@ ssize_t Connection::recv(void *buf, size_t len, int flags){
     ssize_t res = ::recv(fd, (void*)buf, len, flags);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
            //User level blocking using nonblocking io
-           ioh->wait(pd, IOHandler::Flag::UT_IOREAD);
+           ioh->wait(*pd, IOHandler::Flag::UT_IOREAD);
            res = ::recv(fd, buf, len, flags);
     }
     return res;
@@ -159,7 +161,7 @@ ssize_t Connection::recvfrom(void *buf, size_t len, int flags,
     ssize_t res = ::recvfrom(fd, (void*)buf, len, flags, src_addr, addrlen);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
            //User level blocking using nonblocking io
-           ioh->wait(pd, IOHandler::Flag::UT_IOREAD);
+           ioh->wait(*pd, IOHandler::Flag::UT_IOREAD);
            res = ::recvfrom(fd, buf, len, flags, src_addr, addrlen);
     }
     return res;
@@ -172,7 +174,7 @@ ssize_t Connection::recvmsg(int sockfd, struct msghdr *msg, int flags){
     ssize_t res = ::recvmsg(fd, msg, flags);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
         //User level blocking using nonblocking io
-        ioh->wait(pd, IOHandler::Flag::UT_IOREAD);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOREAD);
         res = ::recvmsg(fd, msg, flags);
     }
     return res;
@@ -188,7 +190,7 @@ int Connection::recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
     int res = ::recvmmsg(fd, msgvec, vlen, flags, timeout);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
         //User level blocking using nonblocking io
-        ioh->wait(pd, IOHandler::Flag::UT_IOREAD);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOREAD);
         res = ::recvmmsg(fd, msgvec, vlen, flags, timeout);
     }
     return res;
@@ -199,7 +201,7 @@ ssize_t Connection::send(const void *buf, size_t len, int flags){
 
     ssize_t res = ::send(fd, buf, len, flags);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        ioh->wait(pd, IOHandler::Flag::UT_IOWRITE);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOWRITE);
         res = ::send(fd, buf, len, flags);
     }
     return res;
@@ -212,7 +214,7 @@ ssize_t Connection::sendto(int sockfd, const void *buf, size_t len, int flags,
 
     ssize_t res = ::sendto(fd, buf, len, flags, dest_addr, addrlen);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        ioh->wait(pd, IOHandler::Flag::UT_IOWRITE);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOWRITE);
         res = ::sendto(fd, buf, len, flags, dest_addr, addrlen);
     }
     return res;
@@ -223,7 +225,7 @@ ssize_t Connection::sendmsg(const struct msghdr *msg, int flags){
 
     ssize_t res = ::sendmsg(fd, msg, flags);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        ioh->wait(pd, IOHandler::Flag::UT_IOWRITE);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOWRITE);
         res = ::sendmsg(fd, msg, flags);
     }
     return res;
@@ -235,7 +237,7 @@ int Connection::sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
 
     int res = ::sendmmsg(fd, msgvec, vlen, flags);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        ioh->wait(pd, IOHandler::Flag::UT_IOWRITE);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOWRITE);
         res = ::sendmmsg(fd, msgvec, vlen, flags);
     }
     return res;
@@ -248,7 +250,7 @@ ssize_t Connection::read(void *buf, size_t count){
     ssize_t res = ::read(fd, (void*)buf, count);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
            //User level blocking using nonblocking io
-           ioh->wait(pd, IOHandler::Flag::UT_IOREAD);
+           ioh->wait(*pd, IOHandler::Flag::UT_IOREAD);
            res = ::read(fd, buf, count);
     }
     return res;
@@ -259,15 +261,14 @@ ssize_t Connection::write(const void *buf, size_t count){
 
     ssize_t res = ::write(fd, buf, count);
     while( (res == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
-        ioh->wait(pd, IOHandler::Flag::UT_IOWRITE);
+        ioh->wait(*pd, IOHandler::Flag::UT_IOWRITE);
         res = ::write(fd, buf, count);
     }
     return res;
 }
 
 int Connection::close(){
-    pd.closing.store(true);
-    ioh->close(pd);
+    ioh->close(*pd);
     return ::close(fd);
 }
 
