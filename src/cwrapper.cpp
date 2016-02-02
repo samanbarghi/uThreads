@@ -65,8 +65,6 @@ ssize_t connection_sendmsg(WConnection* con, const struct msghdr *msg, int flags
 ssize_t connection_read(WConnection* con, void *buf, size_t count){ return reinterpret_cast<Connection*>(con)->read(buf, count);}
 ssize_t connection_write(WConnection* con, const void *buf, size_t count){ return reinterpret_cast<Connection*>(con)->write(buf, count);}
 int connection_close(WConnection* con){ return reinterpret_cast<Connection*>(con)->close();}
-void connection_poll_open(WConnection* con){ return reinterpret_cast<Connection*>(con)->pollOpen();}
-void connection_poll_reset(WConnection* con){ return reinterpret_cast<Connection*>(con)->pollReset();}
 /**********************************/
 /******************** uThreadPool **************/
 WuThreadPool* uthreadpool_create(){return reinterpret_cast<WuThreadPool*> (new uThreadPool());}

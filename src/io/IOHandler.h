@@ -75,15 +75,20 @@ private:
     /** Whether the fd is closing or not */
     bool closing;
 
+    /** Whether the fd was added to epoll or not **/
+    bool opened;
+
     /**
      * Reset the variables. Used when PollData is recycled to be used
      * for the same FD. The mutex should always be acquired before calling
      * this function.
      */
     void reset(){
+       fd = -1;
        rut = nullptr;
        wut = nullptr;
        closing = false;
+       opened = false;
     };
 
 public:
@@ -91,14 +96,14 @@ public:
      * @brief Create a PollData structure with the assigned fd
      * @param fd file descriptor
      */
-    PollData( int fd) : fd(fd), closing(false){};
+    PollData( int fd) : fd(fd), closing(false), opened(false){};
 
     /**
      * @brief Create a PollData structure but do not assign any fd
      *
      * Usually used before accept
      */
-    PollData(): closing(false){};
+    PollData(): fd(-1), closing(false), opened(false){};
     PollData(const PollData&) = delete;
     const PollData& operator=(const PollData&) = delete;
     ~PollData(){};
@@ -114,7 +119,7 @@ protected:
     PollData* getPollData(){
         std::unique_lock<std::mutex> mlock(mtx);
         if(cache.empty()){
-            for(int i=0 ; i < 16; i++){
+            for(int i=0 ; i < 128; i++){
                PollData* pd = new PollData();
                cache.push(*pd);
             }

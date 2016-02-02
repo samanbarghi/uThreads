@@ -30,28 +30,17 @@ Connection::Connection(int domain, int type, int protocol)
     if(sockfd != -1){
         ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
         fd = sockfd;
-        init(sockfd, true);
+        init();
     }else{
-        throw std::system_error(EFAULT, std::system_category());
+        throw std::system_error(errno, std::system_category());
     }
 }
 
-void Connection::init(int fd, bool poll){
+void Connection::init(){
     //TODO:throw an exception if fd <= 0
      pd = ioh->pollCache.getPollData();
+     //no need to acquire the lock
      pd->fd = fd;
-     //if user is providing fd,
-     //add this to the underlying polling structure
-     if(poll)
-         pollOpen();
-}
-
-void Connection::pollOpen(){
-    ioh->reset(*pd);
-    ioh->open(*pd);
-}
-void Connection::pollReset(){
-    ioh->reset(*pd);
 }
 
 int Connection::socket(int domain, int type, int protocol){
@@ -60,15 +49,13 @@ int Connection::socket(int domain, int type, int protocol){
     if(fd != -1) return -1;
     int sockfd = ::socket(domain, type | SOCK_NONBLOCK, protocol);
     if(sockfd != -1){
-        fd = sockfd;
-        init(sockfd, true);
+        setFD(sockfd);
     }
     return sockfd;
 }
 
 int Connection::listen(int backlog){
     assert(fd > 0);
-    assert(fd == pd->fd);
 
     int res = ::listen(fd, backlog);
     //on success add to poll
@@ -78,7 +65,6 @@ int Connection::listen(int backlog){
 
 int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen){
     assert(fd != -1);
-    assert(fd == pd->fd);
     //check connection queue for wating connetions
     //Set the fd as nonblocking
     int sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
@@ -90,8 +76,6 @@ int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrl
     //otherwise return the result
     if(sockfd > 0){
         conn->setFD(sockfd);
-        ioh->reset(*conn->pd);
-        ioh->open(*conn->pd);
     }
     return sockfd;
 }
@@ -99,7 +83,6 @@ int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrl
 Connection* Connection::accept(struct sockaddr *addr, socklen_t *addrlen)
                                 throw(std::system_error){
     assert(fd != -1);
-    assert(fd == pd->fd);
     //check connection queue for wating connetions
     //Set the fd as nonblocking
     int sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
@@ -112,7 +95,7 @@ Connection* Connection::accept(struct sockaddr *addr, socklen_t *addrlen)
     if(sockfd > 0){
         return new Connection(sockfd);
     }else{
-        throw std::system_error(EFAULT, std::system_category());
+        throw std::system_error(errno, std::system_category());
         return nullptr;
     }
 

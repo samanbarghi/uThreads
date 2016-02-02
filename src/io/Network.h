@@ -34,7 +34,7 @@ class Connection {
     friend IOHandler;
 private:
     /* used whith polling */
-    PollData* pd;
+    PollData* pd = nullptr;
     //related file descriptor
     int fd = -1;
 
@@ -45,12 +45,7 @@ private:
      * @param fd the File Descriptor
      * @param poll Whether to add this to the underlying polling structure or not
      */
-    void init(int fd, bool poll);
-    Connection(int fd, bool poll) :
-            fd(fd) {
-        init(fd, poll);
-    }
-    ;
+    void init();
 
     void setFD(int fd) {
         this->fd = fd;
@@ -66,8 +61,9 @@ public:
      * a Connection object without fd being set
      */
     Connection() :
-            fd(-1) {
+            fd(-1){
         ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
+        init();
     }
     /**
      * @brief Create a connection object with the provided fd
@@ -79,7 +75,7 @@ public:
     Connection(int fd) :
             fd(fd) {
         ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
-        init(fd, true);
+        init();
     }
 
     /**
@@ -95,12 +91,6 @@ public:
     Connection(int domain, int type, int protocol) throw(std::system_error);
 
     ~Connection();
-
-    ///If the fd has not been added to the poller, do it with PollOpen
-    void pollOpen();
-
-    ///Reset the underlying PollData structure
-    void pollReset();
 
     /**
      * @brief nonblocking accept syscall and updating the passed Connection

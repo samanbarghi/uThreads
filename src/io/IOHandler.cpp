@@ -38,19 +38,24 @@ IOHandler* IOHandler::create(Cluster& cluster){
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
 
-    std::unique_lock<std::mutex> pdlock(pd.mtx);
+    //Should be already locked, only call from this->wait
+    //std::unique_lock<std::mutex> pdlock(pd.mtx);
     int res = _Open(pd.fd, pd);
+    if(res == 0)
+        pd.opened = true;
+    else
+        std::cerr << "EPOLL_ERROR: " << errno << std::endl;
     //TODO: handle epoll errors
 }
 void IOHandler::wait(PollData& pd, int flag){
     assert(pd.fd > 0);
     if(flag & Flag::UT_IOREAD) block(pd, true);
     if(flag & Flag::UT_IOWRITE) block(pd, false);
-
 }
 void IOHandler::block(PollData &pd, bool isRead){
 
     std::unique_lock<std::mutex> pdlock(pd.mtx);
+    if(!pd.opened) open(pd);
     uThread** utp = isRead ? &pd.rut : &pd.wut;
     //TODO:check other states
 
@@ -103,6 +108,7 @@ int IOHandler::close(PollData &pd){
 
     //pd.reset();
     //TODO: handle epoll errors
+    pd.reset();
     pollCache.pushPollData(&pd);
     return res;
 }

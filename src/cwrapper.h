@@ -71,8 +71,6 @@ ssize_t connection_read(WConnection* con, void *buf, size_t count);
 ssize_t connection_write(WConnection* con, const void *buf, size_t count);
 
 int connection_close(WConnection* con);
-void connection_poll_open(WConnection* con);
-void connection_poll_reset(WConnection* con);
 /**********************************/
 
 /******************** uThreadPool **************/
