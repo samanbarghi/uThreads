@@ -15,7 +15,7 @@ LIB_NAME=libuThreads.so
 LIB_FULL_NAME=$(LIB_NAME).$(VERSION)
 
 CXX		 := g++ -std=c++1y
-CXXFLAGS := -O3 -g -ggdb -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread
+CXXFLAGS := -O3 -g -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread
 
 SRCEXT 	:= cpp
 ASMEXT 	:= S
@@ -31,6 +31,8 @@ TESTOBJECTS := $(patsubst $(TEST_DIR)/%,$(BIN_DIR)/%,$(TESTSOURCES:.$(SRCEXT)=))
 LIB 	:= -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -ldl -Wl,-soname,$(LIB_NAME).$(VERSION_MAJOR)
 INC		:= -I $(SRC_DIR) -I $(INCLUDE_DIR)
 TARGET	:= $(LIB_DIR)/$(LIB_FULL_NAME)
+
+HTTP_PARSER := test/include/http_parser.c
 
 all: $(TARGET)
 	@mkdir -p $(BUILD_DIR)/io
@@ -59,9 +61,9 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(ASMEXT)
 test: $(TESTOBJECTS)
 
 $(BIN_DIR)/%: $(TEST_DIR)/%.$(SRCEXT)
-	@echo "$@ $<"
 	@mkdir -p $(BIN_DIR)
-	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $< -luThreads
+	$(eval HTTP := $(if $(findstring webserver,$(<)), $(HTTP_PARSER), ))
+	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $(HTTP) $< -luThreads
 
 clean:
 	@echo " Cleaning..."
