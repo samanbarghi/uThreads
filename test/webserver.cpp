@@ -12,6 +12,7 @@
 
 #define PORT 8800
 #define INPUT_BUFFER_LENGTH 4*1024 //4 KB
+#define MAXIMUM_THREADS_PER_CLUSTER 8
 
 /* HTTP responses*/
 #define RESPONSE_METHOD_NOT_ALLOWED "HTTP/1.1 405 Method Not Allowed\r\n"
@@ -39,10 +40,8 @@
 #define LOGF(fmt, params...) printf(fmt "\n", params);
 #define LOG_ERROR(msg) perror(msg);
 
-
 Connection* sconn; //Server socket
 
-//http-parser settings (https://github.com/joyent/http-parser)
 http_parser_settings settings;
 
 typedef struct {
@@ -52,56 +51,6 @@ typedef struct {
     int url_length;
 } custom_data_t;
 
-void make_path_from_url(const char* URL, char* file_path){
-
-        strcpy(file_path, ROOT_FOLDER);
-        strcat(file_path, URL);
-        //if we need to fetch index.html
-        if(strcmp(URL, "/") == 0){
-            strcat(file_path, "index.html");
-        }
-}
-
-/*
- * Read file content to a a char array
- * Return file size on success and -1 on failure
- */
-
-ssize_t read_file_content(const char* file_path, char **buffer){
-
-	FILE* fp;
-	size_t file_size;
-
-	fp= fopen(file_path, "rb");
-	//Failed openning the file
-	if(!fp)
-		return -1;
-
-	//Determine the file size
-	fseek(fp, 0L, SEEK_END);
-	file_size = ftell(fp);
-	rewind(fp);
-
-	//Allocate memory for buffer
-	*buffer = (char*)calloc( 1, file_size + 1);
-	if(!*buffer){
-		fclose(fp);
-		LOG_ERROR("Error allocation buffer!");
-		return -1;
-	}
-
-	//Copy file content into the buffer
-	if(fread(*buffer, file_size, 1, fp) != 1){
-		fclose(fp);
-		free(*buffer);
-		LOG_ERROR("File read failed");
-		return -1;
-	}
-
-	fclose(fp);
-
-	return file_size;
-}
 ssize_t read_http_request(Connection& cconn, void *vptr, size_t n){
 
 	size_t nleft;
@@ -238,12 +187,28 @@ void *handle_connection(void *arg){
     //pthread_exit(NULL);
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if ( argc != 2 ){
+       printf( "USAGE: %s NUMBER_OF_THREADS\n", argv[0] );
+       return 0;
+    }
+    //set total number of worker threads
+    size_t thread_count = atoi(argv[1]);
+    //Create clusters based on MAXIMUM_THREADS_PER_CLUSTER
+    size_t cluster_count = thread_count/MAXIMUM_THREADS_PER_CLUSTER;
+
     struct sockaddr_in serv_addr; //structure containing an internet address
     bzero((char*) &serv_addr, sizeof(serv_addr));
 
-    Cluster cluster;
-    kThread kta(Cluster::getDefaultCluster());
+    //Create clusters
+    Cluster* clusters[cluster_count];
+    for(size_t i=0; i < cluster_count; i++)
+        clusters[i] = new Cluster();
+
+    //Create kThreads
+    kThread* kThreads[thread_count];
+    for(size_t i=0; i < thread_count; i++)
+        kThreads[i] = new kThread(*clusters[i%cluster_count]);
 
 
     serv_addr.sin_family = AF_INET;
@@ -262,9 +227,9 @@ int main() {
             exit(1);
         };
         sconn->listen(65535);
-        while(1) {
-                Connection* cconn  = sconn->accept((struct sockaddr*)nullptr, nullptr);
-                uThread::create()->start(Cluster::getDefaultCluster(), (void*)handle_connection, (void*)cconn);
+        for(size_t i=0; ; i= (i+1)%cluster_count){
+                Connection* cconn  = sconn->accept(*clusters[i],(struct sockaddr*)nullptr, nullptr);
+                uThread::create()->start(*clusters[i], (void*)handle_connection, (void*)cconn);
         }
         sconn->close();
     }catch(std::system_error& error){
@@ -272,5 +237,7 @@ int main() {
         sconn->close();
     }
 
+    free(clusters);
+    free(kThreads);
     return 0;
 }
