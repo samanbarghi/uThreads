@@ -109,6 +109,21 @@ public:
     ~PollData(){};
 
 };
+
+/*
+ * PollCache is used to cache PollData objects and avoid
+ * nullptr exceptions after the file descriptor is closed.
+ * e.g., after a connection is closed, epoll might generate
+ * a notification returning the pointer to PollData back to
+ * the IOHandler. At this point if the PollData object is
+ * destroyed, the pointer is not valid anymore and segfault
+ * can happen. By allocating space in PollCache and returning
+ * the pointer to it after the connection is closed, the pointer
+ * is always valid. TODO: it might be necessary to deal with stale
+ * notifications in the future, but for now the assumption is that
+ * a stale notification can only cause an unnecessary unblock of the
+ * new uThread(if the PollData is assigned to a new Connection).
+ */
 class PollCache{
     friend class IOHandler;
     friend class Connection;
