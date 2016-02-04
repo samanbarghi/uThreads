@@ -270,10 +270,7 @@ public:
     GENASSERT1(!el.empty(), FmtHex(&el));
     T* first = el.front();
     T* last = el.back();
-    first->Link::prev->Link::next = last->Link::next;
-    last->Link::next->Link::prev = first->Link::prev;
-    first->Link::prev = nullptr;
-    last->Link::next = nullptr;
+    el.anchor.next = el.anchor.prev = &el.anchor;
     splice_back(*first, *last);
   }
 } __packed;
