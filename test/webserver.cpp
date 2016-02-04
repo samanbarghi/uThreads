@@ -13,8 +13,6 @@
 #define PORT 8800
 #define INPUT_BUFFER_LENGTH 4*1024 //4 KB
 
-#define ROOT_FOLDER "/home/sbarghi/tmp/www"
-
 /* HTTP responses*/
 #define RESPONSE_METHOD_NOT_ALLOWED "HTTP/1.1 405 Method Not Allowed\r\n"
 #define RESPONSE_NOT_FOUND "HTTP/1.1 404 Not Found\n" \
