@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
     //set total number of worker threads
     size_t thread_count = atoi(argv[1]);
     //Create clusters based on MAXIMUM_THREADS_PER_CLUSTER
-    size_t cluster_count = thread_count/MAXIMUM_THREADS_PER_CLUSTER;
+    size_t cluster_count = (thread_count/MAXIMUM_THREADS_PER_CLUSTER)+1;
 
     struct sockaddr_in serv_addr; //structure containing an internet address
     bzero((char*) &serv_addr, sizeof(serv_addr));
