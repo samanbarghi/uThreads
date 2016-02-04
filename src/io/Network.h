@@ -79,6 +79,20 @@ public:
     }
 
     /**
+     * @brief Create a connection object with the provided fd, and add
+     * it to the poller thread of the provided cluster
+     * @param fd
+     *
+     * If the connection is already established by other means, set the
+     * fd and add it to the polling structure
+     */
+    Connection(Cluster& cluster, int fd) :
+            fd(fd) {
+        ioh = cluster.iohandler;
+        init();
+    }
+
+    /**
      * @brief Same as socket syscall adds | SOCK_NONBLOCK to type
      * @return same as socket syscall
      *
@@ -103,13 +117,21 @@ public:
     int accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen);
 
     /**
-     * @brief Accept a connection and returns a connection object
+     * @brief Accepts a connection and returns a connection object
      * @return Newly created connection
      *
      * Throws a std::system_error exception on error. Never call from C.
      */
     Connection* accept(struct sockaddr *addr, socklen_t *addrlen) throw(std::system_error);
 
+    /**
+     * @brief Accepts a connection, adds it to the poller thread of
+     * the provided cluster, and returns a connection object
+     * @return Newly created connection
+     *
+     * Throws a std::system_error exception on error. Never call from C.
+     */
+    Connection* accept(Cluster& cluster, struct sockaddr *addr, socklen_t *addrlen) throw(std::system_error);
 
     /**
      * @brief Same as socket syscall, set the fd for current connection

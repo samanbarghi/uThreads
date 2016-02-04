@@ -65,7 +65,7 @@ int Connection::listen(int backlog){
 
 int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen){
     assert(fd != -1);
-    //check connection queue for wating connetions
+    //check connection queue for waiting connections
     //Set the fd as nonblocking
     int sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
     while( (sockfd == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
@@ -83,7 +83,7 @@ int Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrl
 Connection* Connection::accept(struct sockaddr *addr, socklen_t *addrlen)
                                 throw(std::system_error){
     assert(fd != -1);
-    //check connection queue for wating connetions
+    //check connection queue for waiting connections
     //Set the fd as nonblocking
     int sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
     while( (sockfd == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
@@ -100,6 +100,28 @@ Connection* Connection::accept(struct sockaddr *addr, socklen_t *addrlen)
     }
 
 }
+
+Connection* Connection::accept(Cluster& cluster, struct sockaddr *addr, socklen_t *addrlen)
+                                throw(std::system_error){
+    assert(fd != -1);
+    //check connection queue for waiting connections
+    //Set the fd as nonblocking
+    int sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
+    while( (sockfd == -1) && (errno == EAGAIN || errno == EWOULDBLOCK)){
+        //User level blocking using nonblocking io
+        ioh->wait(*pd, IOHandler::Flag::UT_IOREAD);
+        sockfd = ::accept4(fd, addr, addrlen, SOCK_NONBLOCK );
+    }
+    //otherwise return the result
+    if(sockfd > 0){
+        return new Connection(cluster, sockfd);
+    }else{
+        throw std::system_error(errno, std::system_category());
+        return nullptr;
+    }
+
+}
+
 int Connection::bind(const struct sockaddr *addr, socklen_t addrlen){
     assert(fd > 0);
     return ::bind(fd, addr, addrlen);
