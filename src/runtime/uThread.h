@@ -23,9 +23,8 @@
 #include "generic/basics.h"
 #include "generic/IntrusiveContainers.h"
 #include "Stack.h"
+#include "BlockingSync.h"
 
-class BlockingQueue;
-class Mutex;
 class IOHandler;
 class Cluster;
 class uThreadCache;
@@ -65,6 +64,37 @@ class uThread: public IntrusiveList<uThread>::Link {
     friend class BlockingQueue;
     friend class IOHandler;
 private:
+    /*
+     * initUT is the initial uThread that is created when program starts.
+     * initUT holds the context that runs the main thread. It does not have
+     * a separate stack and takes over the underlying kThread(defaultKT)
+     * stack to be able to take control of the main function.
+     */
+    static uThread* initUT;
+
+
+    /* This is only used to create mainUT for kThreads */
+   static uThread* createMainUT(Cluster&);
+
+   /* Variables for Joinable uThread */
+   Mutex   joinMtx;
+   ConditionVariable joinWait;
+
+   /*
+    * Wait or Signal the other thread
+    */
+   inline void waitOrSignal(){
+       joinMtx.acquire();
+       if(joinWait.empty()){
+           joinWait.wait(joinMtx);
+           joinMtx.release();
+       }else{
+           joinWait.signal(joinMtx);
+       }
+   }
+
+
+protected:
      /* hold various states that uThread can go through */
     enum class State : std::uint8_t {
         INITIALIZED,                                    //uThread is initialized
@@ -74,7 +104,14 @@ private:
         MIGRATE,                                  //Migrating to another cluster
         WAITING,                                            //uThread is Blocked
         TERMINATED                    //uThread is done and should be terminated
-    };
+    } state;
+
+    /* hold joinable state of the uThread */
+    enum class JState : std::uint8_t {
+        DETACHED,          //Detached
+        JOINABLE,          //Joinable
+        JOINING            //Joining
+    } jState;
 
     //TODO: Add a function to check uThread's stack for overflow ! Prevent overflow or throw an exception or error?
     //TODO: Add a debug object to project, or a dtrace or lttng functionality
@@ -89,20 +126,9 @@ private:
     uThread(vaddr sb, size_t ss) :
             stackPointer(vaddr(this)), stackBottom(sb), stackSize(ss), state(
                     State::INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(
-                    nullptr) {
+                    nullptr), jState(JState::DETACHED) {
         totalNumberofUTs++;
     }
-
-     /* This is only used to create mainUT for kThreads */
-    static uThread* createMainUT(Cluster&);
-
-    /*
-     * initUT is the initial uThread that is created when program starts.
-     * initUT holds the context that runs the main thread. It does not have
-     * a separate stack and takes over the underlying kThread(defaultKT)
-     * stack to be able to take control of the main function.
-     */
-    static uThread* initUT;
 
     /* Create a stack with the given size */
     static vaddr createStack(size_t);
@@ -126,8 +152,6 @@ private:
     /*
      * Thread variables
      */
-    /* Current state of the uThread */
-    State state;
 
     /*
      * Current Cluster that uThread is executed on.
@@ -151,7 +175,7 @@ private:
      * The object is destroyed either due to the cache being full, or the bool
      * parameter pass to it, which means force destroying the object, is true.
      */
-    void destory(bool);
+    virtual void destory(bool);
 
     /*
      * This function is used to recycle the uThread as it is pushed in
@@ -167,6 +191,10 @@ private:
      * or perform some maintenance jobs after the context is switched.
      */
     void suspend(std::function<void()>&);
+
+    //Function to invoke the run function of a uThread
+    static void invoke(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn;
+
 public:
     /// uThread cannot be copied or assigned
     uThread(const uThread&) = delete;
@@ -174,26 +202,24 @@ public:
     /// @copydetails uThread(const uThread&)
     const uThread& operator=(const uThread&) = delete;
 
-    /// @copydetails uThread(vaddr sb, size_t ss)
-    ~uThread() = delete;
-
-
     /**
      * @brief Create a uThread with a given stack size
      * @param ss stack size
-     * @return a pointer to the newly initialized uThread
+     * @param joinable Whether this thread is joinable or detached
+     * @return a pointer to a new uThread
      *
      * This function relies on a uThreadCache structure
      * and does not always allocate the stack.
      */
-    static uThread* create(size_t ss);
+    static uThread* create(size_t ss, bool joinable=false);
 
     /**
      * @brief Create a uThread with default stack size
-     * @return
+     * @param joinable Whether this thread is joinable or detached
+     * @return a pointer to a new uThread
      */
-    static uThread* create() {
-        return create(defaultStackSize);
+    static uThread* create(bool joinable=false) {
+        return create(defaultStackSize, joinable);
     }
 
     /**
@@ -241,6 +267,17 @@ public:
      * it will be placed back on the ReadyQueue.
      */
     void resume();
+
+    /**
+     * @brief Wait for uThread to finish execution and exit
+     * @return Whether join was successful or failed
+     */
+    bool join();
+
+    /**
+     * @brief Detach a joinable thread.
+     */
+    void detach();
 
 
     /**

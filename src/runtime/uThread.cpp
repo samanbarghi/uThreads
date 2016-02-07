@@ -36,10 +36,17 @@ uThread* uThread::initUT = nullptr;
 kThread kThread::defaultKT;
 
 /******************************************/
-void uThread::reset() {
+void uThread::reset(){
     stackPointer = (vaddr) this;                //reset stack pointer
     currentCluster = nullptr;
     state = State::INITIALIZED;
+    jState = JState::DETACHED;
+}
+
+void uThread::invoke(funcvoid3_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3) {
+    func(arg1, arg2, arg3);
+    currentUThread()->terminate();
+    //Context will be switched in kThread
 }
 
 void uThread::destory(bool force = false) {
@@ -57,7 +64,7 @@ vaddr uThread::createStack(size_t ssize) {
     return ((vaddr) st);
 }
 
-uThread* uThread::create(size_t ss) {
+uThread* uThread::create(size_t ss, bool joinable) {
     uThread* ut = utCache.pop();
 
     if (ut == nullptr) {
@@ -67,8 +74,9 @@ uThread* uThread::create(size_t ss) {
     } else {
         totalNumberofUTs++;
     }
+    if(joinable)
+        ut->jState = JState::JOINABLE;
     return ut;
-
 }
 
 uThread* uThread::createMainUT(Cluster& cluster) {
@@ -80,7 +88,7 @@ uThread* uThread::createMainUT(Cluster& cluster) {
 void uThread::start(const Cluster& cluster, ptr_t func, ptr_t args1,
         ptr_t args2, ptr_t args3) {
     currentCluster = const_cast<Cluster*>(&cluster);
-    stackPointer = (vaddr) stackInit(stackPointer, (ptr_t) Cluster::invoke,
+    stackPointer = (vaddr) stackInit(stackPointer, (ptr_t) uThread::invoke,
             (ptr_t) func, args1, args2, args3);	//Initialize the thread context
     assert(stackPointer != 0);
     this->resume();
@@ -117,14 +125,36 @@ void uThread::resume() {
         currentCluster->schedule(this);//Put uThread back on ReadyQueue
     }
 }
-
-void uThread::terminate() {
-    currentUThread()->state = State::TERMINATED;
+void uThread::terminate(){
+    if(currentUThread()->jState != JState::DETACHED){
+        currentUThread()->waitOrSignal();
+    }
+     currentUThread()->state = State::TERMINATED;
     /*
      * It's scheduler job to switch to another context
      * and terminate this uThread
      */
     kThread::currentkThread()->switchContext();
+
+}
+bool uThread::join(){
+    /*
+     * If Detached, another thread is joining,
+     * there is no need to wait here.
+     */
+    if(jState != JState::JOINABLE) return false;
+    jState = JState::JOINING;
+    waitOrSignal();
+    return true;
+}
+
+void uThread::detach(){
+    jState = JState::DETACHED;
+    joinMtx.acquire();
+    if(!joinWait.empty()){
+        joinWait.signal(joinMtx);
+    }
+    joinMtx.release();
 }
 
 uThread* uThread::currentUThread() {
