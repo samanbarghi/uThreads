@@ -16,6 +16,7 @@
  *******************************************************************************/
 
 #include "BlockingSync.h"
+#include "uThread.h"
 
 bool BlockingQueue::suspend(std::mutex& lock) {
 
@@ -77,4 +78,8 @@ void BlockingQueue::signalAll(Mutex& mutex) {
         ut = queue.front();
     }
     mutex.release();
+}
+
+uThread* BlockingQueue::getCurrentUThread(){
+    return uThread::currentUThread();
 }

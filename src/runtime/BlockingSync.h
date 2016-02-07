@@ -19,13 +19,13 @@
 #define UTHREADS_BLOKING_SYNC_H
 
 #include "generic/IntrusiveContainers.h"
-#include "runtime/kThread.h"
 #include <cassert>
 #include <mutex>
 #include <iostream>
 
 //TODO: implement timeouts for all synchronization and mutual exclusion variables
 class Mutex;
+class uThread;
 /**
  * @class BlockingQueue
  * @brief A queue used to keep track of blocked uThreads
@@ -36,11 +36,14 @@ class Mutex;
 class BlockingQueue {
     friend class uThread;
     friend class Mutex;
+    friend class OwnerLock;
     friend class ConditionVariable;
     friend class Semaphore;
 
     IntrusiveList<uThread> queue;
 
+    //temporary fix to avoid including uThread.h
+    uThread* getCurrentUThread();
 public:
     BlockingQueue() = default;
     ~BlockingQueue() {
@@ -131,8 +134,8 @@ protected:
         //TODO: since assert is disabled during production, find another way
         //to make sure the following is happening
         //Mutex cannot have recursive locking
-        assert(OL || owner != uThread::currentUThread());
-        if(fastpath(owner != nullptr && (!OL || owner != uThread::currentUThread()))) {
+        assert(OL || owner != bq.getCurrentUThread());
+        if(fastpath(owner != nullptr && (!OL || owner != bq.getCurrentUThread()))) {
             return bq.suspend(lock); // release lock, false: timeout
         } else {
             /*
@@ -142,7 +145,7 @@ protected:
              * 		+ The type is OwnlerLock and the calling thread is holding the lock
              * Otherwise, block and wait for the lock
              */
-            owner = uThread::currentUThread();
+            owner = bq.getCurrentUThread();
             lock.unlock();
             return true;
         }
@@ -176,7 +179,7 @@ public:
      */
     void release() {
         lock.lock();
-        assert(owner == uThread::currentUThread()); //Attempt to release lock by non-owner
+        assert(owner == bq.getCurrentUThread()); //Attempt to release lock by non-owner
         internalRelease();
     }
 };
@@ -219,7 +222,7 @@ public:
      */
     mword release() {
         lock.lock();
-        assert(owner == uThread::currentUThread());
+        assert(owner == bq.getCurrentUThread());
         if (--counter == 0)
             internalRelease();
         else
@@ -260,6 +263,12 @@ public:
      * @param mutex The mutex to be released after unblocking is done
      */
     void signalAll(Mutex& mutex) {bq.signalAll(mutex);}
+
+    /**
+     * @brief Whether the waiting list is empty or not
+     * @return Whether the waiting list is empty or not
+     */
+    bool empty(){ return bq.empty(); }
 };
 
 /**
