@@ -88,7 +88,6 @@ private:
     uThread* tryGetWork();                              //Get a unit of work from the ready queue
     ssize_t tryGetWorks(IntrusiveList<uThread>&);       //Get as many uThreads as possible from the readyQueue and move them to local queue
 
-    static void invoke(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn; //Function to invoke the run function of a uThread
 
     IOHandler* iohandler;
 public:
