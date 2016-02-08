@@ -184,7 +184,6 @@ void *handle_connection(void *arg){
     free(my_data);
     delete cconn;
     free(parser);
-    //pthread_exit(NULL);
 }
 
 int main(int argc, char* argv[]) {
@@ -195,19 +194,21 @@ int main(int argc, char* argv[]) {
     //set total number of worker threads
     size_t thread_count = atoi(argv[1]);
     //Create clusters based on MAXIMUM_THREADS_PER_CLUSTER
-    size_t cluster_count = (thread_count/MAXIMUM_THREADS_PER_CLUSTER)+1;
+    size_t cluster_count = (thread_count/(MAXIMUM_THREADS_PER_CLUSTER+1))+1;
 
     struct sockaddr_in serv_addr; //structure containing an internet address
     bzero((char*) &serv_addr, sizeof(serv_addr));
 
     //Create clusters
     Cluster* clusters[cluster_count];
-    for(size_t i=0; i < cluster_count; i++)
+    //Start with adding kThreads to the default Cluster
+    clusters[0] = &Cluster::getDefaultCluster();
+    for(size_t i=1; i < cluster_count; i++)
         clusters[i] = new Cluster();
 
-    //Create kThreads
+    //Create kThreads, default thread is already started --> i=1
     kThread* kThreads[thread_count];
-    for(size_t i=0; i < thread_count; i++)
+    for(size_t i=1; i < thread_count-1; i++)
         kThreads[i] = new kThread(*clusters[i%cluster_count]);
 
 
