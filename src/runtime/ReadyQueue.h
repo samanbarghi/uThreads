@@ -26,6 +26,12 @@ class uThread;
 class ReadyQueue {
     friend class Cluster;
 private:
+    /*
+     * Start and end points for the exponential spin
+     */
+    const uint32_t SPIN_START = 4;
+    const uint32_t SPIN_END = 4 * 1024;
+
     std::mutex mtx;//mutex to protect the queue
     volatile unsigned int  size;//keep track of the size of the queue
     /*
@@ -109,9 +115,6 @@ private:
      * just need to check whether the queue is empty and block on that.
      */
     inline void spinLock(std::unique_lock<std::mutex>& mlock){
-        const uint32_t SPIN_START = 4;
-        const uint32_t SPIN_END = 4 * 1024;
-
         size_t spin = SPIN_START;
         for(;;){
             if(mlock.try_lock()) break;
@@ -165,20 +168,6 @@ private:
      * if the queue is empty.
      */
     ssize_t popMany(IntrusiveList<uThread> &nqueue) {//Pop with condition variable
-        /*
-         * Spin before blocking to avoid the
-         * system call overhead of cv wait on
-         * the consumer and cv wake up on the
-         * producer.
-         * TODO: This was added before spin-block
-         * functionality of mutex, might not be
-         * needed anymore.
-         */
-        for (int spin = 1; spin < 52 * 1024; spin++) {
-            if (size > 0) break;
-            asm volatile("pause");
-        }
-
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         spinLock(mlock);
         if (fastpath(size == 0)) {
