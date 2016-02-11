@@ -104,12 +104,12 @@ void kThread::switchContext(void* args) {
         ktrq->pop_front();
     } else {                //If empty try to fill
 
-        localCluster->tryGetWorks(*ktrq);   //Try to fill the local queue
-        if (!ktrq->empty()) {       //If there is more work start using it
+        ssize_t res = localCluster->tryGetWorks(*ktrq);   //Try to fill the local queue
+        if (res > 0) {       //If there is more work start using it
             ut = ktrq->front();
             ktrq->pop_front();
         } else {        //If no work is available, Switch to defaultUt
-            if (kThread::currentKT->currentUT->state == uThread::State::YIELD)
+            if (res == 0 && kThread::currentKT->currentUT->state == uThread::State::YIELD)
                 return; //if the running uThread yielded, continue running it
             ut = mainUT;
         }

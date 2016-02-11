@@ -159,7 +159,8 @@ private:
      */
     ssize_t tryPopMany(IntrusiveList<uThread> &nqueue) {
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
-        if(!mlock.owns_lock() || size == 0) return -1;
+        if(!mlock.owns_lock()) return -1;
+        if(size == 0) return 0;
         return removeMany(nqueue);
     }
 
