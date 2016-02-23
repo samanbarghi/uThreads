@@ -202,7 +202,7 @@ public:
      *
      * The returned type depends on the platform.
      */
-    std::thread::id getThreadID();
+    std::thread::id getID();
 
     /**
      * @brief Get the pointer to the current kThread

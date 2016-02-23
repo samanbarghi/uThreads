@@ -204,6 +204,6 @@ std::thread::native_handle_type kThread::getThreadNativeHandle() {
         return 0;
 }
 
-std::thread::id kThread::getThreadID() {
+std::thread::id kThread::getID() {
    return threadID;
 }

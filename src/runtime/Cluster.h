@@ -91,6 +91,9 @@ private:
 
     IOHandler* iohandler;
 public:
+    /**
+     * Create a new Cluster
+     */
     Cluster();
     virtual ~Cluster();
 
@@ -115,7 +118,7 @@ public:
      * @return The ID of the cluster
      *
      */
-    uint64_t getClusterID() const {
+    uint64_t getID() const {
         return clusterID;
     }
     /**

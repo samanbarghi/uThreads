@@ -29,7 +29,7 @@ int main(){
     for (int i=0; i< 100; i++){
         //Numbers should be written in order
         ut = uThread::create(true);
-        cout << "ID: " << ut->getUthreadId() << endl;
+        cout << "ID: " << ut->getID() << endl;
         value[i] = i;
         cout << "Before Joinable: "<< value[i] << endl;
 

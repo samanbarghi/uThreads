@@ -30,7 +30,7 @@ WCluster* cluster_create(){  return reinterpret_cast<WCluster*>( new Cluster( ) 
 void cluster_destroy(WCluster* cluster){ delete reinterpret_cast<Cluster*>(cluster); }
 WCluster* cluster_get_default(){ return reinterpret_cast<WCluster*>(&Cluster::getDefaultCluster());}
 WCluster* cluster_get_current(){ return reinterpret_cast<WCluster*>(const_cast<Cluster*>(&uThread::currentUThread()->getCurrentCluster()));}
-uint64_t cluster_get_id(WCluster* cluster){ return reinterpret_cast<Cluster*>(cluster)->getClusterID();}
+uint64_t cluster_get_id(WCluster* cluster){ return reinterpret_cast<Cluster*>(cluster)->getID();}
 /**********************************/
 
 /*************kThread**************/

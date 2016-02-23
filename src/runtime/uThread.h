@@ -302,7 +302,7 @@ public:
      * @brief get the ID of this uThread
      * @return ID of the uThread
      */
-    uint64_t getUthreadId() const {
+    uint64_t getID() const {
         return uThreadID;
     }
 

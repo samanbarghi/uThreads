@@ -23,7 +23,7 @@
 using namespace std;
 static void voidrun(void* args){
 
-	cout << "uThreadID : " << uThread::currentUThread()->getUthreadId() << " | Total uts: " << uThread::currentUThread()->getTotalNumberofUTs() << endl;
+	cout << "uThreadID : " << uThread::currentUThread()->getID() << " | Total uts: " << uThread::currentUThread()->getTotalNumberofUTs() << endl;
 	uThread::terminate();
 }
 
@@ -33,7 +33,7 @@ static void run(void* args){
 
 	uThread* ut = uThread::create();
 	ut->start(uThread::currentUThread()->getCurrentCluster(), (ptr_t)voidrun, &value);
-	cout << "uThreadID : " << uThread::currentUThread()->getUthreadId() << " | Total uts: " << uThread::currentUThread()->getTotalNumberofUTs() << endl;
+	cout << "uThreadID : " << uThread::currentUThread()->getID() << " | Total uts: " << uThread::currentUThread()->getTotalNumberofUTs() << endl;
 	uThread::terminate();
 }
 int main(){
@@ -41,9 +41,9 @@ int main(){
 	std::cout<<"Start of Main Function"<<std::endl;
 
 	Cluster cluster;
-	cout << "First Cluster ID: " << cluster.getClusterID() << endl;
+	cout << "First Cluster ID: " << cluster.getID() << endl;
 	Cluster cluster2;
-	cout << "Second Cluster ID: " << cluster2.getClusterID() << endl;
+	cout << "Second Cluster ID: " << cluster2.getID() << endl;
 
 	kThread kt(cluster);
 	kThread kt1(cluster);
