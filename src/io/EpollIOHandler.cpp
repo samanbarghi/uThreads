@@ -75,7 +75,7 @@ void EpollIOHandler::_Poll(int timeout){
     n = epoll_wait(epoll_fd, events, MAXEVENTS, timeout);
     while( n < 0){
        //TODO: Throw an exception
-        std::cout << "EPOLL ERROR" << std::endl;
+        std::cout << "EPOLL ERROR:" << errno << std::endl;
         n = epoll_wait(epoll_fd, events, MAXEVENTS, timeout);
     }
 
