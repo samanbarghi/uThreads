@@ -3,6 +3,7 @@ A concurrent user-level thread library implemented in C++. uThreads only support
 
 # Dependencies
  * gcc > 4.8 
+ * linux kernel >= 2.9
 
 # Installation
 * Change the destination directory in Makefile (DEST_DIR) to point to where you want the library files be installed. Default location is `/usr/local`
