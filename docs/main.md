@@ -84,3 +84,12 @@ User-level Blocking Synchronization Primitives
 ------------------------------------
 uThreads also provides user-level blocking synchronization and mutex primitives. It has basic Mutex, Condition Variable and Semaphore. You can find examples of their usage under *test* directory in the [github repo](https://github.com/samanbarghi/uThreads).
 
+
+Examples
+----------------------------------
+You can find various examples under the test directory in the [github repo](https://github.com/samanbarghi/uThreads). There is an [EchoClient](https://github.com/samanbarghi/uThreads/blob/master/test/EchoClient.cpp) and [EchoServer](https://github.com/samanbarghi/uThreads/blob/master/test/EchoServer.cpp) implemented using uThreads. 
+
+There is also a simple [webserver](https://github.com/samanbarghi/uThreads/blob/master/test/webserver.cpp) to test uThreads functionality. 
+
+For performance comparisons, memached code has been updated to use uThreads instead of event loops (except the thread that accepts connections), where tasks are assigned to uThreads instead of using the underlying event library. The code can be found [here](https://github.com/samanbarghi/memcached/tree/uThreads).
+
