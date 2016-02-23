@@ -146,6 +146,14 @@ int Connection::connect(const struct sockaddr *addr,socklen_t addrlen){
     return res;
 }
 
+void Connection::blockOnRead(){
+        ioh->wait(*pd, IOHandler::Flag::UT_IOREAD);
+}
+
+void Connection::blockOnWrite(){
+        ioh->wait(*pd, IOHandler::Flag::UT_IOWRITE);
+}
+
 ssize_t Connection::recv(void *buf, size_t len, int flags){
     assert(buf != nullptr);
     assert(fd != -1);

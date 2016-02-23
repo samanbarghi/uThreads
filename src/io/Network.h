@@ -202,6 +202,10 @@ public:
     /// @copydoc recv
     ssize_t write(const void *buf, size_t count);
 
+    /// Block uThread, waiting for read to happen
+    void blockOnRead();
+    /// Block uThread, waiting for write to happen
+    void blockOnWrite();
     /**
      * @brief closes the socket
      * @return the same as close system call
