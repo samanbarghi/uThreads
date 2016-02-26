@@ -79,7 +79,7 @@ void kThread::initialSynchronization() {
 
 void kThread::run() {
     initialize();
-    initializeMainUT(true);
+    initializeMainUT(false);
     defaultRun(this);
 }
 void kThread::runWithFunc(std::function<void(ptr_t)> func, ptr_t args) {
