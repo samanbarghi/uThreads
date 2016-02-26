@@ -26,6 +26,8 @@
 #include "generic/basics.h"
 #include "runtime/Cluster.h"
 #include "runtime/uThread.h"
+#include "generic/blockingconcurrentqueue.h"
+#include "generic/ArrayQueue.h"
 
 /**
  * @class kThread
@@ -53,8 +55,10 @@ class kThread: public IntrusiveList<kThread>::Link {
     friend class uThread;
     friend class Cluster;
     friend class ReadyQueue;
+    friend class MCReadyQueue;
     friend class IOHandler;
 private:
+
     //Only used for defaultKT
     kThread();
     /*
@@ -109,6 +113,9 @@ private:
      * as the central ReadyQueue i protected by a mutex.
      */
     static __thread IntrusiveList<uThread>* ktReadyQueue;
+    static __thread ArrayQueue<uThread, KTHREAD_LOCAL_QUEUE_SIZE> *localQueue;
+    static __thread moodycamel::ProducerToken *ptok;
+    static __thread moodycamel::ConsumerToken *ctok;
 
     /*
      *  Condition variable to be used by Cluster's

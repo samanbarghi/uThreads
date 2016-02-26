@@ -18,12 +18,13 @@
 #include "IOHandler.h"
 #include "Network.h"
 #include "runtime/kThread.h"
+#include "runtime/MoodyCamelReadyQueue.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <iostream>
 #include <sstream>
 
-IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this){}
+IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this), ptok(cluster.readyQueue->queue){}
 
 IOHandler* IOHandler::create(Cluster& cluster){
     IOHandler* ioh = nullptr;
@@ -167,7 +168,7 @@ void IOHandler::unblockBulk(PollData &pd, int flag){
         else if(rold > POLL_WAIT){
             *rut = nullptr;
             rold->state = uThread::State::READY;
-            bulkQueue.push_back(*rold);
+            bulkArray.push(rold);
             bulkCounter++;
         }
     }
@@ -178,7 +179,7 @@ void IOHandler::unblockBulk(PollData &pd, int flag){
         else if(wold > POLL_WAIT){
             *wut = nullptr;
             wold->state = uThread::State::READY;
-            bulkQueue.push_back(*wold);
+            bulkArray.push(wold);
             bulkCounter++;
         }
     }
@@ -196,8 +197,9 @@ void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
     //if this is the last item return by the poller
     //Bulk push everything to the related cluster ready Queue
     if(slowpath(isLast) && bulkCounter >0){
-        localCluster->scheduleMany(bulkQueue, bulkCounter);
-        bulkCounter =0;
+        localCluster->scheduleMany(ptok, bulkArray);
+        bulkArray.reset();
+        bulkCounter = 0;
     }
 }
 

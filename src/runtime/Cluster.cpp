@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include "Cluster.h"
 #include "kThread.h"
-#include "ReadyQueue.h"
 #include "io/IOHandler.h"
+#include "MoodyCamelReadyQueue.h"
 
 std::atomic_ushort Cluster::clusterMasterID(0);
 
@@ -27,7 +27,7 @@ Cluster::Cluster() :
         numberOfkThreads(0) {
     //TODO: IO handler should be only applicable for IO Clusters
     //or be created with the first IO call
-    readyQueue = new ReadyQueue();
+    readyQueue = new MCReadyQueue();
     initialSynchronization();
     iohandler = IOHandler::create(*this);
 }
@@ -49,9 +49,8 @@ void Cluster::schedule(uThread* ut) {
     readyQueue->push(ut);
 }
 
-void Cluster::scheduleMany(IntrusiveList<uThread>& queue, size_t count) {
-    assert(!queue.empty());
-    readyQueue->pushMany(queue, count);
+void Cluster::scheduleMany(moodycamel::ProducerToken& ptok, ArrayQueue<uThread, EPOLL_MAX_EVENT>& queue) {
+    readyQueue->pushMany(ptok, queue);
 }
 
 uThread* Cluster::tryGetWork() {
@@ -59,13 +58,13 @@ uThread* Cluster::tryGetWork() {
 }
 
 /*
- * iPull multiple uThreads from the ready queue and
+ * Pull multiple uThreads from the ready queue and
  * push into the kThread local queue. This is nonblocking.
  */
-ssize_t Cluster::tryGetWorks(IntrusiveList<uThread> &queue) {
-    return readyQueue->tryPopMany(queue);
+ssize_t Cluster::tryGetWorks() {
+    return readyQueue->tryPopMany();
 }
 
-ssize_t Cluster::getWork(IntrusiveList<uThread> &queue) {
-    return readyQueue->popMany(queue);
+ssize_t Cluster::getWork() {
+    return readyQueue->popMany();
 }

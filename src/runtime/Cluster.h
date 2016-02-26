@@ -25,10 +25,13 @@
 #include <assert.h>
 #include "generic/basics.h"
 #include "generic/IntrusiveContainers.h"
+#include "generic/ArrayQueue.h"
+#include "generic/blockingconcurrentqueue.h"
 
 class uThread;
-class ReadyQueue;
 class IOHandler;
+class MCReadyQueue;
+//class IOHandler;
 /**
  * @class Cluster
  * @brief Scheduler and Cluster of kThreads.
@@ -62,7 +65,7 @@ class Cluster {
     friend class Connection;
     friend class IOHandler;
 private:
-    ReadyQueue* readyQueue;                             //There is one ready queue per cluster
+    MCReadyQueue* readyQueue;                             //There is one ready queue per cluster
     std::atomic_uint numberOfkThreads;                  //Number of kThreads in this Cluster
 
     static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
@@ -82,11 +85,11 @@ private:
     void initialSynchronization();
 
     void schedule(uThread*);                            //Put uThread in the ready queue to be picked up by related kThreads
-    void scheduleMany(IntrusiveList<uThread>&, size_t); //Schedule many uThreads
+    void scheduleMany(moodycamel::ProducerToken&, ArrayQueue<uThread, EPOLL_MAX_EVENT>&); //Schedule many uThreads
 
-    ssize_t getWork(IntrusiveList<uThread>&);           //Get a unit of work or if not available sleep till there is one
+    ssize_t getWork();           //Get a unit of work or if not available sleep till there is one
     uThread* tryGetWork();                              //Get a unit of work from the ready queue
-    ssize_t tryGetWorks(IntrusiveList<uThread>&);       //Get as many uThreads as possible from the readyQueue and move them to local queue
+    ssize_t tryGetWorks();       //Get as many uThreads as possible from the readyQueue and move them to local queue
 
 
     IOHandler* iohandler;

@@ -18,7 +18,8 @@
 #ifndef UTHREADS_BASICS_H_
 #define UTHREADS_BASICS_H_
 
-#include <stdint.h>
+#include <cstdint>
+#include <cstddef>
 
 #if defined(__linux__)
 
@@ -34,6 +35,8 @@
 #define __noreturn   __attribute__((__noreturn__))
 #define __useresult  __attribute__((__warn_unused_result__))
 
+static const size_t KTHREAD_LOCAL_QUEUE_SIZE = 128;      //Size of the local kthread ready queue
+static const size_t EPOLL_MAX_EVENT = 256;
 
 /*
  * Type definitions

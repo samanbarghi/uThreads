@@ -17,12 +17,17 @@
 
 #include "kThread.h"
 #include "BlockingSync.h"
+#include "MoodyCamelReadyQueue.h"
 #include <unistd.h>
+#include <sstream>
 
 std::atomic_uint kThread::totalNumberofKTs(0);
 
 __thread kThread* kThread::currentKT = nullptr;
 __thread IntrusiveList<uThread>* kThread::ktReadyQueue = nullptr;
+__thread ArrayQueue<uThread, KTHREAD_LOCAL_QUEUE_SIZE> *kThread::localQueue                       = nullptr;
+__thread moodycamel::ProducerToken *kThread::ptok                                        = nullptr;
+__thread moodycamel::ConsumerToken *kThread::ctok                                        = nullptr;
 
 /*
  * This is only called to create defaultKT
@@ -79,7 +84,7 @@ void kThread::initialSynchronization() {
 
 void kThread::run() {
     initialize();
-    initializeMainUT(true);
+    initializeMainUT(false);
     defaultRun(this);
 }
 void kThread::runWithFunc(std::function<void(ptr_t)> func, ptr_t args) {
@@ -98,19 +103,18 @@ void kThread::switchContext(uThread* ut, void* args) {
 void kThread::switchContext(void* args) {
     uThread* ut = nullptr;
     /*	First check the local queue */
-    IntrusiveList<uThread>* ktrq = ktReadyQueue;
-    if (!ktrq->empty()) {   //If not empty, grab a uThread and run it
-        ut = ktrq->front();
-        ktrq->pop_front();
+    if (!kThread::localQueue->empty()) {   //If not empty, grab a uThread and run it
+        ut = kThread::localQueue->front();
+        kThread::localQueue->pop();
     } else {                //If empty try to fill
 
-        ssize_t res = localCluster->tryGetWorks(*ktrq);   //Try to fill the local queue
-        if (res > 0) {       //If there is more work start using it
-            ut = ktrq->front();
-            ktrq->pop_front();
+        ssize_t res = localCluster->tryGetWorks();   //Try to fill the local queue
+        kThread::localQueue->updateIndexes(res);
+        if (!kThread::localQueue->empty()) {       //If there is more work start using it
+            ut = kThread::localQueue->front();
+            kThread::localQueue->pop();
         } else {        //If no work is available, Switch to defaultUt
-            if (res == 0 && kThread::currentKT->currentUT->state == uThread::State::YIELD)
-                return; //if the running uThread yielded, continue running it
+            if ( kThread::currentKT->currentUT->state == uThread::State::YIELD) return; //if the running uThread yielded, continue running it
             ut = mainUT;
         }
     }
@@ -125,6 +129,9 @@ void kThread::initialize() {
      */
     kThread::currentKT = this;
     kThread::ktReadyQueue = new IntrusiveList<uThread>();
+    kThread::localQueue = new ArrayQueue<uThread, KTHREAD_LOCAL_QUEUE_SIZE>();
+    kThread::ptok = new moodycamel::ProducerToken(localCluster->readyQueue->queue);
+    kThread::ctok = new moodycamel::ConsumerToken(localCluster->readyQueue->queue);
 
 }
 void kThread::initializeMainUT(bool isDefaultKT) {
@@ -154,12 +161,18 @@ void kThread::defaultRun(void* args) {
     kThread* thisKT = (kThread*) args;
     uThread* ut = nullptr;
 
+    size_t count = 0;
+    std::stringstream ss;
     while (true) {
-        thisKT->localCluster->getWork(*thisKT->ktReadyQueue);
-        //ktReadyQueue should not be empty at this point
-        assert(!ktReadyQueue->empty());
-        ut = thisKT->ktReadyQueue->front();
-        thisKT->ktReadyQueue->pop_front();
+        if(kThread::localQueue->empty()){
+            count = thisKT->localCluster->getWork();
+            std::cout << ss.str();
+            //ktReadyQueue should not be empty at this point
+            kThread::localQueue->updateIndexes(count);
+            assert(!kThread::localQueue->empty());
+        }
+        ut = kThread::localQueue->front();
+        kThread::localQueue->pop();
         //Switch to the new uThread
         thisKT->switchContext(ut, nullptr);
     }

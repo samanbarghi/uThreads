@@ -24,6 +24,7 @@
 #include <mutex>
 #include "runtime/uThread.h"
 #include "runtime/kThread.h"
+#include "generic/ArrayQueue.h"
 
 #define POLL_READY  ((uThread*)1)
 #define POLL_WAIT   ((uThread*)2)
@@ -170,6 +171,9 @@ protected:
 
     PollCache pollCache;
 
+    ArrayQueue<uThread, EPOLL_MAX_EVENT> bulkArray;
+    moodycamel::ProducerToken ptok;
+
     virtual int _Open(int fd, PollData &pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
     virtual int  _Close(int fd) = 0;
     virtual void _Poll(int timeout)=0;                ///
@@ -213,7 +217,7 @@ public:
 class EpollIOHandler : public IOHandler {
     friend IOHandler;
 private:
-    static const int MAXEVENTS  = 256;//Maximum number of events this thread can monitor, TODO: do we want this to be modified?
+    static const int MAXEVENTS  = EPOLL_MAX_EVENT;//Maximum number of events this thread can monitor, TODO: do we want this to be modified?
     int epoll_fd = -1;
     struct epoll_event* events;
 
