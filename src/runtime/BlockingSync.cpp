@@ -26,7 +26,8 @@ bool BlockingQueue::suspend(std::mutex& lock) {
 	    lock.unlock();
 	});
 	std::function<void()> f(std::cref(lambda));
-	uThread::currentUThread()->suspend(f);
+    postSwitchStruct* pss = new postSwitchStruct((funcvoid2_t)BlockingQueue::postSwitchFunc, (void*)&f);
+    uThread::currentUThread()->suspend(*pss);
     //TODO: we do not have any cancellation yet, so this line will not be reached at all
     return true;
 }
@@ -37,7 +38,8 @@ bool BlockingQueue::suspend(Mutex& mutex) {
 	        mutex.release();
 	    });
 	    std::function<void()> f(std::cref(lambda));
-	    uThread::currentUThread()->suspend(f);
+        postSwitchStruct* pss = new postSwitchStruct((funcvoid2_t)BlockingQueue::postSwitchFunc, (void*)&f);
+        uThread::currentUThread()->suspend(*pss);
     return true;
 }
 

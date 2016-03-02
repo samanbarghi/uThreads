@@ -40,6 +40,25 @@
  */
 #include "linuxtypes.h"
 /*
+ * This struct is passed to suspend function
+ * so after switching to another uThread, func
+ * will be called and a pointer to the previous uThread
+ * and the args inside the struct is passed to the function.
+ */
+struct postSwitchStruct{
+    /* Function to be called after the switch
+     * the format is void func(void* ut, void* args)
+     * where ut is a uThread* and args is the args
+     * passed through this struct
+     */
+    funcvoid2_t func;
+    /* The arguments to be passed to func */
+    void* args;
+
+    postSwitchStruct(funcvoid2_t f, void* a): func(f), args(a){};
+} __packed;
+
+/*
 * Constant variables
 */
 static const size_t defaultStackSize        = (8 * 1024);           //8k stack size, TODO: determine what is the best stack size, or implement dynamic stack allocation
