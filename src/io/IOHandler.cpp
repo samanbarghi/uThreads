@@ -69,6 +69,7 @@ void IOHandler::block(PollData &pd, bool isRead){
     else
         std::cerr << "Exception on open rut" << std::endl;
 
+    pd.isBlockingOnRead = isRead;
     pdlock.unlock();
     pdlock.release();
 
