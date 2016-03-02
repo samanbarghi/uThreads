@@ -111,9 +111,9 @@ void uThread::migrate(Cluster* cluster) {
     kThread::currentkThread()->switchContext();
 }
 
-void uThread::suspend(std::function<void()>& func) {
+void uThread::suspend(postSwitchStruct& pss) {
     state = State::WAITING;
-    kThread::currentkThread()->switchContext(&func);
+    kThread::currentkThread()->switchContext((void*)&pss);
 }
 
 void uThread::resume() {

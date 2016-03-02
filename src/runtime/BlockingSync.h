@@ -103,6 +103,12 @@ public:
      * @param Mutex to be released after signallAll is done
      */
     void signalAll(Mutex&);
+
+    static void postSwitchFunc(void* ut, void* args){
+        assert(args != nullptr);
+        std::function<void()>* func = (std::function<void()>*) args;
+        (*func)();
+    }
 };
 
 /**

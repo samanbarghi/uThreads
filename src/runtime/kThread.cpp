@@ -155,7 +155,8 @@ void kThread::defaultRun(void* args) {
     uThread* ut = nullptr;
 
     while (true) {
-        thisKT->localCluster->getWork(*thisKT->ktReadyQueue);
+        ssize_t res = thisKT->localCluster->getWork(*thisKT->ktReadyQueue);
+        if(res ==0) continue;
         //ktReadyQueue should not be empty at this point
         assert(!ktReadyQueue->empty());
         ut = thisKT->ktReadyQueue->front();
@@ -182,9 +183,9 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args = nullptr) {
             ck->currentUT->resume();
             break;
         case uThread::State::WAITING: {
-            assert(args != nullptr);
-            std::function<void()>* func = (std::function<void()>*) args;
-            (*func)();
+            postSwitchStruct *pss = (postSwitchStruct*) args;
+            pss->func(ck->currentUT, pss->args);
+            free(pss);
             break;
         }
         default:

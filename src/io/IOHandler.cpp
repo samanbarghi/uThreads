@@ -72,21 +72,8 @@ void IOHandler::block(PollData &pd, bool isRead){
     pdlock.unlock();
     pdlock.release();
 
-    uThread* old = kThread::currentKT->currentUT;
-    //TODO:decrease the capture list to avoid hitting the heap
-    auto lambda([&pd, &utp, &old](){
-        if(pd.closing) return;
-        std::lock_guard<std::mutex> pdlock(pd.mtx);
-          if(*utp == POLL_READY){
-                *utp = nullptr;         //consume the notification and resume
-                old->resume();
-          }else if(*utp == POLL_WAIT){
-                *utp = old;
-          }else
-                std::cerr << "Exception on rut"<< std::endl;
-    });
-    std::function<void()> f(std::cref(lambda));
-    kThread::currentKT->currentUT->suspend(f); //ask for immediate suspension so the possible closing/notifications do not get lost
+    postSwitchStruct* pss = new postSwitchStruct((funcvoid2_t)PollData::postSwitchFunc, (void*)&pd);
+    kThread::currentKT->currentUT->suspend(*pss); //ask for immediate suspension so the possible closing/notifications do not get lost
     //when epoll returns this ut will be back on readyQueue and pick up from here
 }
 int IOHandler::close(PollData &pd){

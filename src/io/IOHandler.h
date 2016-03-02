@@ -78,6 +78,9 @@ private:
     /** Whether the fd was added to epoll or not **/
     bool opened;
 
+    /** Whether this pd is about to block on read or write */
+    bool isBlockingOnRead;
+
     /**
      * Reset the variables. Used when PollData is recycled to be used
      * for the same FD. The mutex should always be acquired before calling
@@ -96,17 +99,34 @@ public:
      * @brief Create a PollData structure with the assigned fd
      * @param fd file descriptor
      */
-    PollData( int fd) : fd(fd), closing(false), opened(false){};
+    PollData( int fd) : fd(fd), closing(false), opened(false), isBlockingOnRead(false){};
 
     /**
      * @brief Create a PollData structure but do not assign any fd
      *
      * Usually used before accept
      */
-    PollData(): fd(-1), closing(false), opened(false){};
+    PollData(): fd(-1), closing(false), opened(false), isBlockingOnRead(false){};
     PollData(const PollData&) = delete;
     const PollData& operator=(const PollData&) = delete;
     ~PollData(){};
+
+    static void postSwitchFunc(void* ut, void* args){
+        assert(args != nullptr);
+        uThread* old = (uThread*)ut;
+        PollData* pd = (PollData*) args;
+        if(pd->closing) return;
+        uThread** utp = pd->isBlockingOnRead ? &pd->rut : &pd->wut;
+
+        std::lock_guard<std::mutex> pdlock(pd->mtx);
+        if(*utp == POLL_READY){
+            *utp = nullptr;         //consume the notification and resume
+            old->resume();
+        }else if(*utp == POLL_WAIT){
+            *utp = old;
+        }else
+            std::cerr << "Exception on rut"<< std::endl;
+    }
 
 };
 
