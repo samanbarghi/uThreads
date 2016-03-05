@@ -113,6 +113,8 @@ public:
 
     static void postSwitchFunc(void* ut, void* args){
         assert(args != nullptr);
+        assert(ut != nullptr);
+
         uThread* old = (uThread*)ut;
         PollData* pd = (PollData*) args;
         if(pd->closing) return;
