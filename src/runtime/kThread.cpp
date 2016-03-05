@@ -134,20 +134,26 @@ void kThread::initializeMainUT(bool isDefaultKT) {
      */
     if (slowpath(isDefaultKT)) {
         mainUT = uThread::create(defaultStackSize);
-        mainUT->start(*localCluster, (ptr_t) kThread::defaultRun, this, nullptr,
-                nullptr);
+        /*
+         * can't use mainUT->start as mainUT should not end up in
+         * the Ready Queue. Thus, the stack pointer shoud be initiated
+         * directly.
+         */
+        mainUT->stackPointer = (vaddr) stackInit(mainUT->stackPointer, (ptr_t) uThread::invoke,
+                (ptr_t) kThread::defaultRun, (void*)this, nullptr, nullptr); //Initialize the thread context
+        mainUT->state = uThread::State::READY;
     } else {
         /*
          * Default function takes up the default kernel thread's
          * stack pointer and run from there
          */
         mainUT = uThread::createMainUT(*localCluster);
+        currentUT = mainUT;
+        mainUT->state = uThread::State::RUNNING;
     }
 
     //Default uThreads are not being counted
     uThread::totalNumberofUTs--;
-    mainUT->state = uThread::State::READY;
-    currentUT = mainUT;
 }
 
 void kThread::defaultRun(void* args) {
