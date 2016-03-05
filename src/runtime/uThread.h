@@ -285,7 +285,7 @@ public:
      * @brief return the current Cluster uThread is executed on
      * @return the current Cluster uThread is executed on
      */
-    const Cluster& getCurrentCluster() const {
+    Cluster& getCurrentCluster() const {
         return *currentCluster;
     }
 

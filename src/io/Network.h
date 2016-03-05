@@ -62,7 +62,7 @@ public:
      */
     Connection() :
             fd(-1){
-        ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
+        ioh = uThread::currentUThread()->getCurrentCluster().getIOHandler();
         init();
     }
     /**
@@ -74,7 +74,7 @@ public:
      */
     Connection(int fd) :
             fd(fd) {
-        ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
+        ioh = uThread::currentUThread()->getCurrentCluster().getIOHandler();
         init();
     }
 
@@ -88,7 +88,7 @@ public:
      */
     Connection(Cluster& cluster, int fd) :
             fd(fd) {
-        ioh = cluster.iohandler;
+        ioh = cluster.getIOHandler();
         init();
     }
 

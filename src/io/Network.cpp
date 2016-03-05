@@ -28,7 +28,7 @@ Connection::Connection(int domain, int type, int protocol)
     // kernels > 2.6.27
     int sockfd = ::socket(domain, type | SOCK_NONBLOCK, protocol);
     if(sockfd != -1){
-        ioh = uThread::currentUThread()->getCurrentCluster().iohandler;
+        ioh = uThread::currentUThread()->getCurrentCluster().getIOHandler();
         fd = sockfd;
         init();
     }else{

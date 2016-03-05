@@ -128,6 +128,8 @@ public:
     size_t getNumberOfkThreads() const {
         return numberOfkThreads.load();
     }
+
+    IOHandler* getIOHandler();
 };
 
 #endif /* UTHREADS_CLUSTER_H_ */

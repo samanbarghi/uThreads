@@ -24,12 +24,11 @@
 std::atomic_ushort Cluster::clusterMasterID(0);
 
 Cluster::Cluster() :
-        numberOfkThreads(0) {
+        numberOfkThreads(0), iohandler(nullptr) {
     //TODO: IO handler should be only applicable for IO Clusters
     //or be created with the first IO call
     readyQueue = new ReadyQueue();
     initialSynchronization();
-    iohandler = IOHandler::create(*this);
 }
 
 void Cluster::initialSynchronization() {
@@ -68,4 +67,10 @@ ssize_t Cluster::tryGetWorks(IntrusiveList<uThread> &queue) {
 
 ssize_t Cluster::getWork(IntrusiveList<uThread> &queue) {
     return readyQueue->popMany(queue);
+}
+
+IOHandler* Cluster::getIOHandler(){
+    if(slowpath(iohandler == nullptr))
+        iohandler = IOHandler::create(*this);
+    return iohandler;
 }
