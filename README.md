@@ -1,5 +1,6 @@
 # uThreads
 A concurrent user-level thread library implemented in C++. uThreads only supports Linux on x86_64 platforms. 
+Full documentation can be found here: [samanbarghi.github.io/uThreads](http://samanbarghi.github.io/uThreads)
 
 # Dependencies
  * gcc > 4.8 
