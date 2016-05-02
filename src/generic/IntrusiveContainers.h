@@ -30,19 +30,21 @@
 template<typename T, size_t ID=0> class IntrusiveList;
 template<typename T, size_t ID=0> class IntrusiveQueue;
 template<typename T,size_t ID=0> class IntrusiveStack;
-template<typename T> class BlockingMPSCQueue;
 
-// NOTE WELL: this simple design (using Link*) only works, if Link is first in T
 template <typename T> class Link {
     friend class IntrusiveList<T>;
     friend class IntrusiveQueue<T>;
     friend class IntrusiveStack<T>;
-    friend class BlockingMPSCQueue<T>;
     Link* prev;
-    Link* volatile next;
+    Link* next;
   public:
     constexpr Link() : prev(nullptr), next(nullptr) {}
-
+    bool onStack() const { return next != nullptr; }
+    bool onQueue() const { return next != nullptr; }
+    bool onList() const {
+      GENASSERT1((prev == nullptr) == (next == nullptr), FmtHex(this));
+      return next != nullptr;
+    }
 } __packed;
 
 template<typename T,size_t ID> class IntrusiveStack {
@@ -59,13 +61,10 @@ public:
   static T*       next(      T& elem) { return (T*)elem.Link<T>::next; }
   static const T* next(const T& elem) { return (T*)elem.Link<T>::next; }
 
-  static const bool onStack(T& elem) { return elem.Link<T>::next != nullptr; }
-
-
   void push(T& first, T& last) {
-    GENASSERT1(!onStack(last), FmtHex(&first));
+    GENASSERT1(!last.onStack(), FmtHex(&first));
     last.Link<T>::next = head;
-    head = &first;
+    head = first;
   }
 
   void push(T& elem) {
@@ -121,9 +120,6 @@ public:
   static T*       next(      T& elem) { return (T*)elem.Link<T>::next; }
   static const T* next(const T& elem) { return (T*)elem.Link<T>::next; }
 
-  static const bool onQueue(T& elem) { return elem.Link<T>::next != nullptr; }
-
-
   void push(T& first, T& last) {
     GENASSERT1(!onQueue(last), FmtHex(&first));
     if slowpath(!head) head = &first;
@@ -167,27 +163,7 @@ public:
     push(*first, *last);
   }
 
-    T* removeAll() {
-        GENASSERT1(!empty(), FmtHex(this));
-        T* last = back();
-        last->Link<T>::next = nullptr;
-        head = nullptr;
-        tail = nullptr;
-        return last;
-    }
-
-  void transferAllFrom(IntrusiveQueue& eq) {
-    GENASSERT1(!eq.empty(), FmtHex(&eq));
-    T* first = eq.front();
-    T* last = eq.back();
-    last->Link<T>::next = nullptr;
-    eq.head = nullptr;
-    eq.tail = nullptr;
-    push(*first, *last);
-  }
-
-} __packed;
-
+// NOTE WELL: this simple design (using anchor) only works, if Link is first in T
 template<typename T, size_t ID> class IntrusiveList {
 private:
   Link<T> anchor;
@@ -209,14 +185,9 @@ public:
   static T*       prev(      T& elem) { return       (T*)elem.Link<T>::prev; }
   static const T* prev(const T& elem) { return (const T*)elem.Link<T>::prev; }
 
-  static const bool onList(T& elem) {
-        GENASSERT1((elem.Link<T>::prev == nullptr) == (elem.Link<T>::next == nullptr), FmtHex(&elem.Link<T>));
-        return elem.Link<T>::next != nullptr;
-      }
-
   static void insert_before(T& next, T& elem) {
-    GENASSERT1(!onList(elem), FmtHex(&elem));
-    GENASSERT1(onList(next), FmtHex(&prev));
+    GENASSERT1(!elem.onList(), FmtHex(&elem));
+    GENASSERT1(next.onList(), FmtHex(&prev));
     next.Link<T>::prev->Link<T>::next = &elem;
     elem.Link<T>::prev = next.Link<T>::prev;
     next.Link<T>::prev = &elem;
@@ -226,7 +197,7 @@ public:
   static void insert_after(T& prev, T& first, T&last) {
     GENASSERT1(first.Link<T>::prev == nullptr, FmtHex(&first));
     GENASSERT1(last.Link<T>::next == nullptr, FmtHex(&last));
-    GENASSERT1(onList(prev), FmtHex(&prev));
+    GENASSERT1(prev.onList(), FmtHex(&prev));
     prev.Link<T>::next->Link<T>::prev = &last;
     last.Link<T>::next = prev.Link<T>::next;
     prev.Link<T>::next = &first;
@@ -238,7 +209,7 @@ public:
   }
 
   static T* remove(T& elem) {
-    GENASSERT1(onList(elem), FmtHex(&elem));
+    GENASSERT1(elem.onList(), FmtHex(&elem));
     elem.Link<T>::prev->Link<T>::next = elem.Link<T>::next;
     elem.Link<T>::next->Link<T>::prev = elem.Link<T>::prev;
     elem.Link<T>::prev = nullptr;
@@ -256,15 +227,6 @@ public:
     first.Link<T>::prev->Link<T>::next = last->Link<T>::next;
     last->Link<T>::next->Link<T>::prev = first.Link<T>::prev;
     first.Link<T>::prev = nullptr;
-    last->Link<T>::next = nullptr;
-    return last;
-  }
-
-  T* removeAll(){
-    GENASSERT1(!empty(), FmtHex(this));
-    T* first = front();
-    T* last = back();
-    first->Link<T>::prev = nullptr;
     last->Link<T>::next = nullptr;
     return last;
   }
