@@ -38,12 +38,7 @@ template <typename T> class Link {
     Link* next;
   public:
     constexpr Link() : prev(nullptr), next(nullptr) {}
-    bool onStack() const { return next != nullptr; }
-    bool onQueue() const { return next != nullptr; }
-    bool onList() const {
-      GENASSERT1((prev == nullptr) == (next == nullptr), FmtHex(this));
-      return next != nullptr;
-    }
+
 } __packed;
 
 template<typename T,size_t ID> class IntrusiveStack {
@@ -60,8 +55,11 @@ public:
   static T*       next(      T& elem) { return (T*)elem.Link<T>::next; }
   static const T* next(const T& elem) { return (T*)elem.Link<T>::next; }
 
+  static const bool onStack(T& elem) { return elem.Link<T>::next != nullptr; }
+
+
   void push(T& first, T& last) {
-    GENASSERT1(!last.onStack(), FmtHex(&first));
+    GENASSERT1(!onStack(last), FmtHex(&first));
     last.Link<T>::next = head;
     head = first;
   }
@@ -119,8 +117,11 @@ public:
   static T*       next(      T& elem) { return (T*)elem.Link<T>::next; }
   static const T* next(const T& elem) { return (T*)elem.Link<T>::next; }
 
+  static const bool onQueue(T& elem) { return elem.Link<T>::next != nullptr; }
+
+
   void push(T& first, T& last) {
-    GENASSERT1(!last.onQueue(), FmtHex(&first));
+    GENASSERT1(!onQueue(last), FmtHex(&first));
     if slowpath(!head) head = &first;
     else {
       GENASSERT1(tail != nullptr, FmtHex(this));
@@ -185,9 +186,14 @@ public:
   static T*       prev(      T& elem) { return       (T*)elem.Link<T>::prev; }
   static const T* prev(const T& elem) { return (const T*)elem.Link<T>::prev; }
 
+  static const bool onList(T& elem) {
+        GENASSERT1((elem.Link<T>::prev == nullptr) == (elem.Link<T>::next == nullptr), FmtHex(&elem.Link<T>));
+        return elem.Link<T>::next != nullptr;
+      }
+
   static void insert_before(T& next, T& elem) {
-    GENASSERT1(!elem.onList(), FmtHex(&elem));
-    GENASSERT1(next.onList(), FmtHex(&prev));
+    GENASSERT1(!onList(elem), FmtHex(&elem));
+    GENASSERT1(onList(next), FmtHex(&prev));
     next.Link<T>::prev->Link<T>::next = &elem;
     elem.Link<T>::prev = next.Link<T>::prev;
     next.Link<T>::prev = &elem;
@@ -197,7 +203,7 @@ public:
   static void insert_after(T& prev, T& first, T&last) {
     GENASSERT1(first.Link<T>::prev == nullptr, FmtHex(&first));
     GENASSERT1(last.Link<T>::next == nullptr, FmtHex(&last));
-    GENASSERT1(prev.onList(), FmtHex(&prev));
+    GENASSERT1(onList(prev), FmtHex(&prev));
     prev.Link<T>::next->Link<T>::prev = &last;
     last.Link<T>::next = prev.Link<T>::next;
     prev.Link<T>::next = &first;
@@ -209,7 +215,7 @@ public:
   }
 
   static T* remove(T& elem) {
-    GENASSERT1(elem.onList(), FmtHex(&elem));
+    GENASSERT1(onList(elem), FmtHex(&elem));
     elem.Link<T>::prev->Link<T>::next = elem.Link<T>::next;
     elem.Link<T>::next->Link<T>::prev = elem.Link<T>::prev;
     elem.Link<T>::prev = nullptr;
@@ -218,7 +224,7 @@ public:
   }
 
   T* remove(T& first, size_t& count) {
-    GENASSERT1(first.onList(), FmtHex(&first));
+    GENASSERT1(onList(first), FmtHex(&first));
     T* last = &first;
     for (size_t i = 1; i < count; i += 1) {
       if slowpath(next(*last) == fence()) count = i; // breaks loop and sets count
