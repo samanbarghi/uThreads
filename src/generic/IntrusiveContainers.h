@@ -30,6 +30,7 @@ template<typename T, size_t ID=0> class IntrusiveList;
 template<typename T, size_t ID=0> class IntrusiveQueue;
 template<typename T,size_t ID=0> class IntrusiveStack;
 
+// NOTE WELL: this simple design (using Link*) only works, if Link is first in T
 template <typename T> class Link {
     friend class IntrusiveList<T>;
     friend class IntrusiveQueue<T>;
@@ -164,7 +165,6 @@ public:
   }
 } __packed;
 
-// NOTE WELL: this simple design (using anchor) only works, if Link is first in T
 template<typename T, size_t ID> class IntrusiveList {
 private:
   Link<T> anchor;
