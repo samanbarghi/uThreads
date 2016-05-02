@@ -19,27 +19,19 @@
 #include "uThread.h"
 
 bool BlockingQueue::suspend(std::mutex& lock) {
-
-	IntrusiveList<uThread>* lqueue = &(this->queue);
-	auto lambda([&, this](){
-	    this->queue.push_back(*uThread::currentUThread());
-	    lock.unlock();
-	});
-	std::function<void()> f(std::cref(lambda));
-    postSwitchStruct* pss = new postSwitchStruct((funcvoid2_t)BlockingQueue::postSwitchFunc, (void*)&f);
-    uThread::currentUThread()->suspend(*pss);
-    //TODO: we do not have any cancellation yet, so this line will not be reached at all
+	std::pair<std::mutex*, BlockingQueue*> bqp(&lock, this);
+	/*
+	 * It is safe to pass the pair to another function as after suspend,
+	 * this block won't reach its end and the pair will not be deallocated.
+	 */
+    uThread::currentUThread()->suspend((funcvoid2_t)BlockingQueue::postSwitchFunc<std::mutex>, (void*)&bqp);
+    //TODO: we do not have any cancellation yet, so this line will not be reached before switching
     return true;
 }
 
 bool BlockingQueue::suspend(Mutex& mutex) {
-	auto lambda([&, this](){
-	        this->queue.push_back(*uThread::currentUThread());
-	        mutex.release();
-	    });
-	    std::function<void()> f(std::cref(lambda));
-        postSwitchStruct* pss = new postSwitchStruct((funcvoid2_t)BlockingQueue::postSwitchFunc, (void*)&f);
-        uThread::currentUThread()->suspend(*pss);
+	std::pair<Mutex*, BlockingQueue*> bqp(&mutex, this);
+    uThread::currentUThread()->suspend((funcvoid2_t)BlockingQueue::postSwitchFunc<Mutex>, (void*)&bqp);
     return true;
 }
 

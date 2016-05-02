@@ -185,13 +185,12 @@ protected:
     void reset();
 
     /*
-     * Used to suspend the uThread. The postSwitchStruct passed to
-     * the suspend function is used to pass a function and an argument
-     * to be called after the context switch is happened.
+     * Used to suspend the uThread. Pass a function and an argument
+     * to be called after the context switch.
      * It is normally the case that the uThread needs to hold on to a lock
-     * or perform some maintenance jobs after the context is switched.
+     * or perform some maintenance after the context is switched.
      */
-    void suspend(postSwitchStruct&);
+    void suspend(funcvoid2_t, void*);
 
     //Function to invoke the run function of a uThread
     static void invoke(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn;

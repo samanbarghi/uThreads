@@ -172,6 +172,15 @@ private:
      */
     static inline void postSwitchFunc(uThread*, void*) __noreturn;
 
+    /*
+     * This struct points to an argument and a function. The function
+     * is called after suspending a uThread and switching to a new
+     * uThread. Two arguments is passed to this function: the old uThread*
+     * and the arguments passed by the calling function.
+     */
+    static __thread funcvoid2_t postSuspendFunc;
+
+
     void initialSynchronization();
 
 

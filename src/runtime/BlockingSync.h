@@ -104,10 +104,15 @@ public:
      */
     void signalAll(Mutex&);
 
+    template<typename T>
     static void postSwitchFunc(void* ut, void* args){
         assert(args != nullptr);
-        std::function<void()>* func = (std::function<void()>*) args;
-        (*func)();
+        assert(ut != nullptr);
+        uThread* utt = (uThread*)ut;
+
+        auto bqp = (std::pair<T*, BlockingQueue*>*)args;
+        bqp->second->queue.push_back(*utt);
+        bqp->first->unlock();
     }
 };
 
@@ -188,6 +193,8 @@ public:
         assert(owner == bq.getCurrentUThread()); //Attempt to release lock by non-owner
         internalRelease();
     }
+    //temporary solution for the postSwitchFunc
+    void unlock(){release();}
 };
 
 /**

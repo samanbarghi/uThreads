@@ -73,8 +73,8 @@ void IOHandler::block(PollData &pd, bool isRead){
     pdlock.unlock();
     pdlock.release();
 
-    postSwitchStruct* pss = new postSwitchStruct((funcvoid2_t)PollData::postSwitchFunc, (void*)&pd);
-    kThread::currentKT->currentUT->suspend(*pss); //ask for immediate suspension so the possible closing/notifications do not get lost
+    kThread::currentKT->currentUT->suspend((funcvoid2_t)PollData::postSwitchFunc, (void*)&pd);
+    //ask for immediate suspension so the possible closing/notifications do not get lost
     //when epoll returns this ut will be back on readyQueue and pick up from here
 }
 int IOHandler::close(PollData &pd){

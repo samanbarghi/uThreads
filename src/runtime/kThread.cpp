@@ -23,6 +23,7 @@ std::atomic_uint kThread::totalNumberofKTs(0);
 
 __thread kThread* kThread::currentKT = nullptr;
 __thread IntrusiveList<uThread>* kThread::ktReadyQueue = nullptr;
+__thread funcvoid2_t kThread::postSuspendFunc = nullptr;
 
 /*
  * This is only called to create defaultKT
@@ -124,8 +125,8 @@ void kThread::initialize() {
      * find the executing thread by referring to this.
      */
     kThread::currentKT = this;
-    kThread::ktReadyQueue = new IntrusiveList<uThread>();
 
+    kThread::ktReadyQueue = new IntrusiveList<uThread>();
 }
 void kThread::initializeMainUT(bool isDefaultKT) {
     /*
@@ -189,9 +190,9 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args = nullptr) {
             ck->currentUT->resume();
             break;
         case uThread::State::WAITING: {
-            postSwitchStruct *pss = (postSwitchStruct*) args;
-            pss->func(ck->currentUT, pss->args);
-            free(pss);
+            //function and the argument should be set for pss
+            assert(postSuspendFunc != nullptr);
+            postSuspendFunc((void*)ck->currentUT, args);
             break;
         }
         default:
