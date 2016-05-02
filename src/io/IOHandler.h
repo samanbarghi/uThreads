@@ -35,7 +35,7 @@ class Connection;
  * @brief Used to maintain file descriptor status while polling for activity
  *
  */
-class PollData : public IntrusiveQueue<PollData>::Link{
+class PollData : public Link<PollData>{
     friend IOHandler;
     friend Connection;
 private:

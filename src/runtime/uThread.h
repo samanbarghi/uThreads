@@ -57,7 +57,7 @@ class uThreadCache;
  * stack. This stack is allocated when uThread is created.
  */
 
-class uThread: public IntrusiveList<uThread>::Link {
+class uThread: public Link<uThread> {
     friend class uThreadCache;
     friend class kThread;
     friend class Cluster;
