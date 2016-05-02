@@ -49,7 +49,7 @@
  * kThreads can be created by passing a Cluster to the constructor of
  * the kThread.
  */
-class kThread: public IntrusiveList<kThread>::Link {
+class kThread: public Link<kThread> {
     friend class uThread;
     friend class Cluster;
     friend class ReadyQueue;
