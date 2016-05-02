@@ -74,7 +74,7 @@ void kThread::initialSynchronization() {
     localCluster->numberOfkThreads++;
 
     //set kernel thread variables
-    threadID = std::this_thread::get_id();
+    threadID = (this == &defaultKT) ? std::this_thread::get_id() : this->threadSelf.get_id();
 }
 
 void kThread::run() {
