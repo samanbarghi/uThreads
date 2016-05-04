@@ -19,6 +19,7 @@
 
 #include "generic/basics.h"
 #include <assert.h>
+#include <atomic>
 
 #define GENASSERT0(expr)            { assert(expr); }
 #define GENASSERT1(expr, msg)       { assert(expr); }
@@ -36,7 +37,7 @@ template <typename T> class Link {
     friend class IntrusiveQueue<T>;
     friend class IntrusiveStack<T>;
     Link* prev;
-    Link* next;
+    Link* volatile next;
   public:
     constexpr Link() : prev(nullptr), next(nullptr) {}
 
@@ -262,4 +263,53 @@ public:
   }
 } __packed;
 
+template<typename T>
+class BlockingMPSCQueue {
+private:
+    std::atomic<Link<T>*>  tail;
+    Link<T>                stub;
+
+    Link<T>*               head;
+
+    bool insert(Link<T>& first, Link<T>& last){
+      last.next = nullptr;
+      Link<T>* prev = tail.exchange(&last, std::memory_order_acquire);
+      bool was_empty = ((uintptr_t)prev & 1) != 0;
+      prev = (Link<T>*)((uintptr_t)prev & ~1);
+      prev->next = &first;
+      return was_empty;
+    }
+
+public:
+    BlockingMPSCQueue(): tail(&stub),head(&stub){}
+
+    //push a single element
+    bool push(T& elem){return insert(elem, elem);}
+    //Push multiple elements in a form of a linked list, linked by next
+    bool push(T& first, T& last){return insert(first, last);}
+
+    // pop operates in chunk of elements and re-inserts stub after each chunk
+    T* pop(){
+        Link<T>* ttail = tail;
+        //If tail is marked empty, queue should not have been scheduled
+        assert(((uintptr_t)ttail & 1) == 0);
+        if(head == &stub){                     // current chunk empty
+                Link<T>* expected = &stub;
+                Link<T>* xchg = (Link<T>*)((uintptr_t)expected | 1);
+                if(tail.compare_exchange_strong(expected, xchg, std::memory_order_release)){
+                    return nullptr; //The Queue is empty
+                }//otherwise another thread is inserting
+            // wait for producer in insert()
+            while(stub.next == nullptr) asm volatile("pause");
+            head = stub.next;                  // remove stub
+            insert(stub, stub);                // re-insert stub at end
+        }
+        // wait for producer in insert()
+        while(head->next == nullptr) asm volatile("pause");
+        // retrieve and return first element
+        Link<T>* l = head;
+        head = head->next;
+        return (T*)l;
+    }
+};
 #endif /* _IntrusiveContainer_h_ */

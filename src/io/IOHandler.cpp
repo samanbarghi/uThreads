@@ -15,10 +15,10 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 
+#include <runtime/schedulers/Scheduler.h>
 #include "IOHandler.h"
 #include "Network.h"
 #include "runtime/kThread.h"
-#include "runtime/Scheduler.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <iostream>

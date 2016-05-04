@@ -22,10 +22,12 @@
 #include <mutex>
 #include <condition_variable>
 #include <functional>
-
 #include "generic/basics.h"
 #include "runtime/Cluster.h"
 #include "runtime/uThread.h"
+
+class KTLocal;
+class KTVar;
 
 /**
  * @class kThread
@@ -52,8 +54,8 @@
 class kThread: public Link<kThread> {
     friend class uThread;
     friend class Cluster;
-    friend class ReadyQueue;
     friend class IOHandler;
+    friend class Scheduler;
 private:
     //Only used for defaultKT
     kThread();
@@ -100,27 +102,15 @@ private:
      * of other clusters upon uThread migration.
      */
     Cluster* localCluster;
-    /*
-     * local readyQueue for kThread which is only
-     * accessible by this kThread (thus thread local).
-     * This is used to bulk pull uThreads from the central
-     * ReadyQueue. The bulk operation lowers the overhead
-     * of pulling threads and accessing the central ReadyQueue
-     * as the central ReadyQueue i protected by a mutex.
-     */
-    static __thread IntrusiveList<uThread>* ktReadyQueue;
 
     /*
-     *  Condition variable to be used by Cluster's
-     *  ReadyQueue. Each kThread provides its own CV
-     *  in order to provide a LIFO blocking order.
+     * Scheduler object
      */
-    std::condition_variable cv;
-    /*
-     * cv_flag is used to detect spurious
-     * wake ups.
-     */
-    bool cv_flag;
+    Scheduler* scheduler;
+
+    static __thread KTLocal* ktlocal;
+
+    KTVar* ktvar;
 
     /*
      * Pointer to the current running uThread
