@@ -15,11 +15,11 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 
+#include <runtime/schedulers/Scheduler.h>
 #include <stdlib.h>
 #include "Cluster.h"
 #include "kThread.h"
 #include "io/IOHandler.h"
-#include "Scheduler.h"
 
 std::atomic_ushort Cluster::clusterMasterID(0);
 
@@ -27,7 +27,6 @@ Cluster::Cluster() :
         numberOfkThreads(0), iohandler(nullptr) {
     //TODO: IO handler should be only applicable for IO Clusters
     //or be created with the first IO call
-    scheduler = new Scheduler<ReadyQueue>();
     initialSynchronization();
 }
 
@@ -37,15 +36,14 @@ void Cluster::initialSynchronization() {
     else
         exit(EXIT_FAILURE);
 }
-
-void Cluster::schedule(uThread* ut){
-    scheduler->schedule(ut);
-}
 Cluster::~Cluster() {
 }
 
 IOHandler* Cluster::getIOHandler(){
-    if(slowpath(iohandler == nullptr))
-        iohandler = IOHandler::create(*this);
+    if(slowpath(iohandler == nullptr)){
+        std::unique_lock<std::mutex> ul(mtx);
+        if(iohandler == nullptr)
+            iohandler = IOHandler::create(*this);
+    }
     return iohandler;
 }

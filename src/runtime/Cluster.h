@@ -20,16 +20,15 @@
 
 #include <mutex>
 #include <atomic>
-#include <condition_variable>
 #include <thread>
 #include <assert.h>
 #include "generic/basics.h"
 #include "generic/IntrusiveContainers.h"
 
-template<typename Q> class Scheduler;
 class uThread;
-class ReadyQueue;
 class IOHandler;
+class Scheduler;
+
 /**
  * @class Cluster
  * @brief Scheduler and Cluster of kThreads.
@@ -62,12 +61,15 @@ class Cluster {
     friend class uThread;
     friend class Connection;
     friend class IOHandler;
+    friend class Scheduler;
 private:
-    Scheduler<ReadyQueue>* scheduler;
+    Scheduler* scheduler;
     std::atomic_uint numberOfkThreads;                  //Number of kThreads in this Cluster
 
     static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
     uint64_t clusterID;                                 //Current Cluster ID
+
+    std::mutex mtx;                                     //Mutex used for initializations
 
     /**
      * @brief defaultCluster includes the main thread.
@@ -78,9 +80,6 @@ private:
      * or getDefaultCluster() function.
      */
     static Cluster defaultCluster;
-
-    void schedule(uThread* ut);
-
 
     void initialSynchronization();
 
