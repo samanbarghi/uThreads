@@ -55,6 +55,22 @@ struct KTVar{
     bool cv_flag;
     KTVar() : cv_flag(false){};
 };
+
+/*
+ * Cluster variables
+ */
+struct ClusterVar{
+    /*
+     * This list is used to schedule uThreads in bulk.
+     * For now it is only used in IOHandler
+     */
+    IntrusiveList<uThread> bulkQueue;
+
+    /*
+     * Count the number of items in bulkQueue
+     */
+    size_t bulkCounter;
+};
 class Scheduler {
     friend class kThread;
     friend class Cluster;
@@ -288,9 +304,9 @@ private:
 
     /* ************** Scheduling wrappers *************/
     //Schedule a uThread on a cluster
-    static void schedule(uThread* ut, Cluster& cluster){
+    static void schedule(uThread* ut, kThread& kt){
         assert(ut != nullptr);
-        cluster.scheduler->__push(ut);
+        kt.scheduler->__push(ut);
     }
     //Put uThread in the ready queue to be picked up by related kThreads
     void schedule(uThread* ut) {
@@ -345,6 +361,16 @@ private:
                cluster.scheduler = new Scheduler();
        }
        return cluster.scheduler;
+    }
+
+    static void prepareBulkPush(uThread* ut){
+        ut->currentCluster->clustervar->bulkQueue.push_back(*ut);
+        ut->currentCluster->clustervar->bulkCounter++;
+    }
+
+    static void bulkPush(Cluster &cluster){
+        cluster.scheduler->schedule(cluster.clustervar->bulkQueue, cluster.clustervar->bulkCounter);
+        cluster.clustervar->bulkCounter =0;
     }
 };
 #endif /* SRC_RUNTIME_SCHEDULER_01_H_ */
