@@ -122,7 +122,13 @@ void kThread::initialize() {
      */
     kThread::currentKT = this;
 
+    //Initialize kt local vars
     kThread::ktlocal = new KTLocal();
+
+    /*
+     * Add the kThread to the list of kThreads in the Cluster
+     */
+    localCluster->addNewkThread(*this);
 }
 void kThread::initializeMainUT(bool isDefaultKT) {
     /*

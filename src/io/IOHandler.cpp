@@ -201,8 +201,8 @@ void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
     //if this is the last item return by the poller
     //Bulk push everything to the related cluster ready Queue
     if(slowpath(isLast) && bulkCounter >0){
-        localCluster->scheduler->schedule(bulkQueue, bulkCounter);
-        bulkCounter =0;
+        Scheduler::bulkPush(*localCluster);
+        bulkCounter=0;
     }
 }
 

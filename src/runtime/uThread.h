@@ -29,6 +29,7 @@ class IOHandler;
 class Cluster;
 class uThreadCache;
 class Scheduler;
+class kThread;
 
 /**
  * @class uThread

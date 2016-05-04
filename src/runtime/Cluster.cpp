@@ -24,8 +24,7 @@
 std::atomic_ushort Cluster::clusterMasterID(0);
 
 Cluster::Cluster() :
-        numberOfkThreads(0), iohandler(nullptr),
-        clustervar(new ClusterVar), ktLast(0) {
+        numberOfkThreads(0), iohandler(nullptr), clustervar(new ClusterVar) {
     //TODO: IO handler should be only applicable for IO Clusters
     //or be created with the first IO call
     initialSynchronization();
@@ -47,4 +46,23 @@ IOHandler* Cluster::getIOHandler(){
             iohandler = IOHandler::create(*this);
     }
     return iohandler;
+}
+
+void Cluster::addNewkThread(kThread& kt){
+    std::lock_guard<std::mutex> lg(mtx);
+    ktVector.emplace_back(&kt);
+
+    /*
+     * Increase the number of kThreads in the cluster.
+     * Since this is always < totalNumberofKTs, it will
+     * not overflow.
+     */
+     numberOfkThreads++;
+}
+
+kThread* Cluster::assignkThread(){
+    assert(!ktVector.empty());
+    size_t next = (ktLast+1)%(ktVector.size());
+    size_t kt = ktLast.exchange(next, std::memory_order_relaxed);
+    return ktVector[kt];
 }
