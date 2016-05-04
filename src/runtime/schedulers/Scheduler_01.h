@@ -23,59 +23,12 @@
 
 class IOHandler;
 
-/*
- * Local kThread objects related to the
- * scheduler. will be instantiated by static __thread
- */
-struct KTLocal{
-    /*
-     * local readyQueue for kThread which is only
-     * accessible by this kThread (thus thread local).
-     * This is used to bulk pull uThreads from the central
-     * ReadyQueue. The bulk operation lowers the overhead
-     * of pulling threads and accessing the central ReadyQueue
-     * as the central ReadyQueue i protected by a mutex.
-     */
-    IntrusiveQueue<uThread> lrq;
-};
-/*
- * Per kThread variable related to the scheduler
- */
-struct KTVar{
-    /*
-     *  Condition variable to be used by Cluster's
-     *  ReadyQueue. Each kThread provides its own CV
-     *  in order to provide a LIFO blocking order.
-     */
-    std::condition_variable cv;
-    /*
-     * cv_flag is used to detect spurious
-     * wake ups.
-     */
-    bool cv_flag;
-    KTVar() : cv_flag(false){};
-};
+template<typename Q> class Scheduler;
 
-/*
- * Cluster variables
- */
-struct ClusterVar{
-    /*
-     * This list is used to schedule uThreads in bulk.
-     * For now it is only used in IOHandler
-     */
-    IntrusiveQueue<uThread> bulkQueue;
+class uThread;
 
-    /*
-     * Count the number of items in bulkQueue
-     */
-    size_t bulkCounter;
-};
-class Scheduler {
-    friend class kThread;
-    friend class Cluster;
-    friend class IOHandler;
-    friend class uThread;
+class ReadyQueue {
+    friend class Scheduler<ReadyQueue>;
 private:
     /*
      * Start and end points for the exponential spin
@@ -287,7 +240,7 @@ private:
      * uThreads are copied directly from the passed container
      * to the queue in bulk to avoid the overhead.
      */
-    void __push(IntrusiveQueue<uThread>& utList, size_t count){
+    void push(IntrusiveList<uThread>& utList, size_t count){
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         __spinLock(mlock);
         queue.transferAllFrom(utList);

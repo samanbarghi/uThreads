@@ -25,6 +25,7 @@
 #include "generic/basics.h"
 #include "generic/IntrusiveContainers.h"
 
+template<typename Q> class Scheduler;
 class uThread;
 class IOHandler;
 class Scheduler;
@@ -65,7 +66,7 @@ class Cluster {
     friend class IOHandler;
     friend class Scheduler;
 private:
-    Scheduler* scheduler;
+    Scheduler<ReadyQueue>* scheduler;
     std::atomic_uint numberOfkThreads;                  //Number of kThreads in this Cluster
 
     static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
@@ -83,36 +84,10 @@ private:
      */
     static Cluster defaultCluster;
 
+    void schedule(uThread* ut);
+
+
     void initialSynchronization();
-
-    IOHandler* iohandler;
-
-    /*
-     * Scheduler's defined cluster variables
-     */
-    ClusterVar* clustervar;
-
-    /*
-     * Vector of kThreads in this Cluster
-     */
-    std::vector<kThread*> ktVector;
-
-    /*
-     * last kThread assigned to a uThread,
-     * for now kThread assignment is round robin
-     * manner.
-     */
-    std::atomic<size_t> ktLast;
-
-    /*
-     * Add a new kThread to this Cluster
-     */
-    void addNewkThread(kThread&);
-
-    /*
-     * Assign a kThread to the requesting uThread
-     */
-    kThread* assignkThread();
 
 public:
     /**

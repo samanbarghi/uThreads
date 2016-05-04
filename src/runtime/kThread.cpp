@@ -19,6 +19,7 @@
 #include "kThread.h"
 #include "BlockingSync.h"
 #include <unistd.h>
+#include "Scheduler.h"
 
 std::atomic_uint kThread::totalNumberofKTs(0);
 
@@ -104,10 +105,25 @@ void kThread::switchContext(uThread* ut, void* args) {
 }
 
 void kThread::switchContext(void* args) {
+    uThread* ut = nullptr;
+    /*	First check the local queue */
+    IntrusiveList<uThread>* ktrq = ktReadyQueue;
+    if (!ktrq->empty()) {   //If not empty, grab a uThread and run it
+        ut = ktrq->front();
+        ktrq->pop_front();
+    } else {                //If empty try to fill
 
-    uThread* ut = scheduler->nonBlockingSwitch(*this);
-    if(ut == nullptr)
-        return;
+        ssize_t res = localCluster->scheduler->tryGetWorks(*ktrq);   //Try to fill the local queue
+        if (res > 0) {       //If there is more work start using it
+            ut = ktrq->front();
+            ktrq->pop_front();
+        } else {        //If no work is available, Switch to defaultUt
+            if (res == 0 && kThread::currentKT->currentUT->state == uThread::State::YIELD)
+                return; //if the running uThread yielded, continue running it
+            ut = mainUT;
+        }
+    }
+    assert(ut != nullptr);
     switchContext(ut, args);
 }
 
@@ -159,9 +175,12 @@ void kThread::defaultRun(void* args) {
     uThread* ut = nullptr;
 
     while (true) {
-        ut = thisKT->scheduler->blockingSwitch(*thisKT);
-        //This should never happen
-        if(ut == nullptr) continue;
+        ssize_t res = thisKT->localCluster->scheduler->getWork(*thisKT->ktReadyQueue);
+        if(res ==0) continue;
+        //ktReadyQueue should not be empty at this point
+        assert(!ktReadyQueue->empty());
+        ut = thisKT->ktReadyQueue->front();
+        thisKT->ktReadyQueue->pop_front();
         //Switch to the new uThread
         thisKT->switchContext(ut, nullptr);
     }
