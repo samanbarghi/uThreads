@@ -209,7 +209,6 @@ protected:
 
 
    //Variables for bulk push to readyQueue
-   IntrusiveList<uThread> bulkQueue;
    size_t bulkCounter;
 
     IOHandler(Cluster&);

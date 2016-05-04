@@ -108,6 +108,7 @@ void uThread::migrate(Cluster* cluster) {
     if (slowpath(kThread::currentkThread()->localCluster == cluster)) //no need to migrate
         return;
     currentUThread()->currentCluster = cluster;
+    currentUThread()->homekThread = cluster->assignkThread();
     currentUThread()->state = State::MIGRATE;
     kThread::currentkThread()->switchContext();
 }
@@ -124,7 +125,9 @@ void uThread::resume() {
                     || state == State::MIGRATE || state == State::YIELD)) {
 
         state = State::READY;
-        Scheduler::schedule(this, *currentCluster);//Put uThread back on ReadyQueue
+        if(homekThread == nullptr)
+            homekThread = currentCluster->assignkThread();
+        Scheduler::schedule(this, *homekThread);//Put uThread back on ReadyQueue
     }
 }
 void uThread::terminate(){
