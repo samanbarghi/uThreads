@@ -20,7 +20,7 @@
 
 #include <mutex>
 #include <atomic>
-#include <thread>
+#include <vector>
 #include <assert.h>
 #include "generic/basics.h"
 #include "generic/IntrusiveContainers.h"
@@ -28,6 +28,8 @@
 class uThread;
 class IOHandler;
 class Scheduler;
+class kThread;
+class ClusterVar;
 
 /**
  * @class Cluster
@@ -84,6 +86,34 @@ private:
     void initialSynchronization();
 
     IOHandler* iohandler;
+
+    /*
+     * Scheduler's defined cluster variables
+     */
+    ClusterVar* clustervar;
+
+    /*
+     * Vector of kThreads in this Cluster
+     */
+    std::vector<kThread*> ktVector;
+
+    /*
+     * last kThread assigned to a uThread,
+     * for now kThread assignment is round robin
+     * manner.
+     */
+    std::atomic<size_t> ktLast;
+
+    /*
+     * Add a new kThread to this Cluster
+     */
+    void addNewkThread(kThread&);
+
+    /*
+     * Assign a kThread to the requesting uThread
+     */
+    kThread* assignkThread();
+
 public:
     /**
      * Create a new Cluster

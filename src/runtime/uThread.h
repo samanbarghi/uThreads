@@ -29,6 +29,7 @@ class IOHandler;
 class Cluster;
 class uThreadCache;
 class Scheduler;
+class kThread;
 
 /**
  * @class uThread
@@ -128,7 +129,7 @@ protected:
     uThread(vaddr sb, size_t ss) :
             stackPointer(vaddr(this)), stackBottom(sb), stackSize(ss), state(
                     State::INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(
-                    nullptr), jState(JState::DETACHED) {
+                    nullptr), jState(JState::DETACHED), homekThread(nullptr) {
         totalNumberofUTs++;
     }
 
@@ -160,6 +161,11 @@ protected:
      * This variable is used for migrating to another Cluster.
      */
     Cluster* currentCluster;
+
+    /*
+     * Current kThread assigned to this uThread
+     */
+    kThread* homekThread;
 
     /*
      * Stack Boundary
