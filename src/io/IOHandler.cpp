@@ -18,6 +18,7 @@
 #include "IOHandler.h"
 #include "Network.h"
 #include "runtime/kThread.h"
+#include "runtime/Scheduler.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <iostream>
@@ -184,7 +185,7 @@ void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
     //if this is the last item return by the poller
     //Bulk push everything to the related cluster ready Queue
     if(slowpath(isLast) && bulkCounter >0){
-        localCluster->scheduleMany(bulkQueue, bulkCounter);
+        localCluster->scheduler->schedule(bulkQueue, bulkCounter);
         bulkCounter =0;
     }
 }

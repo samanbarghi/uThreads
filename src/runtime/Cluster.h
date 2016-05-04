@@ -26,6 +26,7 @@
 #include "generic/basics.h"
 #include "generic/IntrusiveContainers.h"
 
+template<typename Q> class Scheduler;
 class uThread;
 class ReadyQueue;
 class IOHandler;
@@ -62,7 +63,7 @@ class Cluster {
     friend class Connection;
     friend class IOHandler;
 private:
-    ReadyQueue* readyQueue;                             //There is one ready queue per cluster
+    Scheduler<ReadyQueue>* scheduler;
     std::atomic_uint numberOfkThreads;                  //Number of kThreads in this Cluster
 
     static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
@@ -78,16 +79,10 @@ private:
      */
     static Cluster defaultCluster;
 
+    void schedule(uThread* ut);
+
 
     void initialSynchronization();
-
-    void schedule(uThread*);                            //Put uThread in the ready queue to be picked up by related kThreads
-    void scheduleMany(IntrusiveList<uThread>&, size_t); //Schedule many uThreads
-
-    ssize_t getWork(IntrusiveList<uThread>&);           //Get a unit of work or if not available sleep till there is one
-    uThread* tryGetWork();                              //Get a unit of work from the ready queue
-    ssize_t tryGetWorks(IntrusiveList<uThread>&);       //Get as many uThreads as possible from the readyQueue and move them to local queue
-
 
     IOHandler* iohandler;
 public:

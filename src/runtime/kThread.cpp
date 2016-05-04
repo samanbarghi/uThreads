@@ -18,6 +18,7 @@
 #include "kThread.h"
 #include "BlockingSync.h"
 #include <unistd.h>
+#include "Scheduler.h"
 
 std::atomic_uint kThread::totalNumberofKTs(0);
 
@@ -105,7 +106,7 @@ void kThread::switchContext(void* args) {
         ktrq->pop_front();
     } else {                //If empty try to fill
 
-        ssize_t res = localCluster->tryGetWorks(*ktrq);   //Try to fill the local queue
+        ssize_t res = localCluster->scheduler->tryGetWorks(*ktrq);   //Try to fill the local queue
         if (res > 0) {       //If there is more work start using it
             ut = ktrq->front();
             ktrq->pop_front();
@@ -162,7 +163,7 @@ void kThread::defaultRun(void* args) {
     uThread* ut = nullptr;
 
     while (true) {
-        ssize_t res = thisKT->localCluster->getWork(*thisKT->ktReadyQueue);
+        ssize_t res = thisKT->localCluster->scheduler->getWork(*thisKT->ktReadyQueue);
         if(res ==0) continue;
         //ktReadyQueue should not be empty at this point
         assert(!ktReadyQueue->empty());
