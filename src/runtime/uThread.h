@@ -314,3 +314,4 @@ public:
 };
 
 #endif /* UTHREADS_UTHREAD_H_ */
+#include "Cluster.h"

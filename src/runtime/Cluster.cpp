@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include "Cluster.h"
 #include "kThread.h"
-#include "ReadyQueue.h"
 #include "io/IOHandler.h"
+#include "Scheduler.h"
 
 std::atomic_ushort Cluster::clusterMasterID(0);
 
@@ -27,7 +27,7 @@ Cluster::Cluster() :
         numberOfkThreads(0), iohandler(nullptr) {
     //TODO: IO handler should be only applicable for IO Clusters
     //or be created with the first IO call
-    readyQueue = new ReadyQueue();
+    scheduler = new Scheduler<ReadyQueue>();
     initialSynchronization();
 }
 
@@ -38,35 +38,10 @@ void Cluster::initialSynchronization() {
         exit(EXIT_FAILURE);
 }
 
+void Cluster::schedule(uThread* ut){
+    scheduler->schedule(ut);
+}
 Cluster::~Cluster() {
-}
-
-
-void Cluster::schedule(uThread* ut) {
-    assert(ut != nullptr);
-    //Scheduling uThread
-    readyQueue->push(ut);
-}
-
-void Cluster::scheduleMany(IntrusiveList<uThread>& queue, size_t count) {
-    assert(!queue.empty());
-    readyQueue->pushMany(queue, count);
-}
-
-uThread* Cluster::tryGetWork() {
-    return readyQueue->tryPop();
-}
-
-/*
- * iPull multiple uThreads from the ready queue and
- * push into the kThread local queue. This is nonblocking.
- */
-ssize_t Cluster::tryGetWorks(IntrusiveList<uThread> &queue) {
-    return readyQueue->tryPopMany(queue);
-}
-
-ssize_t Cluster::getWork(IntrusiveList<uThread> &queue) {
-    return readyQueue->popMany(queue);
 }
 
 IOHandler* Cluster::getIOHandler(){

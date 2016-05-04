@@ -21,10 +21,12 @@
 #include "generic/IntrusiveContainers.h"
 #include "kThread.h"
 
+template<typename Q> class Scheduler;
+
 class uThread;
 
 class ReadyQueue {
-    friend class Cluster;
+    friend class Scheduler<ReadyQueue>;
 private:
     /*
      * Start and end points for the exponential spin
@@ -236,7 +238,7 @@ private:
      * uThreads are copied directly from the passed container
      * to the queue in bulk to avoid the overhead.
      */
-    void pushMany(IntrusiveList<uThread>& utList, size_t count){
+    void push(IntrusiveList<uThread>& utList, size_t count){
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         spinLock(mlock);
         queue.transferAllFrom(utList);
