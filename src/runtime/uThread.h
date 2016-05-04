@@ -28,6 +28,7 @@
 class IOHandler;
 class Cluster;
 class uThreadCache;
+class Scheduler;
 
 /**
  * @class uThread
@@ -63,6 +64,7 @@ class uThread: public Link<uThread> {
     friend class Cluster;
     friend class BlockingQueue;
     friend class IOHandler;
+    friend class Scheduler;
 private:
     /*
      * initUT is the initial uThread that is created when program starts.

@@ -1,4 +1,4 @@
-/* *****************************************************************************
+/*******************************************************************************
  *     Copyright © 2015, 2016 Saman Barghi
  *
  *     This program is free software: you can redistribute it and/or modify
@@ -15,18 +15,51 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-#ifndef UTHREADS_READY_QUEUE_H_
-#define UTHREADS_READY_QUEUE_H_
+#ifndef SRC_RUNTIME_SCHEDULERS_SCHEDULER_01_H_
+#define SRC_RUNTIME_SCHEDULERS_SCHEDULER_01_H_
+#include "../../generic/IntrusiveContainers.h"
+#include "../Cluster.h"
+#include "../kThread.h"
 
-#include "generic/IntrusiveContainers.h"
-#include "kThread.h"
+class IOHandler;
 
-template<typename Q> class Scheduler;
-
-class uThread;
-
-class ReadyQueue {
-    friend class Scheduler<ReadyQueue>;
+/*
+ * Local kThread objects related to the
+ * scheduler. will be instantiated by static __thread
+ */
+struct KTLocal{
+    /*
+     * local readyQueue for kThread which is only
+     * accessible by this kThread (thus thread local).
+     * This is used to bulk pull uThreads from the central
+     * ReadyQueue. The bulk operation lowers the overhead
+     * of pulling threads and accessing the central ReadyQueue
+     * as the central ReadyQueue i protected by a mutex.
+     */
+    IntrusiveList<uThread> lrq;
+};
+/*
+ * Per kThread variable related to the scheduler
+ */
+struct KTVar{
+    /*
+     *  Condition variable to be used by Cluster's
+     *  ReadyQueue. Each kThread provides its own CV
+     *  in order to provide a LIFO blocking order.
+     */
+    std::condition_variable cv;
+    /*
+     * cv_flag is used to detect spurious
+     * wake ups.
+     */
+    bool cv_flag;
+    KTVar() : cv_flag(false){};
+};
+class Scheduler {
+    friend class kThread;
+    friend class Cluster;
+    friend class IOHandler;
+    friend class uThread;
 private:
     /*
      * Start and end points for the exponential spin
@@ -58,8 +91,8 @@ private:
      */
     size_t lastPopNum;
 
-    ReadyQueue() : size(0), lastPopNum(0) {};
-    virtual ~ReadyQueue() {};
+    Scheduler() : size(0), lastPopNum(0) {};
+    virtual ~Scheduler() {};
 
     /*
      * Remove multiple uThreads from the queue
@@ -72,7 +105,7 @@ private:
      * to the function in bulk. This saves a lot
      * of overhead.
      */
-    ssize_t removeMany(IntrusiveList<uThread> &nqueue){
+    ssize_t __removeMany(IntrusiveList<uThread> &nqueue){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
         size_t numkt = kThread::currentKT->localCluster->getNumberOfkThreads();
@@ -96,12 +129,12 @@ private:
      * this code pops a kThread and unblock it through
      * sending a notificiation on its CV.
      */
-    inline void unBlock(){
+    inline void __unBlock(){
          if(!ktStack.empty()){
             kThread* kt = ktStack.back();
             ktStack.pop_back();
-            kt->cv_flag = true;
-            kt->cv.notify_one();
+            kt->ktvar->cv_flag = true;
+            kt->ktvar->cv.notify_one();
         }
     }
     /*
@@ -116,7 +149,7 @@ private:
      * a chance for producers not to be preceded by many consumers that
      * just need to check whether the queue is empty and block on that.
      */
-    inline void spinLock(std::unique_lock<std::mutex>& mlock){
+    inline void __spinLock(std::unique_lock<std::mutex>& mlock){
         size_t spin = SPIN_START;
         for(;;){
             if(mlock.try_lock()) break;
@@ -138,7 +171,7 @@ private:
      * the mutex or the queue is empty.
      */
 
-    uThread* tryPop() {                     //Try to pop one item, or return null
+    uThread* __tryPop() {                     //Try to pop one item, or return null
         uThread* ut = nullptr;
         /*
          * Do not block on the lock,
@@ -159,20 +192,20 @@ private:
      * give up immediately if cannot acquire
      * the mutex or the queue is empty.
      */
-    ssize_t tryPopMany(IntrusiveList<uThread> &nqueue) {
+    ssize_t __tryPopMany(IntrusiveList<uThread> &nqueue) {
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
         if(!mlock.owns_lock()) return -1;
         if(size == 0) return 0;
-        return removeMany(nqueue);
+        return __removeMany(nqueue);
     }
 
     /*
      * Pop multiple items from the queue and block
      * if the queue is empty.
      */
-    ssize_t popMany(IntrusiveList<uThread> &nqueue) {//Pop with condition variable
+    ssize_t __popMany(IntrusiveList<uThread> &nqueue) {//Pop with condition variable
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
-        spinLock(mlock);
+        __spinLock(mlock);
         if (fastpath(size == 0)) {
             //Push the kThread to stack before waiting on it's cv
             ktStack.push_back(*kThread::currentKT);
@@ -180,7 +213,7 @@ private:
              * Set the cv_flag so we can identify
              * spurious wake ups from notifies
              */
-            kThread::currentKT->cv_flag = false;
+            kThread::currentKT->ktvar->cv_flag = false;
             while (size == 0 ) {
                 /*
                  * cv_flag can be true if the kThread were unblocked
@@ -189,10 +222,10 @@ private:
                  * has been removed from the stack, thus put it back
                  * on the stack
                  */
-                if(kThread::currentKT->cv_flag){
+                if(kThread::currentKT->ktvar->cv_flag){
                     ktStack.push_back(*kThread::currentKT);
                 }
-                kThread::currentKT->cv.wait(mlock);
+                kThread::currentKT->ktvar->cv.wait(mlock);
             }
             /*
              * If cv_flag is not true, it means the kThread
@@ -201,11 +234,11 @@ private:
              * ktStack is intrusive the kThread can remove
              * itself from the stack.
              */
-            if(!kThread::currentKT->cv_flag){
+            if(!kThread::currentKT->ktvar->cv_flag){
                 ktStack.remove(*kThread::currentKT);
             }
         }
-        ssize_t res = removeMany(nqueue);
+        ssize_t res = __removeMany(nqueue);
         /*
          * Each kThread unblocks the next kThread in case
          * PushMany was called. Only one kThread can always hold
@@ -214,7 +247,7 @@ private:
          * Chaining the unblocking has the benefit of distributing the cost
          * of multiple cv.notify_one() calls over producer + waiting consumers.
          */
-        if(size != 0) unBlock();
+        if(size != 0) __unBlock();
 
         return res;
     }
@@ -223,12 +256,12 @@ private:
      * Push a single uThread to the queue and
      * wake one kThread up.
      */
-    void push(uThread* ut) {
+    void __push(uThread* ut) {
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
-        spinLock(mlock);
+        __spinLock(mlock);
         queue.push_back(*ut);
         size++;
-        unBlock();
+        __unBlock();
     }
 
     /*
@@ -238,20 +271,80 @@ private:
      * uThreads are copied directly from the passed container
      * to the queue in bulk to avoid the overhead.
      */
-    void push(IntrusiveList<uThread>& utList, size_t count){
+    void __push(IntrusiveList<uThread>& utList, size_t count){
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
-        spinLock(mlock);
+        __spinLock(mlock);
         queue.transferAllFrom(utList);
         size+=count;
-        unBlock();
+        __unBlock();
     }
 
     /*
      * Whether the queue is empty or not.
      */
-    bool empty() const {
+    bool __empty() const {
         return queue.empty();
     }
-};
 
-#endif /* UTHREADS_READY_QUEUE_H_ */
+    /* ************** Scheduling wrappers *************/
+    //Schedule a uThread on a cluster
+    static void schedule(uThread* ut, Cluster& cluster){
+        assert(ut != nullptr);
+        cluster.scheduler->__push(ut);
+    }
+    //Put uThread in the ready queue to be picked up by related kThreads
+    void schedule(uThread* ut) {
+        assert(ut != nullptr);
+        //Scheduling uThread
+        __push(ut);
+    }
+
+    //Schedule many uThreads
+    void schedule(IntrusiveList<uThread>& queue, size_t count) {
+        assert(!queue.empty());
+        __push(queue, count);
+    }
+
+    uThread* nonBlockingSwitch(kThread& kt){
+        uThread* ut = nullptr; /*  First check the local queue */
+        IntrusiveList<uThread>& ktrq = kt.ktlocal->lrq;
+        if (!ktrq.empty()) {   //If not empty, grab a uThread and run it
+            ut = ktrq.front();
+            ktrq.pop_front();
+        } else {                //If empty try to fill
+
+            ssize_t res = __tryPopMany(ktrq);   //Try to fill the local queue
+            if (res > 0) {       //If there is more work start using it
+                ut = ktrq.front();
+                ktrq.pop_front();
+            } else {        //If no work is available, Switch to defaultUt
+                if (res == 0 && kt.currentUT->state == uThread::State::YIELD)
+                    return nullptr; //if the running uThread yielded, continue running it
+                ut = kt.mainUT;
+            }
+        }
+        assert(ut != nullptr);
+        return ut;
+    }
+
+    uThread* blockingSwitch(kThread& kt){
+        ssize_t res = __popMany(kt.ktlocal->lrq);
+        if(res ==0) return nullptr;
+        //ktReadyQueue should not be empty at this point
+        assert(!kt.ktlocal->lrq.empty());
+        uThread* ut = kt.ktlocal->lrq.front();
+        kt.ktlocal->lrq.pop_front();
+        return ut;
+    }
+
+    /* assign a scheduler to a kThread */
+    static Scheduler* getScheduler(Cluster& cluster){
+       if(slowpath(cluster.scheduler == nullptr)){
+           std::unique_lock<std::mutex> ul(cluster.mtx);
+           if(cluster.scheduler == nullptr)
+               cluster.scheduler = new Scheduler();
+       }
+       return cluster.scheduler;
+    }
+};
+#endif /* SRC_RUNTIME_SCHEDULER_01_H_ */

@@ -15,22 +15,24 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 
+#include <runtime/schedulers/Scheduler.h>
 #include "kThread.h"
 #include "BlockingSync.h"
 #include <unistd.h>
-#include "Scheduler.h"
 
 std::atomic_uint kThread::totalNumberofKTs(0);
 
 __thread kThread* kThread::currentKT = nullptr;
-__thread IntrusiveList<uThread>* kThread::ktReadyQueue = nullptr;
+__thread KTLocal* kThread::ktlocal = nullptr;
 __thread funcvoid2_t kThread::postSuspendFunc = nullptr;
 
 /*
  * This is only called to create defaultKT
  */
 kThread::kThread() :
-        cv_flag(true), threadSelf() {
+        threadSelf() ,
+        ktvar(new KTVar()),
+        scheduler(Scheduler::getScheduler(Cluster::defaultCluster)){
     localCluster = &Cluster::defaultCluster;
     initialize();
     initializeMainUT(true);
@@ -44,13 +46,17 @@ kThread::kThread() :
     initialSynchronization();
 }
 kThread::kThread(Cluster& cluster, std::function<void(ptr_t)> func, ptr_t args) :
-        localCluster(&cluster), threadSelf(&kThread::runWithFunc, this, func,
+        localCluster(&cluster), ktvar(new KTVar()),
+        scheduler(Scheduler::getScheduler(cluster)),
+        threadSelf(&kThread::runWithFunc, this, func,
                 args) {
     initialSynchronization();
 }
 
 kThread::kThread(Cluster& cluster) :
-        localCluster(&cluster), cv_flag(false), threadSelf(&kThread::run, this) {
+        localCluster(&cluster), ktvar(new KTVar()),
+        scheduler(Scheduler::getScheduler(cluster)),
+        threadSelf(&kThread::run, this) {
     initialSynchronization();
 }
 
@@ -98,25 +104,10 @@ void kThread::switchContext(uThread* ut, void* args) {
 }
 
 void kThread::switchContext(void* args) {
-    uThread* ut = nullptr;
-    /*	First check the local queue */
-    IntrusiveList<uThread>* ktrq = ktReadyQueue;
-    if (!ktrq->empty()) {   //If not empty, grab a uThread and run it
-        ut = ktrq->front();
-        ktrq->pop_front();
-    } else {                //If empty try to fill
 
-        ssize_t res = localCluster->scheduler->tryGetWorks(*ktrq);   //Try to fill the local queue
-        if (res > 0) {       //If there is more work start using it
-            ut = ktrq->front();
-            ktrq->pop_front();
-        } else {        //If no work is available, Switch to defaultUt
-            if (res == 0 && kThread::currentKT->currentUT->state == uThread::State::YIELD)
-                return; //if the running uThread yielded, continue running it
-            ut = mainUT;
-        }
-    }
-    assert(ut != nullptr);
+    uThread* ut = scheduler->nonBlockingSwitch(*this);
+    if(ut == nullptr)
+        return;
     switchContext(ut, args);
 }
 
@@ -127,7 +118,7 @@ void kThread::initialize() {
      */
     kThread::currentKT = this;
 
-    kThread::ktReadyQueue = new IntrusiveList<uThread>();
+    kThread::ktlocal = new KTLocal();
 }
 void kThread::initializeMainUT(bool isDefaultKT) {
     /*
@@ -163,12 +154,9 @@ void kThread::defaultRun(void* args) {
     uThread* ut = nullptr;
 
     while (true) {
-        ssize_t res = thisKT->localCluster->scheduler->getWork(*thisKT->ktReadyQueue);
-        if(res ==0) continue;
-        //ktReadyQueue should not be empty at this point
-        assert(!ktReadyQueue->empty());
-        ut = thisKT->ktReadyQueue->front();
-        thisKT->ktReadyQueue->pop_front();
+        ut = thisKT->scheduler->blockingSwitch(*thisKT);
+        //This should never happen
+        if(ut == nullptr) continue;
         //Switch to the new uThread
         thisKT->switchContext(ut, nullptr);
     }

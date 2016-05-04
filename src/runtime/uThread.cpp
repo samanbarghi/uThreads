@@ -20,6 +20,7 @@
 #include "kThread.h"
 #include "BlockingSync.h"
 #include "uThreadCache.h"
+#include "schedulers/Scheduler.h"
 #include <iostream> //TODO: remove this, add debug object
 #include <cassert>
 
@@ -123,7 +124,7 @@ void uThread::resume() {
                     || state == State::MIGRATE || state == State::YIELD)) {
 
         state = State::READY;
-        currentCluster->schedule(this);//Put uThread back on ReadyQueue
+        Scheduler::schedule(this, *currentCluster);//Put uThread back on ReadyQueue
     }
 }
 void uThread::terminate(){
