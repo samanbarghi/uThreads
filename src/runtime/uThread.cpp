@@ -125,9 +125,7 @@ void uThread::resume() {
                     || state == State::MIGRATE || state == State::YIELD)) {
 
         state = State::READY;
-        if(homekThread == nullptr)
-            homekThread = currentCluster->assignkThread();
-        Scheduler::schedule(this, *homekThread);//Put uThread back on ReadyQueue
+        Scheduler::schedule(this, *currentCluster);//Put uThread back on ReadyQueue
     }
 }
 void uThread::terminate(){

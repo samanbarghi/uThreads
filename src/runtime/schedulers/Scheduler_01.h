@@ -23,12 +23,43 @@
 
 class IOHandler;
 
-template<typename Q> class Scheduler;
-
-class uThread;
-
-class ReadyQueue {
-    friend class Scheduler<ReadyQueue>;
+/*
+ * Local kThread objects related to the
+ * scheduler. will be instantiated by static __thread
+ */
+struct KTLocal{
+    /*
+     * local readyQueue for kThread which is only
+     * accessible by this kThread (thus thread local).
+     * This is used to bulk pull uThreads from the central
+     * ReadyQueue. The bulk operation lowers the overhead
+     * of pulling threads and accessing the central ReadyQueue
+     * as the central ReadyQueue i protected by a mutex.
+     */
+    IntrusiveList<uThread> lrq;
+};
+/*
+ * Per kThread variable related to the scheduler
+ */
+struct KTVar{
+    /*
+     *  Condition variable to be used by Cluster's
+     *  ReadyQueue. Each kThread provides its own CV
+     *  in order to provide a LIFO blocking order.
+     */
+    std::condition_variable cv;
+    /*
+     * cv_flag is used to detect spurious
+     * wake ups.
+     */
+    bool cv_flag;
+    KTVar() : cv_flag(false){};
+};
+class Scheduler {
+    friend class kThread;
+    friend class Cluster;
+    friend class IOHandler;
+    friend class uThread;
 private:
     /*
      * Start and end points for the exponential spin
@@ -74,7 +105,7 @@ private:
      * to the function in bulk. This saves a lot
      * of overhead.
      */
-    ssize_t __removeMany(IntrusiveQueue<uThread> &nqueue){
+    ssize_t __removeMany(IntrusiveList<uThread> &nqueue){
         //TODO: is 1 (fall back to one task per each call) is a good number or should we used size%numkt
         //To avoid emptying the queue and not leaving enough work for other kThreads only move a portion of the queue
         size_t numkt = kThread::currentKT->localCluster->getNumberOfkThreads();
@@ -161,7 +192,7 @@ private:
      * give up immediately if cannot acquire
      * the mutex or the queue is empty.
      */
-    ssize_t __tryPopMany(IntrusiveQueue<uThread> &nqueue) {
+    ssize_t __tryPopMany(IntrusiveList<uThread> &nqueue) {
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
         if(!mlock.owns_lock()) return -1;
         if(size == 0) return 0;
@@ -172,7 +203,7 @@ private:
      * Pop multiple items from the queue and block
      * if the queue is empty.
      */
-    ssize_t __popMany(IntrusiveQueue<uThread> &nqueue) {//Pop with condition variable
+    ssize_t __popMany(IntrusiveList<uThread> &nqueue) {//Pop with condition variable
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         __spinLock(mlock);
         if (fastpath(size == 0)) {
@@ -228,7 +259,7 @@ private:
     void __push(uThread* ut) {
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         __spinLock(mlock);
-        queue.push(*ut);
+        queue.push_back(*ut);
         size++;
         __unBlock();
     }
@@ -240,7 +271,7 @@ private:
      * uThreads are copied directly from the passed container
      * to the queue in bulk to avoid the overhead.
      */
-    void push(IntrusiveList<uThread>& utList, size_t count){
+    void __push(IntrusiveList<uThread>& utList, size_t count){
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         __spinLock(mlock);
         queue.transferAllFrom(utList);
@@ -257,9 +288,9 @@ private:
 
     /* ************** Scheduling wrappers *************/
     //Schedule a uThread on a cluster
-    static void schedule(uThread* ut, kThread& kt){
+    static void schedule(uThread* ut, Cluster& cluster){
         assert(ut != nullptr);
-        kt.scheduler->__push(ut);
+        cluster.scheduler->__push(ut);
     }
     //Put uThread in the ready queue to be picked up by related kThreads
     void schedule(uThread* ut) {
@@ -269,23 +300,23 @@ private:
     }
 
     //Schedule many uThreads
-    void schedule(IntrusiveQueue<uThread>& queue, size_t count) {
+    void schedule(IntrusiveList<uThread>& queue, size_t count) {
         assert(!queue.empty());
         __push(queue, count);
     }
 
     uThread* nonBlockingSwitch(kThread& kt){
         uThread* ut = nullptr; /*  First check the local queue */
-        IntrusiveQueue<uThread>& ktrq = kt.ktlocal->lrq;
+        IntrusiveList<uThread>& ktrq = kt.ktlocal->lrq;
         if (!ktrq.empty()) {   //If not empty, grab a uThread and run it
             ut = ktrq.front();
-            ktrq.pop();
+            ktrq.pop_front();
         } else {                //If empty try to fill
 
             ssize_t res = __tryPopMany(ktrq);   //Try to fill the local queue
             if (res > 0) {       //If there is more work start using it
                 ut = ktrq.front();
-                ktrq.pop();
+                ktrq.pop_front();
             } else {        //If no work is available, Switch to defaultUt
                 if (res == 0 && kt.currentUT->state == uThread::State::YIELD)
                     return nullptr; //if the running uThread yielded, continue running it
@@ -302,7 +333,7 @@ private:
         //ktReadyQueue should not be empty at this point
         assert(!kt.ktlocal->lrq.empty());
         uThread* ut = kt.ktlocal->lrq.front();
-        kt.ktlocal->lrq.pop();
+        kt.ktlocal->lrq.pop_front();
         return ut;
     }
 
@@ -314,16 +345,6 @@ private:
                cluster.scheduler = new Scheduler();
        }
        return cluster.scheduler;
-    }
-
-    static void prepareBulkPush(uThread* ut){
-        ut->currentCluster->clustervar->bulkQueue.push(*ut);
-        ut->currentCluster->clustervar->bulkCounter++;
-    }
-
-    static void bulkPush(Cluster &cluster){
-        cluster.scheduler->schedule(cluster.clustervar->bulkQueue, cluster.clustervar->bulkCounter);
-        cluster.clustervar->bulkCounter =0;
     }
 };
 #endif /* SRC_RUNTIME_SCHEDULER_01_H_ */

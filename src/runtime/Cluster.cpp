@@ -20,7 +20,6 @@
 #include "Cluster.h"
 #include "kThread.h"
 #include "io/IOHandler.h"
-#include "Scheduler.h"
 
 std::atomic_ushort Cluster::clusterMasterID(0);
 
@@ -29,7 +28,6 @@ Cluster::Cluster() :
         clustervar(new ClusterVar), ktLast(0) {
     //TODO: IO handler should be only applicable for IO Clusters
     //or be created with the first IO call
-    scheduler = new Scheduler<ReadyQueue>();
     initialSynchronization();
 }
 
@@ -39,16 +37,14 @@ void Cluster::initialSynchronization() {
     else
         exit(EXIT_FAILURE);
 }
-
-void Cluster::schedule(uThread* ut){
-    scheduler->schedule(ut);
-}
 Cluster::~Cluster() {
 }
 
-kThread* Cluster::assignkThread(){
-    assert(!ktVector.empty());
-    size_t next = (ktLast+1)%(ktVector.size());
-    size_t kt = ktLast.exchange(next, std::memory_order_relaxed);
-    return ktVector[kt];
+IOHandler* Cluster::getIOHandler(){
+    if(slowpath(iohandler == nullptr)){
+        std::unique_lock<std::mutex> ul(mtx);
+        if(iohandler == nullptr)
+            iohandler = IOHandler::create(*this);
+    }
+    return iohandler;
 }

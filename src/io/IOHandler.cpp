@@ -19,7 +19,6 @@
 #include "IOHandler.h"
 #include "Network.h"
 #include "runtime/kThread.h"
-#include "runtime/Scheduler.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <iostream>
