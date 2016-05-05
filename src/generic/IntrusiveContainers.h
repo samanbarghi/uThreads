@@ -30,12 +30,14 @@
 template<typename T, size_t ID=0> class IntrusiveList;
 template<typename T, size_t ID=0> class IntrusiveQueue;
 template<typename T,size_t ID=0> class IntrusiveStack;
+template<typename T> class BlockingMPSCQueue;
 
 // NOTE WELL: this simple design (using Link*) only works, if Link is first in T
 template <typename T> class Link {
     friend class IntrusiveList<T>;
     friend class IntrusiveQueue<T>;
     friend class IntrusiveStack<T>;
+    friend class BlockingMPSCQueue<T>;
     Link* prev;
     Link* volatile next;
   public:
@@ -63,7 +65,7 @@ public:
   void push(T& first, T& last) {
     GENASSERT1(!onStack(last), FmtHex(&first));
     last.Link<T>::next = head;
-    head = first;
+    head = &first;
   }
 
   void push(T& elem) {
@@ -164,6 +166,26 @@ public:
     T* last = eq.pop(count);
     push(*first, *last);
   }
+
+    T* removeAll() {
+        GENASSERT1(!empty(), FmtHex(this));
+        T* last = back();
+        last->Link<T>::next = nullptr;
+        head = nullptr;
+        tail = nullptr;
+        return last;
+    }
+
+  void transferAllFrom(IntrusiveQueue& eq) {
+    GENASSERT1(!eq.empty(), FmtHex(&eq));
+    T* first = eq.front();
+    T* last = eq.back();
+    last->Link<T>::next = nullptr;
+    eq.head = nullptr;
+    eq.tail = nullptr;
+    push(*first, *last);
+  }
+
 } __packed;
 
 template<typename T, size_t ID> class IntrusiveList {
@@ -238,6 +260,15 @@ public:
     return last;
   }
 
+  T* removeAll(){
+    GENASSERT1(!empty(), FmtHex(this));
+    T* first = front();
+    T* last = back();
+    first->Link<T>::prev = nullptr;
+    last->Link<T>::next = nullptr;
+    return last;
+  }
+
   void push_front(T& elem)           { insert_before(*front(), elem); }
   void push_back(T& elem)            { insert_after (*back(),  elem); }
   void splice_back(T& first, T&last) { insert_after (*back(),  first, last); }
@@ -272,11 +303,11 @@ private:
     Link<T>*               head;
 
     bool insert(Link<T>& first, Link<T>& last){
-      last.next = nullptr;
+      last.Link<T>::next = nullptr;
       Link<T>* prev = tail.exchange(&last, std::memory_order_acquire);
       bool was_empty = ((uintptr_t)prev & 1) != 0;
       prev = (Link<T>*)((uintptr_t)prev & ~1);
-      prev->next = &first;
+      prev->Link<T>::next = &first;
       return was_empty;
     }
 
@@ -292,7 +323,7 @@ public:
     T* pop(){
         Link<T>* ttail = tail;
         //If tail is marked empty, queue should not have been scheduled
-        assert(((uintptr_t)ttail & 1) == 0);
+        if(((uintptr_t)ttail & 1) == 1) return nullptr;
         if(head == &stub){                     // current chunk empty
                 Link<T>* expected = &stub;
                 Link<T>* xchg = (Link<T>*)((uintptr_t)expected | 1);
@@ -300,8 +331,8 @@ public:
                     return nullptr; //The Queue is empty
                 }//otherwise another thread is inserting
             // wait for producer in insert()
-            while(stub.next == nullptr) asm volatile("pause");
-            head = stub.next;                  // remove stub
+            while(stub.Link<T>::next == nullptr) asm volatile("pause");
+            head = stub.Link<T>::next;                  // remove stub
             insert(stub, stub);                // re-insert stub at end
         }
         // wait for producer in insert()
@@ -309,6 +340,8 @@ public:
         // retrieve and return first element
         Link<T>* l = head;
         head = head->next;
+        l->next = nullptr;
+        l->prev = nullptr;
         return (T*)l;
     }
 };
