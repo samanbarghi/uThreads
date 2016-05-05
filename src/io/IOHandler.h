@@ -76,7 +76,7 @@ private:
     bool closing;
 
     /** Whether the fd was added to epoll or not **/
-    bool opened;
+    std::atomic<bool> opened;
 
     /** Whether this pd is about to block on read or write */
     bool isBlockingOnRead;
@@ -111,24 +111,7 @@ public:
     const PollData& operator=(const PollData&) = delete;
     ~PollData(){};
 
-    static void postSwitchFunc(void* ut, void* args){
-        assert(args != nullptr);
-        assert(ut != nullptr);
 
-        uThread* old = (uThread*)ut;
-        PollData* pd = (PollData*) args;
-        if(pd->closing) return;
-        uThread** utp = pd->isBlockingOnRead ? &pd->rut : &pd->wut;
-
-        std::lock_guard<std::mutex> pdlock(pd->mtx);
-        if(*utp == POLL_READY){
-            *utp = nullptr;         //consume the notification and resume
-            old->resume();
-        }else if(*utp == POLL_WAIT){
-            *utp = old;
-        }else
-            std::cerr << "Exception on rut"<< std::endl;
-    }
 
 };
 
@@ -200,6 +183,8 @@ protected:
     void block(PollData &pd, bool isRead);
     void inline unblock(PollData &pd, int flag);
     void inline unblockBulk(PollData &pd, int flag);
+
+    static void postSwitchFunc(void* ut, void* args);
 
     Cluster*    localCluster;       //Cluster that this Handler belongs to
     kThread    ioKT;               //IO kThread
