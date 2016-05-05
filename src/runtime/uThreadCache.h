@@ -35,7 +35,7 @@ class uThreadCache {
 private:
     //global mutex for protecting the underlying data structure
     std::mutex mtx;
-    IntrusiveList<uThread> stack;
+    IntrusiveStack<uThread> stack;
     size_t count;
     size_t size;
 
@@ -58,7 +58,7 @@ public:
         //do not block just to grab this lock
         if(!mlock.owns_lock() || count == size) return -1;
         ut->reset();
-        stack.push_back(*ut);
+        stack.push(*ut);
         return ++count;
     }
 
@@ -70,10 +70,8 @@ public:
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
         //do not block just to grab this lock
         if(!mlock.owns_lock() || count == 0) return nullptr;
-        uThread* ut = stack.back();
-        stack.pop_back();
         count--;
-        return ut;
+        return stack.pop();
     }
 };
 
