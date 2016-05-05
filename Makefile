@@ -15,7 +15,7 @@ LIB_NAME=libuThreads.so
 LIB_FULL_NAME=$(LIB_NAME).$(VERSION)
 
 CXX		 := g++ -std=c++1y
-CXXFLAGS := -O3 -g -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread
+CXXFLAGS := -O3 -g -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread -DSCHEDULERNO=2
 
 SRCEXT 	:= cpp
 ASMEXT 	:= S
