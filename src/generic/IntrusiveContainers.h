@@ -341,7 +341,6 @@ public:
         Link<T>* l = head;
         head = head->next;
         l->next = nullptr;
-        l->prev = nullptr;
         return (T*)l;
     }
 };
