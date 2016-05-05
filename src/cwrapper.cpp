@@ -36,8 +36,11 @@ uint64_t cluster_get_id(WCluster* cluster){ return reinterpret_cast<Cluster*>(cl
 /*************kThread**************/
 WkThread* kThread_create(WCluster* cluster){  return reinterpret_cast<WkThread*>( new kThread( *reinterpret_cast<Cluster*>(cluster) ) );}
 void WkThread_destroy(WkThread* kt){ delete reinterpret_cast<kThread*>(kt); }
+WkThread* kThread_get_current(){ return reinterpret_cast<WkThread*>(kThread::currentkThread());}
+//if linux
 pthread_t kThread_get_current_pthread_id(){ return kThread::currentkThread()->getThreadNativeHandle(); }
 pthread_t kThread_get_pthread_id(WkThread* kt){ return (reinterpret_cast<kThread*>(kt))->getThreadNativeHandle(); }
+//endif
 uint64_t kThread_count(){ return kThread::getTotalNumberOfkThreads(); }
 /**********************************/
 

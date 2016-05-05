@@ -42,6 +42,7 @@ struct WkThread;
 typedef struct WkThread WkThread;
 WkThread* kThread_create(WCluster* cluster);
 void kThread_destroy(WkThread* kt);
+WkThread* kThread_get_current();
 //if linux
 pthread_t kThread_get_current_pthread_id(); //return pthread_t for current running thread
 pthread_t kThread_get_pthread_id(WkThread* kt); //return pthread_t for the provided kThread
