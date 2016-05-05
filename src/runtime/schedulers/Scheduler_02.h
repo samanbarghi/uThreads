@@ -51,7 +51,8 @@ private:
     //Schedule a uThread on a cluster
     static void schedule(uThread* ut, kThread& kt){
         assert(ut != nullptr);
-        kt.scheduler->runQueue.push(*ut);
+        if(kt.scheduler->runQueue.push(*ut))
+            kt.scheduler->sem.post();
     }
     //Put uThread in the ready queue to be picked up by related kThreads
     void schedule(uThread* ut) {
@@ -103,8 +104,9 @@ private:
 
     static void bulkPush(Cluster &cluster){
         for (auto& x: cluster.ktVector){
-            if(x->ktvar->bulkCounter != 0)
+            if(x->ktvar->bulkCounter > 0)
                 x->scheduler->schedule(x->ktvar->bulkQueue, x->ktvar->bulkCounter);
+                x->ktvar->bulkCounter = 0;
         }
     }
 };
