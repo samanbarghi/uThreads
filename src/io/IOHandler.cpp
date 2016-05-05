@@ -39,13 +39,15 @@ IOHandler* IOHandler::create(Cluster& cluster){
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
 
-    //Should be already locked, only call from this->wait
-    //std::unique_lock<std::mutex> pdlock(pd.mtx);
+    std::lock_guard<std::mutex> pdlock(pd.mtx);
     int res = _Open(pd.fd, pd);
     if(res == 0)
-        pd.opened = true;
-    else
+        pd.opened.store(true, std::memory_order_relaxed);
+    else{
         std::cerr << "EPOLL_ERROR: " << errno << std::endl;
+        //TODO: this should be changed to an exception
+        exit(EXIT_FAILURE);
+    }
     //TODO: handle epoll errors
 }
 void IOHandler::wait(PollData& pd, int flag){
@@ -55,8 +57,7 @@ void IOHandler::wait(PollData& pd, int flag){
 }
 void IOHandler::block(PollData &pd, bool isRead){
 
-    std::unique_lock<std::mutex> pdlock(pd.mtx);
-    if(!pd.opened) open(pd);
+    if(!pd.opened.load(std::memory_order_relaxed)) open(pd);
     uThread** utp = isRead ? &pd.rut : &pd.wut;
     //TODO:check other states
 
@@ -64,19 +65,34 @@ void IOHandler::block(PollData &pd, bool isRead){
     {
         *utp = nullptr;  //consume the notification and return;
         return;
-    }else if(fastpath(*utp == nullptr))
-            //set the state to Waiting
-            *utp = POLL_WAIT;
-    else
+    }else if(*utp > POLL_WAIT)
         std::cerr << "Exception on open rut" << std::endl;
 
+    //This does not need synchronization, since only a single thread
+    //will access it before and after blocking
     pd.isBlockingOnRead = isRead;
-    pdlock.unlock();
-    pdlock.release();
 
-    kThread::currentKT->currentUT->suspend((funcvoid2_t)PollData::postSwitchFunc, (void*)&pd);
+    kThread::currentKT->currentUT->suspend((funcvoid2_t)IOHandler::postSwitchFunc, (void*)&pd);
     //ask for immediate suspension so the possible closing/notifications do not get lost
     //when epoll returns this ut will be back on readyQueue and pick up from here
+}
+void IOHandler::postSwitchFunc(void* ut, void* args){
+    assert(args != nullptr);
+    assert(ut != nullptr);
+
+    uThread* old = (uThread*)ut;
+    PollData* pd = (PollData*) args;
+    if(pd->closing) return;
+    uThread** utp = pd->isBlockingOnRead ? &pd->rut : &pd->wut;
+
+    std::lock_guard<std::mutex> pdlock(pd->mtx);
+    if(*utp == POLL_READY){
+        *utp = nullptr;         //consume the notification and resume
+        old->resume();
+    }else if(*utp == nullptr){
+        *utp = old;
+    }else
+        std::cerr << "Exception on rut"<< std::endl;
 }
 int IOHandler::close(PollData &pd){
 
