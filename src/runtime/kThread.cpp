@@ -37,6 +37,7 @@ kThread::kThread() :
     initialize();
     initializeMainUT(true);
     uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
+    uThread::initUT->homekThread = this;
     /*
      * Since this is for defaultKT, current running uThread
      * is the initial one which is responsible for running
@@ -113,6 +114,10 @@ void kThread::switchContext(void* args) {
 
 void kThread::initialize() {
     /*
+     * Add the kThread to the list of kThreads in the Cluster
+     */
+    localCluster->addNewkThread(*this);
+    /*
      * Set the thread_local pointer to this thread, later we can
      * find the executing thread by referring to this.
      */
@@ -121,10 +126,7 @@ void kThread::initialize() {
     //Initialize kt local vars
     kThread::ktlocal = new KTLocal();
 
-    /*
-     * Add the kThread to the list of kThreads in the Cluster
-     */
-    localCluster->addNewkThread(*this);
+
 }
 void kThread::initializeMainUT(bool isDefaultKT) {
     /*
