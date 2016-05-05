@@ -298,8 +298,8 @@ template<typename T>
 class BlockingMPSCQueue {
 private:
     std::atomic<Link<T>*>  tail;
-    Link<T>                stub;
 
+    Link<T>                stub;
     Link<T>*               head;
 
     bool insert(Link<T>& first, Link<T>& last){
@@ -321,10 +321,11 @@ public:
 
     // pop operates in chunk of elements and re-inserts stub after each chunk
     T* pop(){
-        Link<T>* ttail = tail;
-        //If tail is marked empty, queue should not have been scheduled
-        if(((uintptr_t)ttail & 1) == 1) return nullptr;
+
         if(head == &stub){                     // current chunk empty
+                Link<T>* ttail = tail;
+                //If tail is marked empty, queue should not have been scheduled
+                if(((uintptr_t)ttail & 1) == 1) return nullptr;
                 Link<T>* expected = &stub;
                 Link<T>* xchg = (Link<T>*)((uintptr_t)expected | 1);
                 if(tail.compare_exchange_strong(expected, xchg, std::memory_order_release)){
