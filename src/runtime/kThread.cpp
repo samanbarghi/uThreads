@@ -124,8 +124,6 @@ void kThread::initialize() {
 
     //Initialize kt local vars
     kThread::ktlocal = new KTLocal();
-
-
 }
 void kThread::initializeMainUT(bool isDefaultKT) {
     /*
