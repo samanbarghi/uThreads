@@ -92,7 +92,6 @@ void kThread::run() {
     defaultRun(this);
 }
 void kThread::runWithFunc(std::function<void(ptr_t)> func, ptr_t args) {
-    initialize();
     //There is no need for a mainUT to be created
     func(args);
 }
@@ -125,8 +124,6 @@ void kThread::initialize() {
 
     //Initialize kt local vars
     kThread::ktlocal = new KTLocal();
-
-
 }
 void kThread::initializeMainUT(bool isDefaultKT) {
     /*
