@@ -325,7 +325,7 @@ public:
         if(head == &stub){                     // current chunk empty
                 Link<T>* ttail = tail;
                 //If tail is marked empty, queue should not have been scheduled
-                if(((uintptr_t)ttail & 1) == 1) return nullptr;
+                if(((uintptr_t)ttail & 1) != 0) return nullptr;
                 Link<T>* expected = &stub;
                 Link<T>* xchg = (Link<T>*)((uintptr_t)expected | 1);
                 if(tail.compare_exchange_strong(expected, xchg, std::memory_order_release)){
@@ -337,11 +337,11 @@ public:
             insert(stub, stub);                // re-insert stub at end
         }
         // wait for producer in insert()
-        while(head->next == nullptr) asm volatile("pause");
+        while(head->Link<T>::next == nullptr) asm volatile("pause");
         // retrieve and return first element
         Link<T>* l = head;
-        head = head->next;
-        l->next = nullptr;
+        head = head->Link<T>::next;
+        l->Link<T>::next = nullptr;
         return (T*)l;
     }
 };
