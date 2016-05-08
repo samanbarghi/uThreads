@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -61,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>File&#160;Members</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -68,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -146,36 +147,39 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    IOHandler* iohandler;</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keyword">public</span>:</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <a class="code" href="classCluster.html#aee7feb1d599d4c8fda6c3ee83e86ba81">Cluster</a>();</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    <span class="keyword">virtual</span> ~<a class="code" href="classCluster.html">Cluster</a>();</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <a class="code" href="classCluster.html#aee7feb1d599d4c8fda6c3ee83e86ba81">Cluster</a>(<span class="keyword">const</span> <a class="code" href="classCluster.html">Cluster</a>&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keyword">const</span> <a class="code" href="classCluster.html">Cluster</a>&amp; <a class="code" href="classCluster.html#a1a2e5d92d34e8cac90939f4205e4ca39">operator=</a>(<span class="keyword">const</span> <a class="code" href="classCluster.html">Cluster</a>&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;</div>
-<div class="line"><a name="l00113"></a><span class="lineno"><a class="line" href="classCluster.html#a8461d9e484561668256e4aa32ec60fd1">  113</a></span>&#160;    <span class="keyword">static</span> <a class="code" href="classCluster.html">Cluster</a>&amp; <a class="code" href="classCluster.html#a8461d9e484561668256e4aa32ec60fd1">getDefaultCluster</a>(){</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;        <span class="keywordflow">return</span> defaultCluster;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;    }</div>
-<div class="line"><a name="l00121"></a><span class="lineno"><a class="line" href="classCluster.html#a92b978ebaa584215a754623f97ec878e">  121</a></span>&#160;    uint64_t <a class="code" href="classCluster.html#a92b978ebaa584215a754623f97ec878e">getID</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;        <span class="keywordflow">return</span> clusterID;</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    }</div>
-<div class="line"><a name="l00128"></a><span class="lineno"><a class="line" href="classCluster.html#acca2f3441c51571a901691829a0f4370">  128</a></span>&#160;    <span class="keywordtype">size_t</span> <a class="code" href="classCluster.html#acca2f3441c51571a901691829a0f4370">getNumberOfkThreads</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        <span class="keywordflow">return</span> numberOfkThreads.load();</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    }</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;};</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* UTHREADS_CLUSTER_H_ */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="classCluster_html_a8461d9e484561668256e4aa32ec60fd1"><div class="ttname"><a href="classCluster.html#a8461d9e484561668256e4aa32ec60fd1">Cluster::getDefaultCluster</a></div><div class="ttdeci">static Cluster &amp; getDefaultCluster()</div><div class="ttdef"><b>Definition:</b> Cluster.h:113</div></div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classCluster.html#a4bddfc88ac859610acab15dd12851b58">~Cluster</a>();</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    <a class="code" href="classCluster.html#aee7feb1d599d4c8fda6c3ee83e86ba81">Cluster</a>(<span class="keyword">const</span> <a class="code" href="classCluster.html">Cluster</a>&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keyword">const</span> <a class="code" href="classCluster.html">Cluster</a>&amp; <a class="code" href="classCluster.html#a1a2e5d92d34e8cac90939f4205e4ca39">operator=</a>(<span class="keyword">const</span> <a class="code" href="classCluster.html">Cluster</a>&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;</div>
+<div class="line"><a name="l00116"></a><span class="lineno"><a class="line" href="classCluster.html#a8461d9e484561668256e4aa32ec60fd1">  116</a></span>&#160;    <span class="keyword">static</span> <a class="code" href="classCluster.html">Cluster</a>&amp; <a class="code" href="classCluster.html#a8461d9e484561668256e4aa32ec60fd1">getDefaultCluster</a>(){</div>
+<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        <span class="keywordflow">return</span> defaultCluster;</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    }</div>
+<div class="line"><a name="l00124"></a><span class="lineno"><a class="line" href="classCluster.html#a92b978ebaa584215a754623f97ec878e">  124</a></span>&#160;    uint64_t <a class="code" href="classCluster.html#a92b978ebaa584215a754623f97ec878e">getID</a>()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;        <span class="keywordflow">return</span> clusterID;</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;    }</div>
+<div class="line"><a name="l00131"></a><span class="lineno"><a class="line" href="classCluster.html#acca2f3441c51571a901691829a0f4370">  131</a></span>&#160;    <span class="keywordtype">size_t</span> <a class="code" href="classCluster.html#acca2f3441c51571a901691829a0f4370">getNumberOfkThreads</a>()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;        <span class="keywordflow">return</span> numberOfkThreads.load();</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    }</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    IOHandler* getIOHandler();</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;};</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* UTHREADS_CLUSTER_H_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="classCluster_html_a8461d9e484561668256e4aa32ec60fd1"><div class="ttname"><a href="classCluster.html#a8461d9e484561668256e4aa32ec60fd1">Cluster::getDefaultCluster</a></div><div class="ttdeci">static Cluster &amp; getDefaultCluster()</div><div class="ttdef"><b>Definition:</b> Cluster.h:116</div></div>
 <div class="ttc" id="classCluster_html_a1a2e5d92d34e8cac90939f4205e4ca39"><div class="ttname"><a href="classCluster.html#a1a2e5d92d34e8cac90939f4205e4ca39">Cluster::operator=</a></div><div class="ttdeci">const Cluster &amp; operator=(const Cluster &amp;)=delete</div></div>
 <div class="ttc" id="classCluster_html_aee7feb1d599d4c8fda6c3ee83e86ba81"><div class="ttname"><a href="classCluster.html#aee7feb1d599d4c8fda6c3ee83e86ba81">Cluster::Cluster</a></div><div class="ttdeci">Cluster()</div><div class="ttdef"><b>Definition:</b> Cluster.cpp:26</div></div>
-<div class="ttc" id="classCluster_html_a92b978ebaa584215a754623f97ec878e"><div class="ttname"><a href="classCluster.html#a92b978ebaa584215a754623f97ec878e">Cluster::getID</a></div><div class="ttdeci">uint64_t getID() const </div><div class="ttdoc">Get the ID of Cluster. </div><div class="ttdef"><b>Definition:</b> Cluster.h:121</div></div>
+<div class="ttc" id="classCluster_html_a92b978ebaa584215a754623f97ec878e"><div class="ttname"><a href="classCluster.html#a92b978ebaa584215a754623f97ec878e">Cluster::getID</a></div><div class="ttdeci">uint64_t getID() const </div><div class="ttdoc">Get the ID of Cluster. </div><div class="ttdef"><b>Definition:</b> Cluster.h:124</div></div>
+<div class="ttc" id="classCluster_html_a4bddfc88ac859610acab15dd12851b58"><div class="ttname"><a href="classCluster.html#a4bddfc88ac859610acab15dd12851b58">Cluster::~Cluster</a></div><div class="ttdeci">virtual ~Cluster()</div><div class="ttdef"><b>Definition:</b> Cluster.cpp:41</div></div>
 <div class="ttc" id="classkThread_html"><div class="ttname"><a href="classkThread.html">kThread</a></div><div class="ttdoc">Object to represent kernel threads. </div><div class="ttdef"><b>Definition:</b> kThread.h:52</div></div>
-<div class="ttc" id="classCluster_html_acca2f3441c51571a901691829a0f4370"><div class="ttname"><a href="classCluster.html#acca2f3441c51571a901691829a0f4370">Cluster::getNumberOfkThreads</a></div><div class="ttdeci">size_t getNumberOfkThreads() const </div><div class="ttdoc">Total number of kThreads belonging to this cluster. </div><div class="ttdef"><b>Definition:</b> Cluster.h:128</div></div>
+<div class="ttc" id="classCluster_html_acca2f3441c51571a901691829a0f4370"><div class="ttname"><a href="classCluster.html#acca2f3441c51571a901691829a0f4370">Cluster::getNumberOfkThreads</a></div><div class="ttdeci">size_t getNumberOfkThreads() const </div><div class="ttdoc">Total number of kThreads belonging to this cluster. </div><div class="ttdef"><b>Definition:</b> Cluster.h:131</div></div>
 <div class="ttc" id="classuThread_html"><div class="ttname"><a href="classuThread.html">uThread</a></div><div class="ttdoc">user-level threads (fiber) </div><div class="ttdef"><b>Definition:</b> uThread.h:60</div></div>
 <div class="ttc" id="classCluster_html"><div class="ttname"><a href="classCluster.html">Cluster</a></div><div class="ttdoc">Scheduler and Cluster of kThreads. </div><div class="ttdef"><b>Definition:</b> Cluster.h:59</div></div>
 <div class="ttc" id="classConnection_html"><div class="ttname"><a href="classConnection.html">Connection</a></div><div class="ttdoc">Represents a network connection. </div><div class="ttdef"><b>Definition:</b> Network.h:33</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:13 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

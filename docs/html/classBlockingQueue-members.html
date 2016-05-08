@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -96,19 +96,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>Mutex</b> (defined in <a class="el" href="classBlockingQueue.html">BlockingQueue</a>)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">friend</span></td></tr>
   <tr><td class="entry"><a class="el" href="classBlockingQueue.html#ab94e2841b6af3218d1129b24546b221f">operator=</a>(const BlockingQueue &amp;)=delete</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>OwnerLock</b> (defined in <a class="el" href="classBlockingQueue.html">BlockingQueue</a>)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">friend</span></td></tr>
-  <tr bgcolor="#f0f0f0"><td class="entry"><b>Semaphore</b> (defined in <a class="el" href="classBlockingQueue.html">BlockingQueue</a>)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">friend</span></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="classBlockingQueue.html#a20408816bf5e238f45c889b36366fc81">signal</a>(std::mutex &amp;lock, uThread *&amp;owner)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="classBlockingQueue.html#a5d4c4d762f881650d1a8185541e5193e">signal</a>(std::mutex &amp;lock)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="classBlockingQueue.html#aeaf15e5b071b56d625c2157f39ab70a8">signal</a>(Mutex &amp;)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="classBlockingQueue.html#a8ce1bf035feb9855ffd766e7b09ba494">signalAll</a>(Mutex &amp;)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="classBlockingQueue.html#a1839ebbd33698341bd8e43b1bb2e1125">suspend</a>(std::mutex &amp;lock)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="classBlockingQueue.html#a238e5122ad36d25d90a3d28c7d11eb69">suspend</a>(Mutex &amp;)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>uThread</b> (defined in <a class="el" href="classBlockingQueue.html">BlockingQueue</a>)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">friend</span></td></tr>
-  <tr bgcolor="#f0f0f0"><td class="entry"><b>~BlockingQueue</b>() (defined in <a class="el" href="classBlockingQueue.html">BlockingQueue</a>)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr bgcolor="#f0f0f0"><td class="entry"><b>postSwitchFunc</b>(void *ut, void *args) (defined in <a class="el" href="classBlockingQueue.html">BlockingQueue</a>)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">static</span></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>Semaphore</b> (defined in <a class="el" href="classBlockingQueue.html">BlockingQueue</a>)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">friend</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classBlockingQueue.html#a20408816bf5e238f45c889b36366fc81">signal</a>(std::mutex &amp;lock, uThread *&amp;owner)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classBlockingQueue.html#a5d4c4d762f881650d1a8185541e5193e">signal</a>(std::mutex &amp;lock)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classBlockingQueue.html#aeaf15e5b071b56d625c2157f39ab70a8">signal</a>(Mutex &amp;)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classBlockingQueue.html#a8ce1bf035feb9855ffd766e7b09ba494">signalAll</a>(Mutex &amp;)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="classBlockingQueue.html#a1839ebbd33698341bd8e43b1bb2e1125">suspend</a>(std::mutex &amp;lock)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classBlockingQueue.html#a238e5122ad36d25d90a3d28c7d11eb69">suspend</a>(Mutex &amp;)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0"><td class="entry"><b>uThread</b> (defined in <a class="el" href="classBlockingQueue.html">BlockingQueue</a>)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">friend</span></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>~BlockingQueue</b>() (defined in <a class="el" href="classBlockingQueue.html">BlockingQueue</a>)</td><td class="entry"><a class="el" href="classBlockingQueue.html">BlockingQueue</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
 </table></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:13 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

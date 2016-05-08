@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -136,9 +136,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuThread.html#a94e7549580f48d90e2164407c2f468e3">detach</a> ()</td></tr>
 <tr class="memdesc:a94e7549580f48d90e2164407c2f468e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Detach a joinable thread. <br/></td></tr>
 <tr class="separator:a94e7549580f48d90e2164407c2f468e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a345ede57a53f8cd066f7e430c685c891"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classCluster.html">Cluster</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuThread.html#a345ede57a53f8cd066f7e430c685c891">getCurrentCluster</a> () const </td></tr>
-<tr class="memdesc:a345ede57a53f8cd066f7e430c685c891"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the current <a class="el" href="classCluster.html" title="Scheduler and Cluster of kThreads. ">Cluster</a> <a class="el" href="classuThread.html" title="user-level threads (fiber) ">uThread</a> is executed on  <a href="#a345ede57a53f8cd066f7e430c685c891">More...</a><br/></td></tr>
-<tr class="separator:a345ede57a53f8cd066f7e430c685c891"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a809919798d1c2e1ad1f277dcb78f3ab7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classCluster.html">Cluster</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuThread.html#a809919798d1c2e1ad1f277dcb78f3ab7">getCurrentCluster</a> () const </td></tr>
+<tr class="memdesc:a809919798d1c2e1ad1f277dcb78f3ab7"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the current <a class="el" href="classCluster.html" title="Scheduler and Cluster of kThreads. ">Cluster</a> <a class="el" href="classuThread.html" title="user-level threads (fiber) ">uThread</a> is executed on  <a href="#a809919798d1c2e1ad1f277dcb78f3ab7">More...</a><br/></td></tr>
+<tr class="separator:a809919798d1c2e1ad1f277dcb78f3ab7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c2c2cca905292012843f99956e69db7"><td class="memItemLeft" align="right" valign="top">uint64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classuThread.html#a6c2c2cca905292012843f99956e69db7">getID</a> () const </td></tr>
 <tr class="memdesc:a6c2c2cca905292012843f99956e69db7"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the ID of this <a class="el" href="classuThread.html" title="user-level threads (fiber) ">uThread</a>  <a href="#a6c2c2cca905292012843f99956e69db7">More...</a><br/></td></tr>
 <tr class="separator:a6c2c2cca905292012843f99956e69db7"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -196,9 +196,9 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>destory</b> (
 <tr class="memitem:a353292b64f15c489f3ad0428e7ebcae9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a353292b64f15c489f3ad0428e7ebcae9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
 <tr class="separator:a353292b64f15c489f3ad0428e7ebcae9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55615d41777514935f60ba9f7c407a6c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55615d41777514935f60ba9f7c407a6c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>suspend</b> (std::function&lt; void()&gt; &amp;)</td></tr>
-<tr class="separator:a55615d41777514935f60ba9f7c407a6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4cb415b0f97f2c8d415ff85e84acc393"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4cb415b0f97f2c8d415ff85e84acc393"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>suspend</b> (funcvoid2_t, void *)</td></tr>
+<tr class="separator:a4cb415b0f97f2c8d415ff85e84acc393"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-static-methods"></a>
 Static Protected Member Functions</h2></td></tr>
@@ -410,7 +410,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>IOHandler</b></td></
 
 </div>
 </div>
-<a class="anchor" id="a345ede57a53f8cd066f7e430c685c891"></a>
+<a class="anchor" id="a809919798d1c2e1ad1f277dcb78f3ab7"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -418,7 +418,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>IOHandler</b></td></
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="classCluster.html">Cluster</a>&amp; uThread::getCurrentCluster </td>
+          <td class="memname"><a class="el" href="classCluster.html">Cluster</a>&amp; uThread::getCurrentCluster </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -677,7 +677,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>IOHandler</b></td></
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:14 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

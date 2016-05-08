@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -61,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>File&#160;Members</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -68,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -239,12 +240,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <span class="keywordtype">void</span> reset();</div>
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;</div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    <span class="comment">/*</span></div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">     * Used to suspend the uThread. The function passed to</span></div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">     * the suspend function is called after the context switch is happened.</span></div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">     * Used to suspend the uThread. Pass a function and an argument</span></div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">     * to be called after the context switch.</span></div>
 <div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="comment">     * It is normally the case that the uThread needs to hold on to a lock</span></div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="comment">     * or perform some maintenance jobs after the context is switched.</span></div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="comment">     * or perform some maintenance after the context is switched.</span></div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="comment">     */</span></div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <span class="keywordtype">void</span> suspend(std::function&lt;<span class="keywordtype">void</span>()&gt;&amp;);</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <span class="keywordtype">void</span> suspend(funcvoid2_t, <span class="keywordtype">void</span>*);</div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;</div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <span class="comment">//Function to invoke the run function of a uThread</span></div>
 <div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <span class="keyword">static</span> <span class="keywordtype">void</span> invoke(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn;</div>
@@ -276,7 +277,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classuThread.html#a94e7549580f48d90e2164407c2f468e3">detach</a>();</div>
 <div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;</div>
 <div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;</div>
-<div class="line"><a name="l00287"></a><span class="lineno"><a class="line" href="classuThread.html#a345ede57a53f8cd066f7e430c685c891">  287</a></span>&#160;    <span class="keyword">const</span> <a class="code" href="classCluster.html">Cluster</a>&amp; <a class="code" href="classuThread.html#a345ede57a53f8cd066f7e430c685c891">getCurrentCluster</a>()<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00287"></a><span class="lineno"><a class="line" href="classuThread.html#a809919798d1c2e1ad1f277dcb78f3ab7">  287</a></span>&#160;    <a class="code" href="classCluster.html">Cluster</a>&amp; <a class="code" href="classuThread.html#a809919798d1c2e1ad1f277dcb78f3ab7">getCurrentCluster</a>()<span class="keyword"> const </span>{</div>
 <div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <span class="keywordflow">return</span> *currentCluster;</div>
 <div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    }</div>
 <div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;</div>
@@ -293,34 +294,34 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;</div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* UTHREADS_UTHREAD_H_ */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="classuThread_html_acb2bf674fef97660b37a4312c50012b9"><div class="ttname"><a href="classuThread.html#acb2bf674fef97660b37a4312c50012b9">uThread::migrate</a></div><div class="ttdeci">static void migrate(Cluster *)</div><div class="ttdoc">Move the uThread to the provided cluster. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:105</div></div>
-<div class="ttc" id="classMutex_html_ad43ff97f225007f2fbb0da2e98676b07"><div class="ttname"><a href="classMutex.html#ad43ff97f225007f2fbb0da2e98676b07">Mutex::release</a></div><div class="ttdeci">void release()</div><div class="ttdoc">release the Mutex </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:180</div></div>
-<div class="ttc" id="classuThread_html_a345ede57a53f8cd066f7e430c685c891"><div class="ttname"><a href="classuThread.html#a345ede57a53f8cd066f7e430c685c891">uThread::getCurrentCluster</a></div><div class="ttdeci">const Cluster &amp; getCurrentCluster() const </div><div class="ttdoc">return the current Cluster uThread is executed on </div><div class="ttdef"><b>Definition:</b> uThread.h:287</div></div>
+<div class="ttc" id="classMutex_html_ad43ff97f225007f2fbb0da2e98676b07"><div class="ttname"><a href="classMutex.html#ad43ff97f225007f2fbb0da2e98676b07">Mutex::release</a></div><div class="ttdeci">void release()</div><div class="ttdoc">release the Mutex </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:191</div></div>
 <div class="ttc" id="classuThread_html_a4f06f273113543782615bb79132ff67b"><div class="ttname"><a href="classuThread.html#a4f06f273113543782615bb79132ff67b">uThread::yield</a></div><div class="ttdeci">static void yield()</div><div class="ttdoc">Causes uThread to yield. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:97</div></div>
-<div class="ttc" id="classuThread_html_a683f52115914f4a8ddfe2c8e66da08f5"><div class="ttname"><a href="classuThread.html#a683f52115914f4a8ddfe2c8e66da08f5">uThread::currentUThread</a></div><div class="ttdeci">static uThread * currentUThread()</div><div class="ttdoc">Get a pointer to the current running uThread. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:160</div></div>
-<div class="ttc" id="classuThread_html_a7985b14dbb17fe272b645778fed2dca5"><div class="ttname"><a href="classuThread.html#a7985b14dbb17fe272b645778fed2dca5">uThread::terminate</a></div><div class="ttdeci">static void terminate()</div><div class="ttdoc">Terminates the uThread. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:128</div></div>
+<div class="ttc" id="classuThread_html_a683f52115914f4a8ddfe2c8e66da08f5"><div class="ttname"><a href="classuThread.html#a683f52115914f4a8ddfe2c8e66da08f5">uThread::currentUThread</a></div><div class="ttdeci">static uThread * currentUThread()</div><div class="ttdoc">Get a pointer to the current running uThread. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:161</div></div>
+<div class="ttc" id="classuThread_html_a7985b14dbb17fe272b645778fed2dca5"><div class="ttname"><a href="classuThread.html#a7985b14dbb17fe272b645778fed2dca5">uThread::terminate</a></div><div class="ttdeci">static void terminate()</div><div class="ttdoc">Terminates the uThread. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:129</div></div>
 <div class="ttc" id="classuThread_html_a7491d81078b3ded533c600137cde8325"><div class="ttname"><a href="classuThread.html#a7491d81078b3ded533c600137cde8325">uThread::uThread</a></div><div class="ttdeci">uThread(vaddr sb, size_t ss)</div><div class="ttdef"><b>Definition:</b> uThread.h:126</div></div>
 <div class="ttc" id="classuThread_html_a4c1bc2aa32ac06dbbaf932152562b7b0"><div class="ttname"><a href="classuThread.html#a4c1bc2aa32ac06dbbaf932152562b7b0">uThread::create</a></div><div class="ttdeci">static uThread * create(size_t ss, bool joinable=false)</div><div class="ttdoc">Create a uThread with a given stack size. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:67</div></div>
-<div class="ttc" id="classMutex_html"><div class="ttname"><a href="classMutex.html">Mutex</a></div><div class="ttdoc">A user-level Mutex. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:112</div></div>
-<div class="ttc" id="classuThread_html_aa2013382daa87962930a60d4970e103e"><div class="ttname"><a href="classuThread.html#aa2013382daa87962930a60d4970e103e">uThread::resume</a></div><div class="ttdeci">void resume()</div><div class="ttdoc">Resumes the uThread. If uThread is blocked or is waiting on IO it will be placed back on the ReadyQue...</div><div class="ttdef"><b>Definition:</b> uThread.cpp:119</div></div>
+<div class="ttc" id="classMutex_html"><div class="ttname"><a href="classMutex.html">Mutex</a></div><div class="ttdoc">A user-level Mutex. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:123</div></div>
+<div class="ttc" id="classuThread_html_aa2013382daa87962930a60d4970e103e"><div class="ttname"><a href="classuThread.html#aa2013382daa87962930a60d4970e103e">uThread::resume</a></div><div class="ttdeci">void resume()</div><div class="ttdoc">Resumes the uThread. If uThread is blocked or is waiting on IO it will be placed back on the ReadyQue...</div><div class="ttdef"><b>Definition:</b> uThread.cpp:120</div></div>
 <div class="ttc" id="classuThread_html_ad23f1adae475c3a07db4c8a686d3f582"><div class="ttname"><a href="classuThread.html#ad23f1adae475c3a07db4c8a686d3f582">uThread::getTotalNumberofUTs</a></div><div class="ttdeci">static uint64_t getTotalNumberofUTs()</div><div class="ttdef"><b>Definition:</b> uThread.h:297</div></div>
 <div class="ttc" id="classkThread_html"><div class="ttname"><a href="classkThread.html">kThread</a></div><div class="ttdoc">Object to represent kernel threads. </div><div class="ttdef"><b>Definition:</b> kThread.h:52</div></div>
 <div class="ttc" id="classuThreadCache_html"><div class="ttname"><a href="classuThreadCache.html">uThreadCache</a></div><div class="ttdoc">Data structure to cache uThreads. </div><div class="ttdef"><b>Definition:</b> uThreadCache.h:33</div></div>
-<div class="ttc" id="classMutex_html_a03d47d29019a39b055a9e0b2d8056df5"><div class="ttname"><a href="classMutex.html#a03d47d29019a39b055a9e0b2d8056df5">Mutex::acquire</a></div><div class="ttdeci">bool acquire()</div><div class="ttdoc">acquire the mutex </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:171</div></div>
-<div class="ttc" id="classConditionVariable_html_ae4a96299ca9a202314a82f1152d45c1a"><div class="ttname"><a href="classConditionVariable.html#ae4a96299ca9a202314a82f1152d45c1a">ConditionVariable::empty</a></div><div class="ttdeci">bool empty()</div><div class="ttdoc">Whether the waiting list is empty or not. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:271</div></div>
+<div class="ttc" id="classMutex_html_a03d47d29019a39b055a9e0b2d8056df5"><div class="ttname"><a href="classMutex.html#a03d47d29019a39b055a9e0b2d8056df5">Mutex::acquire</a></div><div class="ttdeci">bool acquire()</div><div class="ttdoc">acquire the mutex </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:182</div></div>
+<div class="ttc" id="classConditionVariable_html_ae4a96299ca9a202314a82f1152d45c1a"><div class="ttname"><a href="classConditionVariable.html#ae4a96299ca9a202314a82f1152d45c1a">ConditionVariable::empty</a></div><div class="ttdeci">bool empty()</div><div class="ttdoc">Whether the waiting list is empty or not. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:284</div></div>
+<div class="ttc" id="classuThread_html_a809919798d1c2e1ad1f277dcb78f3ab7"><div class="ttname"><a href="classuThread.html#a809919798d1c2e1ad1f277dcb78f3ab7">uThread::getCurrentCluster</a></div><div class="ttdeci">Cluster &amp; getCurrentCluster() const </div><div class="ttdoc">return the current Cluster uThread is executed on </div><div class="ttdef"><b>Definition:</b> uThread.h:287</div></div>
 <div class="ttc" id="classuThread_html"><div class="ttname"><a href="classuThread.html">uThread</a></div><div class="ttdoc">user-level threads (fiber) </div><div class="ttdef"><b>Definition:</b> uThread.h:60</div></div>
 <div class="ttc" id="classCluster_html"><div class="ttname"><a href="classCluster.html">Cluster</a></div><div class="ttdoc">Scheduler and Cluster of kThreads. </div><div class="ttdef"><b>Definition:</b> Cluster.h:59</div></div>
 <div class="ttc" id="classuThread_html_a2a5c71fa82f4f3e6dd5437e5be7c7184"><div class="ttname"><a href="classuThread.html#a2a5c71fa82f4f3e6dd5437e5be7c7184">uThread::start</a></div><div class="ttdeci">void start(const Cluster &amp;cluster, ptr_t func, ptr_t arg1=nullptr, ptr_t arg2=nullptr, ptr_t arg3=nullptr)</div><div class="ttdoc">start the uThread by calling the function passed to it </div><div class="ttdef"><b>Definition:</b> uThread.cpp:88</div></div>
-<div class="ttc" id="classuThread_html_a7230cc0873429c99e07866814a682f8b"><div class="ttname"><a href="classuThread.html#a7230cc0873429c99e07866814a682f8b">uThread::join</a></div><div class="ttdeci">bool join()</div><div class="ttdoc">Wait for uThread to finish execution and exit. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:140</div></div>
+<div class="ttc" id="classuThread_html_a7230cc0873429c99e07866814a682f8b"><div class="ttname"><a href="classuThread.html#a7230cc0873429c99e07866814a682f8b">uThread::join</a></div><div class="ttdeci">bool join()</div><div class="ttdoc">Wait for uThread to finish execution and exit. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:141</div></div>
 <div class="ttc" id="classBlockingQueue_html"><div class="ttname"><a href="classBlockingQueue.html">BlockingQueue</a></div><div class="ttdoc">A queue used to keep track of blocked uThreads. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:36</div></div>
-<div class="ttc" id="classuThread_html_a94e7549580f48d90e2164407c2f468e3"><div class="ttname"><a href="classuThread.html#a94e7549580f48d90e2164407c2f468e3">uThread::detach</a></div><div class="ttdeci">void detach()</div><div class="ttdoc">Detach a joinable thread. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:151</div></div>
-<div class="ttc" id="classConditionVariable_html_ad4b800e9fffa3733b219eb6bd9904baa"><div class="ttname"><a href="classConditionVariable.html#ad4b800e9fffa3733b219eb6bd9904baa">ConditionVariable::wait</a></div><div class="ttdeci">void wait(Mutex &amp;mutex)</div><div class="ttdoc">Block uThread on the condition variable using the provided mutex. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:249</div></div>
+<div class="ttc" id="classuThread_html_a94e7549580f48d90e2164407c2f468e3"><div class="ttname"><a href="classuThread.html#a94e7549580f48d90e2164407c2f468e3">uThread::detach</a></div><div class="ttdeci">void detach()</div><div class="ttdoc">Detach a joinable thread. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:152</div></div>
+<div class="ttc" id="classConditionVariable_html_ad4b800e9fffa3733b219eb6bd9904baa"><div class="ttname"><a href="classConditionVariable.html#ad4b800e9fffa3733b219eb6bd9904baa">ConditionVariable::wait</a></div><div class="ttdeci">void wait(Mutex &amp;mutex)</div><div class="ttdoc">Block uThread on the condition variable using the provided mutex. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:262</div></div>
 <div class="ttc" id="classuThread_html_a6c2c2cca905292012843f99956e69db7"><div class="ttname"><a href="classuThread.html#a6c2c2cca905292012843f99956e69db7">uThread::getID</a></div><div class="ttdeci">uint64_t getID() const </div><div class="ttdoc">get the ID of this uThread </div><div class="ttdef"><b>Definition:</b> uThread.h:305</div></div>
-<div class="ttc" id="classConditionVariable_html"><div class="ttname"><a href="classConditionVariable.html">ConditionVariable</a></div><div class="ttdoc">A user level condition variable. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:241</div></div>
-<div class="ttc" id="classConditionVariable_html_a21d16b7babe81a2bf116ce0ef2636889"><div class="ttname"><a href="classConditionVariable.html#a21d16b7babe81a2bf116ce0ef2636889">ConditionVariable::signal</a></div><div class="ttdeci">void signal(Mutex &amp;mutex)</div><div class="ttdoc">Unblock one uThread waiting on the condition variable. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:258</div></div>
+<div class="ttc" id="classConditionVariable_html"><div class="ttname"><a href="classConditionVariable.html">ConditionVariable</a></div><div class="ttdoc">A user level condition variable. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:254</div></div>
+<div class="ttc" id="classConditionVariable_html_a21d16b7babe81a2bf116ce0ef2636889"><div class="ttname"><a href="classConditionVariable.html#a21d16b7babe81a2bf116ce0ef2636889">ConditionVariable::signal</a></div><div class="ttdeci">void signal(Mutex &amp;mutex)</div><div class="ttdoc">Unblock one uThread waiting on the condition variable. </div><div class="ttdef"><b>Definition:</b> BlockingSync.h:271</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:13 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

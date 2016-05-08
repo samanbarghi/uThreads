@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -98,7 +98,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr class="even"><td class="entry"><a class="el" href="classuThread.html#a683f52115914f4a8ddfe2c8e66da08f5">currentUThread</a>()</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">static</span></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>destory</b>(bool) (defined in <a class="el" href="classuThread.html">uThread</a>)</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">protected</span><span class="mlabel">virtual</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classuThread.html#a94e7549580f48d90e2164407c2f468e3">detach</a>()</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="classuThread.html#a345ede57a53f8cd066f7e430c685c891">getCurrentCluster</a>() const </td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classuThread.html#a809919798d1c2e1ad1f277dcb78f3ab7">getCurrentCluster</a>() const </td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="classuThread.html#a6c2c2cca905292012843f99956e69db7">getID</a>() const </td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
   <tr><td class="entry"><a class="el" href="classuThread.html#ad23f1adae475c3a07db4c8a686d3f582">getTotalNumberofUTs</a>()</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">static</span></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>invoke</b>(funcvoid3_t, ptr_t, ptr_t, ptr_t) __noreturn (defined in <a class="el" href="classuThread.html">uThread</a>)</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">protected</span><span class="mlabel">static</span></td></tr>
@@ -117,7 +117,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr><td class="entry"><a class="el" href="classuThread.html#a2a5c71fa82f4f3e6dd5437e5be7c7184">start</a>(const Cluster &amp;cluster, ptr_t func, ptr_t arg1=nullptr, ptr_t arg2=nullptr, ptr_t arg3=nullptr)</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>State</b> enum name (defined in <a class="el" href="classuThread.html">uThread</a>)</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>state</b> (defined in <a class="el" href="classuThread.html">uThread</a>)</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>suspend</b>(std::function&lt; void()&gt; &amp;) (defined in <a class="el" href="classuThread.html">uThread</a>)</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>suspend</b>(funcvoid2_t, void *) (defined in <a class="el" href="classuThread.html">uThread</a>)</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
   <tr><td class="entry"><a class="el" href="classuThread.html#a7985b14dbb17fe272b645778fed2dca5">terminate</a>()</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">static</span></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>totalNumberofUTs</b> (defined in <a class="el" href="classuThread.html">uThread</a>)</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">protected</span><span class="mlabel">static</span></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>utCache</b> (defined in <a class="el" href="classuThread.html">uThread</a>)</td><td class="entry"><a class="el" href="classuThread.html">uThread</a></td><td class="entry"><span class="mlabel">protected</span><span class="mlabel">static</span></td></tr>
@@ -130,7 +130,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </table></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:14 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

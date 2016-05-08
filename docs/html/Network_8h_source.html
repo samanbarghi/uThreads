@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -61,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>File&#160;Members</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -68,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -129,18 +130,18 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;</div>
 <div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="classConnection.html#a9de94289ca6259f94ef6aeba3b134a77">   63</a></span>&#160;    <a class="code" href="classConnection.html#a9de94289ca6259f94ef6aeba3b134a77">Connection</a>() :</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;            fd(-1){</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        ioh = <a class="code" href="classuThread.html#a683f52115914f4a8ddfe2c8e66da08f5">uThread::currentUThread</a>()-&gt;<a class="code" href="classuThread.html#a345ede57a53f8cd066f7e430c685c891">getCurrentCluster</a>().iohandler;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;        ioh = <a class="code" href="classuThread.html#a683f52115914f4a8ddfe2c8e66da08f5">uThread::currentUThread</a>()-&gt;<a class="code" href="classuThread.html#a809919798d1c2e1ad1f277dcb78f3ab7">getCurrentCluster</a>().getIOHandler();</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;        init();</div>
 <div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    }</div>
 <div class="line"><a name="l00075"></a><span class="lineno"><a class="line" href="classConnection.html#a678f126f0e36a967eaf9407c0076fe71">   75</a></span>&#160;    <a class="code" href="classConnection.html#a678f126f0e36a967eaf9407c0076fe71">Connection</a>(<span class="keywordtype">int</span> fd) :</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;            fd(fd) {</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        ioh = <a class="code" href="classuThread.html#a683f52115914f4a8ddfe2c8e66da08f5">uThread::currentUThread</a>()-&gt;<a class="code" href="classuThread.html#a345ede57a53f8cd066f7e430c685c891">getCurrentCluster</a>().iohandler;</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        ioh = <a class="code" href="classuThread.html#a683f52115914f4a8ddfe2c8e66da08f5">uThread::currentUThread</a>()-&gt;<a class="code" href="classuThread.html#a809919798d1c2e1ad1f277dcb78f3ab7">getCurrentCluster</a>().getIOHandler();</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;        init();</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    }</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;</div>
 <div class="line"><a name="l00089"></a><span class="lineno"><a class="line" href="classConnection.html#acd24274ba1458df2d0c91aead3b5842e">   89</a></span>&#160;    <a class="code" href="classConnection.html#acd24274ba1458df2d0c91aead3b5842e">Connection</a>(<a class="code" href="classCluster.html">Cluster</a>&amp; cluster, <span class="keywordtype">int</span> fd) :</div>
 <div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;            fd(fd) {</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        ioh = cluster.iohandler;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        ioh = cluster.getIOHandler();</div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;        init();</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    }</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;</div>
@@ -178,23 +179,23 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    ssize_t <a class="code" href="classConnection.html#a3af7fb4b8be808734642e445abc018ff">read</a>(<span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> count);</div>
 <div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    ssize_t <a class="code" href="classConnection.html#a52779a029077afe137d75f4c4400835f">write</a>(<span class="keyword">const</span> <span class="keywordtype">void</span> *buf, <span class="keywordtype">size_t</span> count);</div>
 <div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classConnection.html#a52ef3dc97bd197e4bc325f938e71ddad">blockOnRead</a>();</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classConnection.html#a5584682af2fda6cc6df14f15f1138d40">blockOnWrite</a>();</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classConnection.html#a45b01070c1dbe47db80f5b76f89b46d7">close</a>();</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;</div>
-<div class="line"><a name="l00219"></a><span class="lineno"><a class="line" href="classConnection.html#a9066aa7952bb194c34b482e19f7d69e9">  219</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classConnection.html#a9066aa7952bb194c34b482e19f7d69e9">getFd</a>()<span class="keyword"> const </span>{<span class="keywordflow">return</span> fd;}</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;};</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* UTHREADS_INCLUDE_NETWORK_H_ */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classConnection.html#a52ef3dc97bd197e4bc325f938e71ddad">blockOnRead</a>();</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classConnection.html#a5584682af2fda6cc6df14f15f1138d40">blockOnWrite</a>();</div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classConnection.html#a45b01070c1dbe47db80f5b76f89b46d7">close</a>();</div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;</div>
+<div class="line"><a name="l00224"></a><span class="lineno"><a class="line" href="classConnection.html#a9066aa7952bb194c34b482e19f7d69e9">  224</a></span>&#160;    <span class="keywordtype">int</span> <a class="code" href="classConnection.html#a9066aa7952bb194c34b482e19f7d69e9">getFd</a>()<span class="keyword"> const </span>{<span class="keywordflow">return</span> fd;}</div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;};</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;</div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* UTHREADS_INCLUDE_NETWORK_H_ */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="classConnection_html_a04ec1f8d40bd793159d31e332006c2ae"><div class="ttname"><a href="classConnection.html#a04ec1f8d40bd793159d31e332006c2ae">Connection::recvmmsg</a></div><div class="ttdeci">int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, unsigned int flags, struct timespec *timeout)</div><div class="ttdoc">Call the underlying system call on Connection&#39;s file descriptor. </div><div class="ttdef"><b>Definition:</b> Network.cpp:196</div></div>
 <div class="ttc" id="classConnection_html_a7ca0eaf02b9ba1fa11043c0633993148"><div class="ttname"><a href="classConnection.html#a7ca0eaf02b9ba1fa11043c0633993148">Connection::socket</a></div><div class="ttdeci">int socket(int domain, int type, int protocol)</div><div class="ttdoc">Same as socket syscall, set the fd for current connection. </div><div class="ttdef"><b>Definition:</b> Network.cpp:46</div></div>
 <div class="ttc" id="classConnection_html_a1909fdc1f9bf5a9222c867b5fd185f01"><div class="ttname"><a href="classConnection.html#a1909fdc1f9bf5a9222c867b5fd185f01">Connection::sendmsg</a></div><div class="ttdeci">ssize_t sendmsg(const struct msghdr *msg, int flags)</div><div class="ttdoc">Call the underlying system call on Connection&#39;s file descriptor. </div><div class="ttdef"><b>Definition:</b> Network.cpp:236</div></div>
-<div class="ttc" id="classConnection_html_a52ef3dc97bd197e4bc325f938e71ddad"><div class="ttname"><a href="classConnection.html#a52ef3dc97bd197e4bc325f938e71ddad">Connection::blockOnRead</a></div><div class="ttdeci">void blockOnRead()</div><div class="ttdoc">Block uThread, waiting for read to happen. </div><div class="ttdef"><b>Definition:</b> Network.cpp:149</div></div>
+<div class="ttc" id="classConnection_html_a52ef3dc97bd197e4bc325f938e71ddad"><div class="ttname"><a href="classConnection.html#a52ef3dc97bd197e4bc325f938e71ddad">Connection::blockOnRead</a></div><div class="ttdeci">void blockOnRead()</div><div class="ttdoc">Block uThread, waiting for fd to become ready for read. </div><div class="ttdef"><b>Definition:</b> Network.cpp:149</div></div>
 <div class="ttc" id="classConnection_html_a9214bf2705f7913edf38261f16ea3890"><div class="ttname"><a href="classConnection.html#a9214bf2705f7913edf38261f16ea3890">Connection::send</a></div><div class="ttdeci">ssize_t send(const void *buf, size_t len, int flags)</div><div class="ttdoc">Call the underlying system call on Connection&#39;s file descriptor. </div><div class="ttdef"><b>Definition:</b> Network.cpp:211</div></div>
 <div class="ttc" id="classConnection_html_acd24274ba1458df2d0c91aead3b5842e"><div class="ttname"><a href="classConnection.html#acd24274ba1458df2d0c91aead3b5842e">Connection::Connection</a></div><div class="ttdeci">Connection(Cluster &amp;cluster, int fd)</div><div class="ttdoc">Create a connection object with the provided fd, and add it to the poller thread of the provided clus...</div><div class="ttdef"><b>Definition:</b> Network.h:89</div></div>
-<div class="ttc" id="classuThread_html_a345ede57a53f8cd066f7e430c685c891"><div class="ttname"><a href="classuThread.html#a345ede57a53f8cd066f7e430c685c891">uThread::getCurrentCluster</a></div><div class="ttdeci">const Cluster &amp; getCurrentCluster() const </div><div class="ttdoc">return the current Cluster uThread is executed on </div><div class="ttdef"><b>Definition:</b> uThread.h:287</div></div>
-<div class="ttc" id="classuThread_html_a683f52115914f4a8ddfe2c8e66da08f5"><div class="ttname"><a href="classuThread.html#a683f52115914f4a8ddfe2c8e66da08f5">uThread::currentUThread</a></div><div class="ttdeci">static uThread * currentUThread()</div><div class="ttdoc">Get a pointer to the current running uThread. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:160</div></div>
+<div class="ttc" id="classuThread_html_a683f52115914f4a8ddfe2c8e66da08f5"><div class="ttname"><a href="classuThread.html#a683f52115914f4a8ddfe2c8e66da08f5">uThread::currentUThread</a></div><div class="ttdeci">static uThread * currentUThread()</div><div class="ttdoc">Get a pointer to the current running uThread. </div><div class="ttdef"><b>Definition:</b> uThread.cpp:161</div></div>
 <div class="ttc" id="classConnection_html_a47e466c9973e65fcf90e32a1b4f1d00d"><div class="ttname"><a href="classConnection.html#a47e466c9973e65fcf90e32a1b4f1d00d">Connection::recvmsg</a></div><div class="ttdeci">ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags)</div><div class="ttdoc">Call the underlying system call on Connection&#39;s file descriptor. </div><div class="ttdef"><b>Definition:</b> Network.cpp:183</div></div>
 <div class="ttc" id="classConnection_html_a4de67507d8f63474528c1b86e6f752bb"><div class="ttname"><a href="classConnection.html#a4de67507d8f63474528c1b86e6f752bb">Connection::listen</a></div><div class="ttdeci">int listen(int backlog)</div><div class="ttdoc">Same as listen syscall on current fd. </div><div class="ttdef"><b>Definition:</b> Network.cpp:57</div></div>
 <div class="ttc" id="classConnection_html_a678f126f0e36a967eaf9407c0076fe71"><div class="ttname"><a href="classConnection.html#a678f126f0e36a967eaf9407c0076fe71">Connection::Connection</a></div><div class="ttdeci">Connection(int fd)</div><div class="ttdoc">Create a connection object with the provided fd. </div><div class="ttdef"><b>Definition:</b> Network.h:75</div></div>
@@ -203,7 +204,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="classConnection_html_a196bf571408c74e7e4cafa1d314207d7"><div class="ttname"><a href="classConnection.html#a196bf571408c74e7e4cafa1d314207d7">Connection::recv</a></div><div class="ttdeci">ssize_t recv(void *buf, size_t len, int flags)</div><div class="ttdoc">Call the underlying system call on Connection&#39;s file descriptor. </div><div class="ttdef"><b>Definition:</b> Network.cpp:157</div></div>
 <div class="ttc" id="classConnection_html_a94585e13778b334ca84470f720b5cdfe"><div class="ttname"><a href="classConnection.html#a94585e13778b334ca84470f720b5cdfe">Connection::bind</a></div><div class="ttdeci">int bind(const struct sockaddr *addr, socklen_t addrlen)</div><div class="ttdoc">Same as bind syscall. </div><div class="ttdef"><b>Definition:</b> Network.cpp:125</div></div>
 <div class="ttc" id="classConnection_html_a52779a029077afe137d75f4c4400835f"><div class="ttname"><a href="classConnection.html#a52779a029077afe137d75f4c4400835f">Connection::write</a></div><div class="ttdeci">ssize_t write(const void *buf, size_t count)</div><div class="ttdoc">Call the underlying system call on Connection&#39;s file descriptor. </div><div class="ttdef"><b>Definition:</b> Network.cpp:271</div></div>
-<div class="ttc" id="classConnection_html_a5584682af2fda6cc6df14f15f1138d40"><div class="ttname"><a href="classConnection.html#a5584682af2fda6cc6df14f15f1138d40">Connection::blockOnWrite</a></div><div class="ttdeci">void blockOnWrite()</div><div class="ttdoc">Block uThread, waiting for write to happen. </div><div class="ttdef"><b>Definition:</b> Network.cpp:153</div></div>
+<div class="ttc" id="classConnection_html_a5584682af2fda6cc6df14f15f1138d40"><div class="ttname"><a href="classConnection.html#a5584682af2fda6cc6df14f15f1138d40">Connection::blockOnWrite</a></div><div class="ttdeci">void blockOnWrite()</div><div class="ttdoc">Block uThread, waiting for fd to become ready for write. </div><div class="ttdef"><b>Definition:</b> Network.cpp:153</div></div>
+<div class="ttc" id="classuThread_html_a809919798d1c2e1ad1f277dcb78f3ab7"><div class="ttname"><a href="classuThread.html#a809919798d1c2e1ad1f277dcb78f3ab7">uThread::getCurrentCluster</a></div><div class="ttdeci">Cluster &amp; getCurrentCluster() const </div><div class="ttdoc">return the current Cluster uThread is executed on </div><div class="ttdef"><b>Definition:</b> uThread.h:287</div></div>
 <div class="ttc" id="classCluster_html"><div class="ttname"><a href="classCluster.html">Cluster</a></div><div class="ttdoc">Scheduler and Cluster of kThreads. </div><div class="ttdef"><b>Definition:</b> Cluster.h:59</div></div>
 <div class="ttc" id="classConnection_html_a13a1fc3d884fa74b71edbf98b7b52d51"><div class="ttname"><a href="classConnection.html#a13a1fc3d884fa74b71edbf98b7b52d51">Connection::connect</a></div><div class="ttdeci">int connect(const struct sockaddr *addr, socklen_t addrlen)</div><div class="ttdoc">Same as connect syscall. </div><div class="ttdef"><b>Definition:</b> Network.cpp:130</div></div>
 <div class="ttc" id="classConnection_html_a9de94289ca6259f94ef6aeba3b134a77"><div class="ttname"><a href="classConnection.html#a9de94289ca6259f94ef6aeba3b134a77">Connection::Connection</a></div><div class="ttdeci">Connection()</div><div class="ttdoc">Create a Connection that does not have. </div><div class="ttdef"><b>Definition:</b> Network.h:63</div></div>
@@ -212,11 +214,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="classConnection_html"><div class="ttname"><a href="classConnection.html">Connection</a></div><div class="ttdoc">Represents a network connection. </div><div class="ttdef"><b>Definition:</b> Network.h:33</div></div>
 <div class="ttc" id="classConnection_html_ac5b278dc9229ecc7dc960a70478c6505"><div class="ttname"><a href="classConnection.html#ac5b278dc9229ecc7dc960a70478c6505">Connection::sendto</a></div><div class="ttdeci">ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)</div><div class="ttdoc">Call the underlying system call on Connection&#39;s file descriptor. </div><div class="ttdef"><b>Definition:</b> Network.cpp:222</div></div>
 <div class="ttc" id="classConnection_html_a1382e9cbe83b08fd71c5171adf081007"><div class="ttname"><a href="classConnection.html#a1382e9cbe83b08fd71c5171adf081007">Connection::sendmmsg</a></div><div class="ttdeci">int sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen, unsigned int flags)</div><div class="ttdoc">Call the underlying system call on Connection&#39;s file descriptor. </div><div class="ttdef"><b>Definition:</b> Network.cpp:246</div></div>
-<div class="ttc" id="classConnection_html_a9066aa7952bb194c34b482e19f7d69e9"><div class="ttname"><a href="classConnection.html#a9066aa7952bb194c34b482e19f7d69e9">Connection::getFd</a></div><div class="ttdeci">int getFd() const </div><div class="ttdoc">return the Connection&#39;s file descriptor </div><div class="ttdef"><b>Definition:</b> Network.h:219</div></div>
+<div class="ttc" id="classConnection_html_a9066aa7952bb194c34b482e19f7d69e9"><div class="ttname"><a href="classConnection.html#a9066aa7952bb194c34b482e19f7d69e9">Connection::getFd</a></div><div class="ttdeci">int getFd() const </div><div class="ttdoc">return the Connection&#39;s file descriptor </div><div class="ttdef"><b>Definition:</b> Network.h:224</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:13 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

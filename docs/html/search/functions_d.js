@@ -1,6 +1,10 @@
 var searchData=
 [
   ['semaphore',['Semaphore',['../classSemaphore.html#a9f4e6def847ec928d274b1df4aeb0233',1,'Semaphore']]],
+  ['semaphore_5fcreate',['semaphore_create',['../cwrapper_8h.html#a50871266a50c5bc215f8a2ce43da9242',1,'cwrapper.cpp']]],
+  ['semaphore_5fdestroy',['semaphore_destroy',['../cwrapper_8h.html#a904d4b9b3a1cf0eb4ce5884d1c23163f',1,'cwrapper.cpp']]],
+  ['semaphore_5fp',['semaphore_p',['../cwrapper_8h.html#ae5d486fae5c32dc6e7f843f99b41f9a7',1,'cwrapper.cpp']]],
+  ['semaphore_5fv',['semaphore_v',['../cwrapper_8h.html#a34f0fa11b8e1ad60c8aa55c506d392d4',1,'cwrapper.cpp']]],
   ['send',['send',['../classConnection.html#a9214bf2705f7913edf38261f16ea3890',1,'Connection']]],
   ['sendmmsg',['sendmmsg',['../classConnection.html#a1382e9cbe83b08fd71c5171adf081007',1,'Connection']]],
   ['sendmsg',['sendmsg',['../classConnection.html#a1909fdc1f9bf5a9222c867b5fd185f01',1,'Connection']]],
