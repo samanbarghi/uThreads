@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -162,11 +162,11 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a52779a029077afe137d75f4c4400835f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52ef3dc97bd197e4bc325f938e71ddad"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a52ef3dc97bd197e4bc325f938e71ddad"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConnection.html#a52ef3dc97bd197e4bc325f938e71ddad">blockOnRead</a> ()</td></tr>
-<tr class="memdesc:a52ef3dc97bd197e4bc325f938e71ddad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Block <a class="el" href="classuThread.html" title="user-level threads (fiber) ">uThread</a>, waiting for read to happen. <br/></td></tr>
+<tr class="memdesc:a52ef3dc97bd197e4bc325f938e71ddad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Block <a class="el" href="classuThread.html" title="user-level threads (fiber) ">uThread</a>, waiting for fd to become ready for read. <br/></td></tr>
 <tr class="separator:a52ef3dc97bd197e4bc325f938e71ddad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5584682af2fda6cc6df14f15f1138d40"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5584682af2fda6cc6df14f15f1138d40"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConnection.html#a5584682af2fda6cc6df14f15f1138d40">blockOnWrite</a> ()</td></tr>
-<tr class="memdesc:a5584682af2fda6cc6df14f15f1138d40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Block <a class="el" href="classuThread.html" title="user-level threads (fiber) ">uThread</a>, waiting for write to happen. <br/></td></tr>
+<tr class="memdesc:a5584682af2fda6cc6df14f15f1138d40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Block <a class="el" href="classuThread.html" title="user-level threads (fiber) ">uThread</a>, waiting for fd to become ready for write. <br/></td></tr>
 <tr class="separator:a5584682af2fda6cc6df14f15f1138d40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a45b01070c1dbe47db80f5b76f89b46d7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classConnection.html#a45b01070c1dbe47db80f5b76f89b46d7">close</a> ()</td></tr>
 <tr class="memdesc:a45b01070c1dbe47db80f5b76f89b46d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">closes the socket  <a href="#a45b01070c1dbe47db80f5b76f89b46d7">More...</a><br/></td></tr>
@@ -1015,7 +1015,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:14 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -101,6 +101,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 Public Member Functions</h2></td></tr>
 <tr class="memitem:aee7feb1d599d4c8fda6c3ee83e86ba81"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCluster.html#aee7feb1d599d4c8fda6c3ee83e86ba81">Cluster</a> ()</td></tr>
 <tr class="separator:aee7feb1d599d4c8fda6c3ee83e86ba81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4bddfc88ac859610acab15dd12851b58"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCluster.html#a4bddfc88ac859610acab15dd12851b58">~Cluster</a> ()</td></tr>
+<tr class="separator:a4bddfc88ac859610acab15dd12851b58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7a4c30b0014b9fb9d64baecf7d79b553"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCluster.html#a7a4c30b0014b9fb9d64baecf7d79b553">Cluster</a> (const <a class="el" href="classCluster.html">Cluster</a> &amp;)=delete</td></tr>
 <tr class="separator:a7a4c30b0014b9fb9d64baecf7d79b553"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1a2e5d92d34e8cac90939f4205e4ca39"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classCluster.html">Cluster</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCluster.html#a1a2e5d92d34e8cac90939f4205e4ca39">operator=</a> (const <a class="el" href="classCluster.html">Cluster</a> &amp;)=delete</td></tr>
@@ -111,6 +113,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:acca2f3441c51571a901691829a0f4370"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCluster.html#acca2f3441c51571a901691829a0f4370">getNumberOfkThreads</a> () const </td></tr>
 <tr class="memdesc:acca2f3441c51571a901691829a0f4370"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total number of kThreads belonging to this cluster.  <a href="#acca2f3441c51571a901691829a0f4370">More...</a><br/></td></tr>
 <tr class="separator:acca2f3441c51571a901691829a0f4370"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2d61a8f6912116b136805531fe91c89"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2d61a8f6912116b136805531fe91c89"></a>
+IOHandler *&#160;</td><td class="memItemRight" valign="bottom"><b>getIOHandler</b> ()</td></tr>
+<tr class="separator:ad2d61a8f6912116b136805531fe91c89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -151,6 +156,30 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>IOHandler</b></td></
       </table>
 </div><div class="memdoc">
 <p>Create a new <a class="el" href="classCluster.html" title="Scheduler and Cluster of kThreads. ">Cluster</a> </p>
+
+</div>
+</div>
+<a class="anchor" id="a4bddfc88ac859610acab15dd12851b58"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">Cluster::~Cluster </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Destroy the cluster </p>
 
 </div>
 </div>
@@ -291,7 +320,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>IOHandler</b></td></
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:13 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

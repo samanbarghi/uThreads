@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -71,7 +71,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -120,7 +120,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ac94b1b75187b8881f0851b3cadb1b676"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classkThread.html" title="Object to represent kernel threads. ">kThread</a> cannot be copied or assigned.  <a href="#ac94b1b75187b8881f0851b3cadb1b676">More...</a><br/></td></tr>
 <tr class="separator:ac94b1b75187b8881f0851b3cadb1b676"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af957bc6de81d072bc4424a76589e7989"><td class="memItemLeft" align="right" valign="top">std::thread::native_handle_type&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classkThread.html#af957bc6de81d072bc4424a76589e7989">getThreadNativeHandle</a> ()</td></tr>
-<tr class="memdesc:af957bc6de81d072bc4424a76589e7989"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the native hanlde for the kernel thread  <a href="#af957bc6de81d072bc4424a76589e7989">More...</a><br/></td></tr>
+<tr class="memdesc:af957bc6de81d072bc4424a76589e7989"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the native handle for the kernel thread  <a href="#af957bc6de81d072bc4424a76589e7989">More...</a><br/></td></tr>
 <tr class="separator:af957bc6de81d072bc4424a76589e7989"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6bab63d97c18e0f0921a14f738d1d41"><td class="memItemLeft" align="right" valign="top">std::thread::id&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classkThread.html#ac6bab63d97c18e0f0921a14f738d1d41">getID</a> ()</td></tr>
 <tr class="memdesc:ac6bab63d97c18e0f0921a14f738d1d41"><td class="mdescLeft">&#160;</td><td class="mdescRight">returns the kernel thread ID  <a href="#ac6bab63d97c18e0f0921a14f738d1d41">More...</a><br/></td></tr>
@@ -240,7 +240,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>IOHandler</b></td></
       </table>
 </div><div class="memdoc">
 
-<p>return the native hanlde for the kernel thread </p>
+<p>return the native handle for the kernel thread </p>
 <dl class="section return"><dt>Returns</dt><dd>native handle for the <a class="el" href="classkThread.html" title="Object to represent kernel threads. ">kThread</a></dd></dl>
 <p>In linux this is pthread_t representation of the thread. </p>
 
@@ -304,7 +304,7 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>IOHandler</b></td></
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:14 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

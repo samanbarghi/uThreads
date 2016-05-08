@@ -23,7 +23,7 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">uThreads
-   &#160;<span id="projectnumber">0.1.0</span>
+   &#160;<span id="projectnumber">0.2.0</span>
    </div>
   </td>
  </tr>
@@ -61,6 +61,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <div id="navrow2" class="tabs2">
     <ul class="tablist">
       <li><a href="files.html"><span>File&#160;List</span></a></li>
+      <li><a href="globals.html"><span>File&#160;Members</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -68,7 +69,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -239,38 +240,47 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<span class="comment">     */</span></div>
 <div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> postSwitchFunc(<a class="code" href="classuThread.html">uThread</a>*, <span class="keywordtype">void</span>*) __noreturn;</div>
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="keywordtype">void</span> initialSynchronization();</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;    <span class="comment">//TODO: add a function to create multiple kThreads on a given cluster</span></div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<span class="comment"></span>    <a class="code" href="classkThread.html">kThread</a>(<a class="code" href="classCluster.html">Cluster</a>&amp;);</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <span class="keyword">virtual</span> ~<a class="code" href="classkThread.html">kThread</a>();</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="comment">/*</span></div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;<span class="comment">     * This struct points to an argument and a function. The function</span></div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;<span class="comment">     * is called after suspending a uThread and switching to a new</span></div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="comment">     * uThread. Two arguments is passed to this function: the old uThread*</span></div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;<span class="comment">     * and the arguments passed by the calling function.</span></div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="comment">     */</span></div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <span class="keyword">static</span> __thread funcvoid2_t postSuspendFunc;</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="keywordtype">void</span> initialSynchronization();</div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;</div>
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <a class="code" href="classkThread.html">kThread</a>(<span class="keyword">const</span> <a class="code" href="classkThread.html">kThread</a>&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    <span class="keyword">const</span> <a class="code" href="classkThread.html">kThread</a>&amp; <a class="code" href="classkThread.html#ac94b1b75187b8881f0851b3cadb1b676">operator=</a>(<span class="keyword">const</span> <a class="code" href="classkThread.html">kThread</a>&amp;) = <span class="keyword">delete</span>;</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    std::thread::native_handle_type <a class="code" href="classkThread.html#af957bc6de81d072bc4424a76589e7989">getThreadNativeHandle</a>();</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    std::thread::id <a class="code" href="classkThread.html#ac6bab63d97c18e0f0921a14f738d1d41">getID</a>();</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;</div>
-<div class="line"><a name="l00214"></a><span class="lineno"><a class="line" href="classkThread.html#a7c7562067f667d4e1915f6987a100a06">  214</a></span>&#160;    <span class="keyword">static</span> <a class="code" href="classkThread.html">kThread</a>* <a class="code" href="classkThread.html#a7c7562067f667d4e1915f6987a100a06">currentkThread</a>(){<span class="keywordflow">return</span> kThread::currentKT;}</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <span class="comment">//TODO: add a function to create multiple kThreads on a given cluster</span></div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="comment"></span>    <a class="code" href="classkThread.html">kThread</a>(<a class="code" href="classCluster.html">Cluster</a>&amp;);</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <span class="keyword">virtual</span> ~<a class="code" href="classkThread.html">kThread</a>();</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    <a class="code" href="classkThread.html">kThread</a>(<span class="keyword">const</span> <a class="code" href="classkThread.html">kThread</a>&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;    <span class="keyword">const</span> <a class="code" href="classkThread.html">kThread</a>&amp; <a class="code" href="classkThread.html#ac94b1b75187b8881f0851b3cadb1b676">operator=</a>(<span class="keyword">const</span> <a class="code" href="classkThread.html">kThread</a>&amp;) = <span class="keyword">delete</span>;</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    std::thread::native_handle_type <a class="code" href="classkThread.html#af957bc6de81d072bc4424a76589e7989">getThreadNativeHandle</a>();</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;    std::thread::id <a class="code" href="classkThread.html#ac6bab63d97c18e0f0921a14f738d1d41">getID</a>();</div>
 <div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;</div>
-<div class="line"><a name="l00221"></a><span class="lineno"><a class="line" href="classkThread.html#a6ed1ee9d04a1d0f36d77cec56d45d461">  221</a></span>&#160;    <span class="keyword">static</span> uint <a class="code" href="classkThread.html#a6ed1ee9d04a1d0f36d77cec56d45d461">getTotalNumberOfkThreads</a>(){<span class="keywordflow">return</span> totalNumberofKTs.load();}</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;};</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* UTHREADS_KTHREADS_H_ */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="classkThread_html_af957bc6de81d072bc4424a76589e7989"><div class="ttname"><a href="classkThread.html#af957bc6de81d072bc4424a76589e7989">kThread::getThreadNativeHandle</a></div><div class="ttdeci">std::thread::native_handle_type getThreadNativeHandle()</div><div class="ttdoc">return the native hanlde for the kernel thread </div><div class="ttdef"><b>Definition:</b> kThread.cpp:200</div></div>
-<div class="ttc" id="classkThread_html_a7c7562067f667d4e1915f6987a100a06"><div class="ttname"><a href="classkThread.html#a7c7562067f667d4e1915f6987a100a06">kThread::currentkThread</a></div><div class="ttdeci">static kThread * currentkThread()</div><div class="ttdoc">Get the pointer to the current kThread. </div><div class="ttdef"><b>Definition:</b> kThread.h:214</div></div>
+<div class="line"><a name="l00223"></a><span class="lineno"><a class="line" href="classkThread.html#a7c7562067f667d4e1915f6987a100a06">  223</a></span>&#160;    <span class="keyword">static</span> <a class="code" href="classkThread.html">kThread</a>* <a class="code" href="classkThread.html#a7c7562067f667d4e1915f6987a100a06">currentkThread</a>(){<span class="keywordflow">return</span> kThread::currentKT;}</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;</div>
+<div class="line"><a name="l00230"></a><span class="lineno"><a class="line" href="classkThread.html#a6ed1ee9d04a1d0f36d77cec56d45d461">  230</a></span>&#160;    <span class="keyword">static</span> uint <a class="code" href="classkThread.html#a6ed1ee9d04a1d0f36d77cec56d45d461">getTotalNumberOfkThreads</a>(){<span class="keywordflow">return</span> totalNumberofKTs.load();}</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;};</div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* UTHREADS_KTHREADS_H_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="classkThread_html_af957bc6de81d072bc4424a76589e7989"><div class="ttname"><a href="classkThread.html#af957bc6de81d072bc4424a76589e7989">kThread::getThreadNativeHandle</a></div><div class="ttdeci">std::thread::native_handle_type getThreadNativeHandle()</div><div class="ttdoc">return the native handle for the kernel thread </div><div class="ttdef"><b>Definition:</b> kThread.cpp:208</div></div>
+<div class="ttc" id="classkThread_html_a7c7562067f667d4e1915f6987a100a06"><div class="ttname"><a href="classkThread.html#a7c7562067f667d4e1915f6987a100a06">kThread::currentkThread</a></div><div class="ttdeci">static kThread * currentkThread()</div><div class="ttdoc">Get the pointer to the current kThread. </div><div class="ttdef"><b>Definition:</b> kThread.h:223</div></div>
 <div class="ttc" id="classkThread_html"><div class="ttname"><a href="classkThread.html">kThread</a></div><div class="ttdoc">Object to represent kernel threads. </div><div class="ttdef"><b>Definition:</b> kThread.h:52</div></div>
-<div class="ttc" id="classkThread_html_a6ed1ee9d04a1d0f36d77cec56d45d461"><div class="ttname"><a href="classkThread.html#a6ed1ee9d04a1d0f36d77cec56d45d461">kThread::getTotalNumberOfkThreads</a></div><div class="ttdeci">static uint getTotalNumberOfkThreads()</div><div class="ttdef"><b>Definition:</b> kThread.h:221</div></div>
+<div class="ttc" id="classkThread_html_a6ed1ee9d04a1d0f36d77cec56d45d461"><div class="ttname"><a href="classkThread.html#a6ed1ee9d04a1d0f36d77cec56d45d461">kThread::getTotalNumberOfkThreads</a></div><div class="ttdeci">static uint getTotalNumberOfkThreads()</div><div class="ttdef"><b>Definition:</b> kThread.h:230</div></div>
 <div class="ttc" id="classuThread_html"><div class="ttname"><a href="classuThread.html">uThread</a></div><div class="ttdoc">user-level threads (fiber) </div><div class="ttdef"><b>Definition:</b> uThread.h:60</div></div>
 <div class="ttc" id="classCluster_html"><div class="ttname"><a href="classCluster.html">Cluster</a></div><div class="ttdoc">Scheduler and Cluster of kThreads. </div><div class="ttdef"><b>Definition:</b> Cluster.h:59</div></div>
 <div class="ttc" id="classkThread_html_ac94b1b75187b8881f0851b3cadb1b676"><div class="ttname"><a href="classkThread.html#ac94b1b75187b8881f0851b3cadb1b676">kThread::operator=</a></div><div class="ttdeci">const kThread &amp; operator=(const kThread &amp;)=delete</div><div class="ttdoc">kThread cannot be copied or assigned. </div></div>
-<div class="ttc" id="classkThread_html_ac6bab63d97c18e0f0921a14f738d1d41"><div class="ttname"><a href="classkThread.html#ac6bab63d97c18e0f0921a14f738d1d41">kThread::getID</a></div><div class="ttdeci">std::thread::id getID()</div><div class="ttdoc">returns the kernel thread ID </div><div class="ttdef"><b>Definition:</b> kThread.cpp:207</div></div>
+<div class="ttc" id="classkThread_html_ac6bab63d97c18e0f0921a14f738d1d41"><div class="ttname"><a href="classkThread.html#ac6bab63d97c18e0f0921a14f738d1d41">kThread::getID</a></div><div class="ttdeci">std::thread::id getID()</div><div class="ttdoc">returns the kernel thread ID </div><div class="ttdef"><b>Definition:</b> kThread.cpp:215</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Feb 23 2016 14:48:36 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun May 8 2016 16:15:13 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
