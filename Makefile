@@ -39,10 +39,11 @@ all: $(TARGET)
 	@mkdir -p $(BUILD_DIR)/runtime
 	@mkdir -p $(BUILD_DIR)/generic
 
+#Pass O1 to linker to optimize the hash table size, can be verified by `readelf -I`
 $(TARGET) :  $(SOBJECTS) $(OBJECTS)
 	@echo " Linking..."
 	@mkdir -p $(LIB_DIR)
-	$(CXX) -shared -m64 -fPIC $^ -o $(TARGET) $(LIB)
+	$(CXX) -Wl,-O1 -shared -m64 -fPIC $^ -o $(TARGET) $(LIB)
 -include $(OBJECTS:.o=.d)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(SRCEXT)
