@@ -39,6 +39,10 @@ kThread::kThread() :
     uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
     uThread::initUT->homekThread = this;
     /*
+     * Add the kThread to the list of kThreads in the Cluster
+     */
+    localCluster->addNewkThread(*this);
+    /*
      * Since this is for defaultKT, current running uThread
      * is the initial one which is responsible for running
      * the main() function.
@@ -58,6 +62,10 @@ kThread::kThread(Cluster& cluster) :
         localCluster(&cluster), ktvar(new KTVar()),
         scheduler(Scheduler::getScheduler(cluster)),
         threadSelf(&kThread::run, this) {
+    /*
+     * Add the kThread to the list of kThreads in the Cluster
+     */
+    localCluster->addNewkThread(*this);
     initialSynchronization();
 }
 
@@ -112,10 +120,6 @@ void kThread::switchContext(void* args) {
 }
 
 void kThread::initialize() {
-    /*
-     * Add the kThread to the list of kThreads in the Cluster
-     */
-    localCluster->addNewkThread(*this);
     /*
      * Set the thread_local pointer to this thread, later we can
      * find the executing thread by referring to this.
