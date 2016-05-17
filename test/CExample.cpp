@@ -21,11 +21,11 @@ int main(){
     int value[100000];
     for (int i=0; i< 100000; i++){
         //create a uThread
-        ut = uThread_create();
+        ut = uThread_create(false);
         value[i] = i;
         //Start the uThread over the prvoided cluster
         if(i%2 == 0) uThread_start(ut, cluster, (void*)run, &value[i], 0, 0);
-        else  uThread_start(ut, cluster_get_default(), (void*)run, &value[i]);
+        else  uThread_start(ut, cluster_get_default(), (void*)run, &value[i], 0, 0);
     }
 
     while(uThread_get_total_number_of_uThreads() > 2)
