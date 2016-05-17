@@ -78,9 +78,9 @@ pthread_t   kThread_get_pthread_id(WkThread* kt); //return pthread_t for the pro
 struct      WuThread;
 typedef     struct WuThread WuThread;
 /** @copydoc uThread::create **/
-WuThread*   uThread_create(bool joinable=false);
+WuThread*   uThread_create(bool joinable);
 /** @copydoc uThread::start **/
-void        uThread_start(WuThread* ut, WCluster* cluster, void *func, void *arg1=0 , void* arg2=0, void* arg3=0);
+void        uThread_start(WuThread* ut, WCluster* cluster, void *func, void *arg1 , void* arg2, void* arg3);
 /** @copydoc uThread::migrate **/
 void        uThread_migrate(WCluster* cluster);
 /** @copydoc uThread::terminate **/
