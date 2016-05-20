@@ -29,10 +29,12 @@ IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), 
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
     bool expected = false;
+
     //If another uThread called opened already, return
     //TODO: use a mutex instead?
     if(!__atomic_compare_exchange_n(&pd.opened, &expected, true, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
         return;
+
     //Add the file descriptor to the poller struct
     int res = _Open(pd.fd, pd);
     if(res != 0){
