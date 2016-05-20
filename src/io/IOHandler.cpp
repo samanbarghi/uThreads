@@ -24,27 +24,15 @@
 #include <iostream>
 #include <sstream>
 
-IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this){}
-
-IOHandler* IOHandler::create(Cluster& cluster){
-    IOHandler* ioh = nullptr;
-#if defined (__linux__)
-    ioh = new EpollIOHandler(cluster);
-#else
-#error unsupported system: only __linux__ supported at this moment
-#endif
-    return ioh;
-}
+IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this), poller(*this){}
 
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
     bool expected = false;
-
     //If another uThread called opened already, return
     //TODO: use a mutex instead?
     if(!__atomic_compare_exchange_n(&pd.opened, &expected, true, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
         return;
-
     //Add the file descriptor to the poller struct
     int res = _Open(pd.fd, pd);
     if(res != 0){
@@ -122,7 +110,7 @@ int IOHandler::close(PollData &pd){
     if(!__atomic_compare_exchange_n(&pd.closing, &expected, true, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
         return -1;
     //remove from underlying poll structure
-    int res = _Close(pd.fd);
+    int res = poller._Close(pd.fd);
 
     //pd.reset();
     //TODO: handle epoll errors
@@ -132,7 +120,7 @@ int IOHandler::close(PollData &pd){
 }
 
 void IOHandler::poll(int timeout, int flag){
-    _Poll(timeout);
+    poller._Poll(timeout);
 }
 
 void IOHandler::reset(PollData& pd){
