@@ -24,26 +24,19 @@
 #include <iostream>
 #include <sstream>
 
-IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this){}
-
-IOHandler* IOHandler::create(Cluster& cluster){
-    IOHandler* ioh = nullptr;
-#if defined (__linux__)
-    ioh = new EpollIOHandler(cluster);
-#else
-#error unsupported system: only __linux__ supported at this moment
-#endif
-    return ioh;
-}
+IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this), poller(*this){}
 
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
-
-    std::lock_guard<std::mutex> pdlock(pd.mtx);
+    bool expected = false;
+    //If another uThread called opened already, return
+    //TODO: use a mutex instead?
+    if(!__atomic_compare_exchange_n(&pd.opened, &expected, true, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+        return;
+    //Add the file descriptor to the poller struct
     int res = _Open(pd.fd, pd);
-    if(res == 0)
-        pd.opened.store(true, std::memory_order_relaxed);
-    else{
+    if(res != 0){
+        __atomic_exchange_n(&pd.opened, false, __ATOMIC_RELAXED);
         std::cerr << "EPOLL_ERROR: " << errno << std::endl;
         //TODO: this should be changed to an exception
         exit(EXIT_FAILURE);
@@ -57,15 +50,18 @@ void IOHandler::wait(PollData& pd, int flag){
 }
 void IOHandler::block(PollData &pd, bool isRead){
 
-    if(!pd.opened.load(std::memory_order_relaxed)) open(pd);
+    if(!pd.opened) open(pd);
     uThread** utp = isRead ? &pd.rut : &pd.wut;
-    //TODO:check other states
 
-    if(slowpath(*utp == POLL_READY))    //This is unlikely since we just did a nonblocking read
+    uThread* ut = *utp;
+
+    if(slowpath(ut == POLL_READY))    //This is unlikely since we just did a nonblocking read
     {
+        //No need for atomic, as for now only a single uThread can block on
+        //read for each fd
         *utp = nullptr;  //consume the notification and return;
         return;
-    }else if(*utp > POLL_WAIT)
+    }else if(ut > POLL_WAIT)
         std::cerr << "Exception on open rut" << std::endl;
 
     //This does not need synchronization, since only a single thread
@@ -80,36 +76,41 @@ void IOHandler::postSwitchFunc(void* ut, void* args){
     assert(args != nullptr);
     assert(ut != nullptr);
 
-    uThread* old = (uThread*)ut;
+    uThread* utold = (uThread*)ut;
     PollData* pd = (PollData*) args;
     if(pd->closing) return;
     uThread** utp = pd->isBlockingOnRead ? &pd->rut : &pd->wut;
 
-    std::lock_guard<std::mutex> pdlock(pd->mtx);
-    if(*utp == POLL_READY){
-        *utp = nullptr;         //consume the notification and resume
-        old->resume();
-    }else if(*utp == nullptr){
-        *utp = old;
-    }else
-        std::cerr << "Exception on rut"<< std::endl;
+    uThread *old, *expected ;
+    while(true){
+        old = *utp;
+        expected = nullptr;
+        if(old == POLL_READY){
+            *utp = nullptr;         //consume the notification and resume
+            utold->resume();
+            return;
+        }
+        if(old != nullptr)
+            std::cerr << "Exception on rut"<< std::endl;
+
+        if(__atomic_compare_exchange_n(utp, &expected, utold, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED ))
+            break;
+    }
 }
 int IOHandler::close(PollData &pd){
 
-    std::lock_guard<std::mutex> pdlock(pd.mtx);
-
-    int flag = 0;
+    //unblock pd if blocked
     if(pd.rut > POLL_WAIT)
-        flag | Flag::UT_IOREAD;
+        unblock(pd, true);
     if(pd.wut > POLL_WAIT);
-        flag | Flag::UT_IOWRITE;
+        unblock(pd, true);
 
-    if(flag)
-        unblock(pd, flag);
-
-    pd.closing = true;
+    bool expected = false;
+    //another thread is already closing this fd
+    if(!__atomic_compare_exchange_n(&pd.closing, &expected, true, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+        return -1;
     //remove from underlying poll structure
-    int res = _Close(pd.fd);
+    int res = poller._Close(pd.fd);
 
     //pd.reset();
     //TODO: handle epoll errors
@@ -119,72 +120,61 @@ int IOHandler::close(PollData &pd){
 }
 
 void IOHandler::poll(int timeout, int flag){
-    _Poll(timeout);
+    poller._Poll(timeout);
 }
 
 void IOHandler::reset(PollData& pd){
-    std::lock_guard<std::mutex> pdlock(pd.mtx);
     pd.reset();
 }
 
-void IOHandler::unblock(PollData &pd, int flag){
+void IOHandler::unblock(PollData &pd, bool isRead){
 
-    std::lock_guard<std::mutex> pdlock(pd.mtx);
     //if it's closing no need to process
-    if(slowpath(pd.closing)) return;
+    if(pd.closing) return;
 
-    uThread **rut = &pd.rut, **wut = &pd.wut;
-    uThread *rold = *rut, *wold = *wut;
+    uThread** utp = isRead ? &pd.rut : &pd.wut;
+    uThread* old;
 
-    if(flag & Flag::UT_IOREAD){
-        //if(rold == POLL_READY) //do nothing
-        if(rold == nullptr || rold == POLL_WAIT)
-           *rut = POLL_READY;
-        else if(rold > POLL_WAIT){
-            *rut = nullptr;
-            rold->resume();
-        }
-    }
-    if(flag & Flag::UT_IOWRITE){
-        //if(wold == POLL_READY) do nothing
-        if(wold == nullptr || wold == POLL_WAIT)
-           *wut = POLL_READY;
-        else if(wold > POLL_WAIT){
-            *wut = nullptr;
-            wold->resume();
+    while(true){
+        old = *utp;
+        if(old == POLL_READY) return;
+        //For now only if io is ready we call the unblock
+        uThread* utnew = nullptr;
+        if(old == nullptr || old == POLL_WAIT) utnew = POLL_READY;
+        if(__atomic_compare_exchange_n(utp, &old, utnew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
+            if(old == nullptr || old == POLL_WAIT)
+                return;
+            else{
+                old->resume();
+                break;
+            }
         }
     }
 }
 
-void IOHandler::unblockBulk(PollData &pd, int flag){
+void IOHandler::unblockBulk(PollData &pd, bool isRead){
 
-    std::lock_guard<std::mutex> pdlock(pd.mtx);
     //if it's closing no need to process
     if(slowpath(pd.closing)) return;
 
-    uThread **rut = &pd.rut, **wut = &pd.wut;
-    uThread *rold = *rut, *wold = *wut;
+    uThread** utp = isRead ? &pd.rut : &pd.wut;
+    uThread* old;
 
-    if(flag & Flag::UT_IOREAD){
-        //if(rold == POLL_READY) //do nothing
-        if(rold == nullptr || rold == POLL_WAIT)
-           *rut = POLL_READY;
-        else if(rold > POLL_WAIT){
-            *rut = nullptr;
-            rold->state = uThread::State::READY;
-            Scheduler::prepareBulkPush(rold);
-            bulkCounter++;
-        }
-    }
-    if(flag & Flag::UT_IOWRITE){
-        //if(wold == POLL_READY) do nothing
-        if(wold == nullptr || wold == POLL_WAIT)
-           *wut = POLL_READY;
-        else if(wold > POLL_WAIT){
-            *wut = nullptr;
-            wold->state = uThread::State::READY;
-            Scheduler::prepareBulkPush(wold);
-            bulkCounter++;
+    while(true){
+        old = *utp;
+        if(old == POLL_READY) return;
+        //For now only if io is ready we call the unblock
+        uThread* utnew = nullptr;
+        if(old == nullptr || old == POLL_WAIT) utnew = POLL_READY;
+        if(__atomic_compare_exchange_n(utp, &old, utnew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
+            if(old == nullptr || old == POLL_WAIT)
+                return;
+            else{
+                old->state = uThread::State::READY;
+                Scheduler::prepareBulkPush(old);
+                bulkCounter++;
+                break;
+            }
         }
     }
     /* It is the responsibility of the caller function
@@ -194,10 +184,12 @@ void IOHandler::unblockBulk(PollData &pd, int flag){
 }
 
 void IOHandler::PollReady(PollData &pd, int flag){
-    unblock(pd, flag);
+    if(flag & Flag::UT_IOREAD) unblock(pd, true);
+    if(flag & Flag::UT_IOWRITE) unblock(pd, false);
 }
 void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
-    unblockBulk(pd, flag);
+    if(flag & Flag::UT_IOREAD) unblockBulk(pd, true);
+    if(flag & Flag::UT_IOWRITE) unblockBulk(pd, false);
     //if this is the last item return by the poller
     //Bulk push everything to the related cluster ready Queue
     if(slowpath(isLast) && bulkCounter >0){

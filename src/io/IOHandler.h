@@ -76,7 +76,7 @@ private:
     bool closing;
 
     /** Whether the fd was added to epoll or not **/
-    std::atomic<bool> opened;
+    bool opened;
 
     /** Whether this pd is about to block on read or write */
     bool isBlockingOnRead;
@@ -154,6 +154,12 @@ protected:
         cache.push(*pd);
     }
 };
+#if defined (__linux__)
+#include "EpollIOHandler.h"
+#else
+#error unsupported system: only __linux__ supported at this moment
+#endif
+
 /*
  * This class is a virtual class to provide nonblocking I/O
  * to uThreads. select/poll/epoll or other type of nonblocking
@@ -165,6 +171,7 @@ class IOHandler{
     friend class Connection;
     friend class Cluster;
     friend class ReadyQueue;
+    friend class IOPoller;
 
 protected:
     /* polling flags */
@@ -175,14 +182,11 @@ protected:
 
     PollCache pollCache;
 
-    virtual int _Open(int fd, PollData &pd) = 0;         //Add current fd to the polling list, and add current uThread to IOQueue
-    virtual int  _Close(int fd) = 0;
-    virtual void _Poll(int timeout)=0;                ///
-
+    IOPoller poller;
 
     void block(PollData &pd, bool isRead);
-    void inline unblock(PollData &pd, int flag);
-    void inline unblockBulk(PollData &pd, int flag);
+    void inline unblock(PollData &pd, bool isRead);
+    void inline unblockBulk(PollData &pd, bool isRead);
 
     static void postSwitchFunc(void* ut, void* args);
 
@@ -209,28 +213,8 @@ public:
    void poll(int timeout, int flag);
    void reset(PollData &pd);
    //dealing with uThreads
-
-
-   //create an instance of IOHandler based on the platform
-   static IOHandler* create(Cluster&);
 };
 
-/* epoll wrapper */
-class EpollIOHandler : public IOHandler {
-    friend IOHandler;
-private:
-    static const int MAXEVENTS  = 256;//Maximum number of events this thread can monitor, TODO: do we want this to be modified?
-    int epoll_fd = -1;
-    struct epoll_event* events;
-
-    int _Open(int fd, PollData& pd);
-    int  _Close(int fd);
-    void _Poll(int timeout);
-
-protected:
-    EpollIOHandler(Cluster&);
-    virtual ~EpollIOHandler();
-};
 
 /** @endcond */
 #endif /* IOHANDLER_H_ */

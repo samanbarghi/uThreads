@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-EpollIOHandler::EpollIOHandler(Cluster& cluster) : IOHandler(cluster) {
+IOPoller::IOPoller(IOHandler& i) : ioh(i) {
     //Assuming kernel version >= 2.9
     epoll_fd = epoll_create1 (EPOLL_CLOEXEC);
    	//TODO: Make sure this is backward compatible with kernel < 2.9
@@ -33,7 +33,7 @@ EpollIOHandler::EpollIOHandler(Cluster& cluster) : IOHandler(cluster) {
     events = (epoll_event*)calloc(MAXEVENTS, sizeof(struct epoll_event));
 }
 
-int EpollIOHandler::_Open(int fd, PollData &pd){
+int IOPoller::_Open(int fd, PollData &pd){
     struct epoll_event ev;
     ev.events = EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLET;
     ev.data.ptr = (void*)&pd;
@@ -44,7 +44,7 @@ int EpollIOHandler::_Open(int fd, PollData &pd){
     return res;
 }
 
-int EpollIOHandler::_Close(int fd){
+int IOPoller::_Close(int fd){
    struct epoll_event ev;
    int res;
 
@@ -64,7 +64,7 @@ int EpollIOHandler::_Close(int fd){
  * IOHandeler, it is important to make sure this does not add extra overhead.
  */
 
-void EpollIOHandler::_Poll(int timeout){
+void IOPoller::_Poll(int timeout){
     if(slowpath(!epoll_fd))
         return;
 
@@ -89,16 +89,16 @@ void EpollIOHandler::_Poll(int timeout){
             continue;
         mode = 0;
         if(ev->events & (EPOLLIN|EPOLLRDHUP|EPOLLHUP|EPOLLERR))
-            mode |= UT_IOREAD;
+            mode |= IOHandler::UT_IOREAD;
         if(ev->events & (EPOLLOUT|EPOLLHUP|EPOLLERR))
-            mode |= UT_IOWRITE;
+            mode |= IOHandler::UT_IOWRITE;
         if(fastpath(mode))
-            this->PollReadyBulk( *(PollData*) ev->data.ptr , mode, i==n-1);
+            ioh.PollReadyBulk( *(PollData*) ev->data.ptr , mode, i==n-1);
     }
 
 }
 
-EpollIOHandler::~EpollIOHandler() {
+IOPoller::~IOPoller() {
     ::close(epoll_fd);
     free(events);
 }

@@ -44,7 +44,7 @@ IOHandler* Cluster::getIOHandler(){
     if(slowpath(iohandler == nullptr)){
         std::unique_lock<std::mutex> ul(mtx);
         if(iohandler == nullptr)
-            iohandler = IOHandler::create(*this);
+            iohandler = new IOHandler(*this);
     }
     return iohandler;
 }
