@@ -76,7 +76,7 @@ private:
     bool closing;
 
     /** Whether the fd was added to epoll or not **/
-    std::atomic<bool> opened;
+    bool opened;
 
     /** Whether this pd is about to block on read or write */
     bool isBlockingOnRead;
@@ -181,8 +181,8 @@ protected:
 
 
     void block(PollData &pd, bool isRead);
-    void inline unblock(PollData &pd, int flag);
-    void inline unblockBulk(PollData &pd, int flag);
+    void inline unblock(PollData &pd, bool isRead);
+    void inline unblockBulk(PollData &pd, bool isRead);
 
     static void postSwitchFunc(void* ut, void* args);
 
