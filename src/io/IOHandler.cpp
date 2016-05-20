@@ -34,7 +34,7 @@ void IOHandler::open(PollData &pd){
     if(!__atomic_compare_exchange_n(&pd.opened, &expected, true, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
         return;
     //Add the file descriptor to the poller struct
-    int res = _Open(pd.fd, pd);
+    int res = poller._Open(pd.fd, pd);
     if(res != 0){
         __atomic_exchange_n(&pd.opened, false, __ATOMIC_RELAXED);
         std::cerr << "EPOLL_ERROR: " << errno << std::endl;
