@@ -144,12 +144,10 @@ void IOHandler::unblock(PollData &pd, bool isRead){
         uThread* utnew = nullptr;
         if(old == nullptr || old == POLL_WAIT) utnew = POLL_READY;
         if(__atomic_compare_exchange_n(utp, &old, utnew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
-            if(old == nullptr || old == POLL_WAIT)
-                return;
-            else{
+            if(old > POLL_WAIT)
                 old->resume();
-                break;
-            }
+
+            break;
         }
     }
 }
@@ -169,14 +167,12 @@ void IOHandler::unblockBulk(PollData &pd, bool isRead){
         uThread* utnew = nullptr;
         if(old == nullptr || old == POLL_WAIT) utnew = POLL_READY;
         if(__atomic_compare_exchange_n(utp, &old, utnew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
-            if(old == nullptr || old == POLL_WAIT)
-                return;
-            else{
+            if(old > POLL_WAIT){
                 old->state = uThread::State::READY;
                 Scheduler::prepareBulkPush(old);
                 bulkCounter++;
-                break;
             }
+            break;
         }
     }
     /* It is the responsibility of the caller function
