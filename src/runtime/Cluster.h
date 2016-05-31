@@ -65,13 +65,38 @@ class Cluster {
     friend class IOHandler;
     friend class Scheduler;
 private:
-    Scheduler* scheduler;
-    std::atomic_uint numberOfkThreads;                  //Number of kThreads in this Cluster
+    // First 64 bytes (CACHELINE_SIZE)
+    Scheduler* scheduler;                               //(8 bytes)
 
-    static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
+    IOHandler* iohandler;                               //(8 bytes)
+
+    /*
+     * Scheduler's defined cluster variables
+     */
+    ClusterVar* clustervar;                             //(8 bytes)
+
+    // First 64 bytes (CACHELINE_SIZE)
+
+    /*
+     * last kThread assigned to a uThread,
+     * for now kThread assignment is round robin
+     * manner.
+     */
+    std::atomic<size_t> ktLast;
+
+    std::atomic_uint numberOfkThreads;                  //Number of kThreads in this Cluster
+    /*
+     * Vector of kThreads in this Cluster
+     */
+    std::vector<kThread*> ktVector;
+
     uint64_t clusterID;                                 //Current Cluster ID
 
     std::mutex mtx;                                     //Mutex used for initializations
+
+    static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
+
+
 
     /**
      * @brief defaultCluster includes the main thread.
@@ -84,25 +109,6 @@ private:
     static Cluster defaultCluster;
 
     void initialSynchronization();
-
-    IOHandler* iohandler;
-
-    /*
-     * Scheduler's defined cluster variables
-     */
-    ClusterVar* clustervar;
-
-    /*
-     * Vector of kThreads in this Cluster
-     */
-    std::vector<kThread*> ktVector;
-
-    /*
-     * last kThread assigned to a uThread,
-     * for now kThread assignment is round robin
-     * manner.
-     */
-    std::atomic<size_t> ktLast;
 
     /*
      * Add a new kThread to this Cluster

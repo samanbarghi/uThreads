@@ -23,15 +23,15 @@ struct KTLocal{};
  */
 struct KTVar{
     /*
+     * Count the number of items in bulkQueue
+     */
+    size_t bulkCounter;
+
+    /*
      * This list is used to schedule uThreads in bulk.
      * For now it is only used in IOHandler
      */
     IntrusiveQueue<uThread> bulkQueue;
-
-    /*
-     * Count the number of items in bulkQueue
-     */
-    size_t bulkCounter;
 
     KTVar(): bulkCounter(0){};
 };
@@ -45,8 +45,8 @@ class Scheduler {
     friend class uThread;
 private:
 
-    BlockingMPSCQueue<uThread> runQueue;
     semaphore sem;
+    BlockingMPSCQueue<uThread> runQueue;
     /* ************** Scheduling wrappers *************/
     //Schedule a uThread on a cluster
     static void schedule(uThread* ut, kThread& kt){

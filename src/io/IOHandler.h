@@ -53,11 +53,7 @@ private:
      * or the requesting uThread is updating the semaphore.
      */
 
-    //Mutex that protects this  PollData
-    std::mutex mtx;
-    //file descriptor
-    int fd = -1;
-
+    // First 64 bytes (CACHELINE_SIZE)
     /**
      * These semaphores are used to keep track of the state at which
      * the file descriptor is in. They can be in four modes:
@@ -80,6 +76,14 @@ private:
 
     /** Whether this pd is about to block on read or write */
     bool isBlockingOnRead;
+
+    //file descriptor
+    int fd = -1;
+
+    // First 64 bytes (CACHELINE_SIZE)
+
+    //Mutex that protects this  PollData
+    std::mutex mtx;
 
     /**
      * Reset the variables. Used when PollData is recycled to be used
@@ -174,15 +178,22 @@ class IOHandler{
     friend class IOPoller;
 
 protected:
+    Cluster*    localCluster;       //Cluster that this Handler belongs to
+
+    //Variables for bulk push to readyQueue
+    size_t bulkCounter;
+
+    kThread    ioKT;               //IO kThread
+
+    PollCache pollCache;
+
+    IOPoller poller;
+
     /* polling flags */
     enum Flag {
         UT_IOREAD    = 1 << 0,                           //READ
         UT_IOWRITE   = 1 << 1                            //WRITE
     };
-
-    PollCache pollCache;
-
-    IOPoller poller;
 
     void block(PollData &pd, bool isRead);
     void inline unblock(PollData &pd, bool isRead);
@@ -190,15 +201,8 @@ protected:
 
     static void postSwitchFunc(void* ut, void* args);
 
-    Cluster*    localCluster;       //Cluster that this Handler belongs to
-    kThread    ioKT;               //IO kThread
-
     //Polling IO Function
    static void pollerFunc(void*) __noreturn;
-
-
-   //Variables for bulk push to readyQueue
-   size_t bulkCounter;
 
     IOHandler(Cluster&);
     void PollReady(PollData &pd, int flag);                   //When there is notification update pollData and unblock the related ut

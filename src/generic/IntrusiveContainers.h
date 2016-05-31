@@ -297,10 +297,10 @@ public:
 template<typename T>
 class BlockingMPSCQueue {
 private:
-    std::atomic<Link<T>*>  tail;
-
-    Link<T>                stub;
     Link<T>*               head;
+    Link<T>                stub;
+
+    std::atomic<Link<T>*>  tail;
 
     bool insert(Link<T>& first, Link<T>& last){
       last.Link<T>::next = nullptr;
