@@ -126,7 +126,7 @@ public:
 
   void push(T& first, T& last) {
     GENASSERT1(!onQueue(last), FmtHex(&first));
-    if slowpath(!head) head = &first;
+    if (!head) head = &first;
     else {
       GENASSERT1(tail != nullptr, FmtHex(this));
       tail->Link<T>::next = &first;
