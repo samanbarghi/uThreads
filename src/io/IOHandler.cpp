@@ -168,7 +168,7 @@ void IOHandler::unblockBulk(PollData &pd, bool isRead){
         if(old == nullptr || old == POLL_WAIT) utnew = POLL_READY;
         if(__atomic_compare_exchange_n(utp, &old, utnew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
             if(old > POLL_WAIT){
-                old->state = uThread::State::READY;
+                //old->state = uThread::State::READY;
                 Scheduler::prepareBulkPush(old);
                 bulkCounter++;
             }
