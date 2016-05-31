@@ -66,6 +66,35 @@ class uThread: public Link<uThread> {
     friend class BlockingQueue;
     friend class IOHandler;
     friend class Scheduler;
+
+    // First 64 bytes (CACHELINE_SIZE)
+    //Link* prev                        (8 bytes)
+    //Link* next                        (8 bytes)
+protected:
+    /*
+     * Thread variables
+     */
+
+    /*
+     * Current Cluster that uThread is executed on.
+     * This variable is used for migrating to another Cluster.
+     */
+    Cluster* currentCluster;          //(8 bytes)
+
+    /*
+     * Current kThread assigned to this uThread
+     */
+    kThread* homekThread;             //(8 bytes)
+
+    /*
+     * Stack Boundary
+     */
+    vaddr stackPointer;         // holds stack pointer while thread inactive (8 bytes)
+    vaddr stackBottom;          //Bottom of the stack                        (8 bytes)
+    size_t stackSize;           //Size of the stack of the current uThread   (8 bytes ?)
+
+    uint64_t uThreadID;                         //unique Id for this uThread (8 bytes)
+    // First 64 bytes (CACHELINE_SIZE)
 private:
     /*
      * initUT is the initial uThread that is created when program starts.
@@ -150,29 +179,9 @@ protected:
     //TODO: Add more variables, number of suspended, number of running ...
     static std::atomic_ulong totalNumberofUTs;  //Total number of existing uThreads
     static std::atomic_ulong uThreadMasterID;   //The main ID counter
-    uint64_t uThreadID;                         //unique Id for this uThread
 
-    /*
-     * Thread variables
-     */
 
-    /*
-     * Current Cluster that uThread is executed on.
-     * This variable is used for migrating to another Cluster.
-     */
-    Cluster* currentCluster;
 
-    /*
-     * Current kThread assigned to this uThread
-     */
-    kThread* homekThread;
-
-    /*
-     * Stack Boundary
-     */
-    size_t stackSize;           //Size of the stack of the current uThread
-    vaddr stackPointer;         // holds stack pointer while thread inactive
-    vaddr stackBottom;          //Bottom of the stack
 
     /*
      * Destroys the uThread by freeing the memory allocated on the stack.

@@ -57,6 +57,51 @@ class kThread: public Link<kThread> {
     friend class IOHandler;
     friend class Scheduler;
 private:
+    // First 64 bytes (CACHELINE_SIZE)
+    /*
+     * Pointer to the cluster this kThread
+     * belongs to. Each kThread only belongs to
+     * one Cluster and can pull uThreads from
+     * the ReadyQueue of that Cluster. kThreads
+     * can however push uThreads to ReadyQueue
+     * of other clusters upon uThread migration.
+     */
+    Cluster* localCluster; // (8 bytes)
+
+    /*
+     * Scheduler object
+     */
+    Scheduler* scheduler; // (8 bytes)
+
+
+    KTVar* ktvar;         // (8 bytes)
+
+    /*
+     * Pointer to the current running uThread
+     */
+    uThread* currentUT;   // (8 bytes)
+
+    /*
+     * Each kThread has a main uThread that is
+     * only used when there is no uThread available
+     * on the ReadyQueue. kThread then switches to
+     * this uThread and block on the ReadyQueue waiting
+     * for more uThreads to arrive.
+     */
+    uThread* mainUT;    // (8 bytes)
+
+    // First 64 bytes (CACHELINE_SIZE)
+
+     /* Holds the id of the underlying kernel thread */
+    std::thread::id threadID;
+
+    /*
+     * The actual kernel thread behind this kThread.
+     * on Linux it will be a pthread.
+     */
+    std::thread threadSelf;
+
+
     //Only used for defaultKT
     kThread();
     /*
@@ -68,23 +113,6 @@ private:
     kThread(Cluster&, std::function<void(ptr_t)>, ptr_t);
 
     /*
-     * The actual kernel thread behind this kThread.
-     * on Linux it will be a pthread.
-     */
-    std::thread threadSelf;
-     /* Holds the id of the underlying kernel thread */
-    std::thread::id threadID;
-
-    /*
-     * Each kThread has a main uThread that is
-     * only used when there is no uThread available
-     * on the ReadyQueue. kThread then switches to
-     * this uThread and block on the ReadyQueue waiting
-     * for more uThreads to arrive.
-     */
-    uThread* mainUT;
-
-    /*
      * defaultKT represents the main thread
      * when program starts. This is the thread
      * responsible for running the main function.
@@ -92,30 +120,6 @@ private:
      * program and cannot be accessed by user.
      */
     static kThread defaultKT;
-
-    /*
-     * Pointer to the cluster this kThread
-     * belongs to. Each kThread only belongs to
-     * one Cluster and can pull uThreads from
-     * the ReadyQueue of that Cluster. kThreads
-     * can however push uThreads to ReadyQueue
-     * of other clusters upon uThread migration.
-     */
-    Cluster* localCluster;
-
-    /*
-     * Scheduler object
-     */
-    Scheduler* scheduler;
-
-    static __thread KTLocal* ktlocal;
-
-    KTVar* ktvar;
-
-    /*
-     * Pointer to the current running uThread
-     */
-    uThread* currentUT;
 
     /*
      * Pointer to the current kThread. This thread local variable
@@ -170,6 +174,8 @@ private:
      */
     static __thread funcvoid2_t postSuspendFunc;
 
+
+    static __thread KTLocal* ktlocal;
 
     void initialSynchronization();
 

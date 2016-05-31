@@ -33,6 +33,8 @@ typedef void (*funcvoid1_t)(ptr_t);
 typedef void (*funcvoid2_t)(ptr_t, ptr_t);
 typedef void (*funcvoid3_t)(ptr_t, ptr_t, ptr_t);
 
+static const int CACHELINE_SIZE = 64;
+
 #else
 #error unsupported architecture: only __x86_64__ supported at this time
 #endif
