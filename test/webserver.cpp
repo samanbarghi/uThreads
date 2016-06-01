@@ -238,7 +238,7 @@ int main(int argc, char* argv[]) {
         sconn->close();
     }
 
-    free(clusters);
-    free(kThreads);
+    for(Cluster* cluster : clusters) delete cluster;
+    for(kThread* kt: kThreads) delete kt;
     return 0;
 }
