@@ -164,7 +164,7 @@ protected:
 
     void internalRelease() {
         // try baton-passing, if yes: 'signal' releases lock
-        if fastpath(bq.signal(lock, owner)) return;
+        if (fastpath(bq.signal(lock, owner))) return;
         owner = nullptr;
         lock.unlock();
     }
