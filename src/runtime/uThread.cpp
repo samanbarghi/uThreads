@@ -72,7 +72,7 @@ uThread* uThread::create(size_t ss, bool joinable) {
         vaddr mem = uThread::createStack(ss);  //Allocating stack for the thread
         vaddr This = mem + ss - sizeof(uThread);
         ut = new (ptr_t(This)) uThread(mem, ss);
-        ut->utvar = new UTVar(ut);
+        ut->utvar = new UTVar();
     } else {
         totalNumberofUTs++;
     }
@@ -83,7 +83,7 @@ uThread* uThread::create(size_t ss, bool joinable) {
 
 uThread* uThread::createMainUT(Cluster& cluster) {
     uThread* ut = new uThread(0, 0);
-    ut->utvar = new UTVar(ut);
+    ut->utvar = new UTVar();
     ut->currentCluster = &cluster;
     return ut;
 }
