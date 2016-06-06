@@ -281,6 +281,7 @@ ssize_t Connection::write(const void *buf, size_t count){
 }
 
 int Connection::close(){
+    assert(pd != nullptr);
     ioh->close(*pd);
     return ::close(fd);
 }
