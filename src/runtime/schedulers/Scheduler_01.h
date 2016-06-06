@@ -22,7 +22,10 @@
 #include "../kThread.h"
 
 class IOHandler;
-
+/*
+ * Per uThread variable used by scheduler
+ */
+struct UTVar{};
 /*
  * Local kThread objects related to the
  * scheduler. will be instantiated by static __thread

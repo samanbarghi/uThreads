@@ -30,6 +30,7 @@ class Cluster;
 class uThreadCache;
 class Scheduler;
 class kThread;
+class UTVar;
 
 /**
  * @class uThread
@@ -93,9 +94,11 @@ protected:
     vaddr stackBottom;          //Bottom of the stack                        (8 bytes)
     size_t stackSize;           //Size of the stack of the current uThread   (8 bytes ?)
 
-    uint64_t uThreadID;                         //unique Id for this uThread (8 bytes)
+    UTVar*  utvar;
     // First 64 bytes (CACHELINE_SIZE)
+    uint64_t uThreadID;                         //unique Id for this uThread (8 bytes)
 private:
+
     /*
      * initUT is the initial uThread that is created when program starts.
      * initUT holds the context that runs the main thread. It does not have
@@ -158,7 +161,7 @@ protected:
     uThread(vaddr sb, size_t ss) :
             stackPointer(vaddr(this)), stackBottom(sb), stackSize(ss), state(
                     State::INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(
-                    nullptr), jState(JState::DETACHED), homekThread(nullptr) {
+                    nullptr), jState(JState::DETACHED), homekThread(nullptr), utvar(nullptr) {
         totalNumberofUTs++;
     }
 
