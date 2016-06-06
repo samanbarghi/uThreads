@@ -83,8 +83,8 @@ l_retry:
 struct UTVar{
     NIBlockingMPSCQueue<uThread>::Node*   node;
 
-    UTVar(uThread* ut){
-        node = new NIBlockingMPSCQueue<uThread>::Node(ut);
+    UTVar(){
+        node = new NIBlockingMPSCQueue<uThread>::Node(nullptr);
     }
 
 };
@@ -118,6 +118,7 @@ private:
         assert(ut != nullptr);
         auto node =  ut->utvar->node;
         assert(node != nullptr);
+        node->setState(ut);
         ut->utvar->node = nullptr;
 
         if(kt.scheduler->runQueue.push(*node))
@@ -128,6 +129,7 @@ private:
         assert(ut != nullptr);
         auto node =  ut->utvar->node;
         assert(node != nullptr);
+        node->setState(ut);
         ut->utvar->node = nullptr;
         if(runQueue.push(*node))
             sem.post();
@@ -150,7 +152,6 @@ private:
         }else{
             ut = node->getState();
             if(tmpNode != nullptr){
-                tmpNode->setState(ut);
                 ut->utvar->node = tmpNode;
             }else{
                 ut->utvar->node = new  NIBlockingMPSCQueue<uThread>::Node(ut);
@@ -171,7 +172,6 @@ private:
         }
         ut = node->getState();
         if(tmpNode != nullptr){
-            tmpNode->setState(ut);
             ut->utvar->node = tmpNode;
         }else{
             ut->utvar->node = new  NIBlockingMPSCQueue<uThread>::Node(ut);
