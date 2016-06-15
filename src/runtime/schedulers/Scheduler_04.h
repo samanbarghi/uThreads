@@ -166,10 +166,9 @@ private:
         uThread* ut = nullptr;
         auto node = runQueue.pop();
 
-        while(node == nullptr){
-           sem.wait();
-           node = runQueue.pop();
-        }
+        sem.wait();
+        node = runQueue.pop();
+
         ut = node->getState();
         if(tmpNode != nullptr){
             ut->utvar->node = tmpNode;

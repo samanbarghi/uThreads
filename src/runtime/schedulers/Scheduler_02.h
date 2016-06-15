@@ -88,10 +88,9 @@ private:
     uThread* blockingSwitch(kThread& kt){
         uThread* ut = runQueue.pop();
 
-        while(ut == nullptr){
-           sem.wait();
-           ut = runQueue.pop();
-        }
+        sem.wait();
+        ut = runQueue.pop();
+
         return ut;
     }
 
