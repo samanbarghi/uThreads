@@ -55,10 +55,10 @@ void IOHandler::block(PollData &pd, bool isRead){
 
     uThread* ut = *utp;
 
-    if(slowpath(ut == POLL_READY))    //This is unlikely since we just did a nonblocking read
+    if(ut == POLL_READY)
     {
         //No need for atomic, as for now only a single uThread can block on
-        //read for each fd
+        //read/write for each fd
         *utp = nullptr;  //consume the notification and return;
         return;
     }else if(ut > POLL_WAIT)
