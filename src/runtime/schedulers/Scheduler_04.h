@@ -43,7 +43,7 @@ private:
     }
 
 public:
-    NIBlockingMPSCQueue(): stub(nullptr), tail(&stub),head(&stub){}
+    NIBlockingMPSCQueue(): stub(nullptr), tail( (Node*) ((uintptr_t)&stub | 1 )),head(&stub){}
 
     //push a single element
     bool push(Node& elem){return insert(elem, elem);}
@@ -164,10 +164,9 @@ private:
 
     uThread* blockingSwitch(kThread& kt){
         uThread* ut = nullptr;
-        auto node = runQueue.pop();
 
         sem.wait();
-        node = runQueue.pop();
+        auto node = runQueue.pop();
 
         ut = node->getState();
         if(tmpNode != nullptr){
