@@ -86,10 +86,11 @@ private:
     }
 
     uThread* blockingSwitch(kThread& kt){
-        uThread* ut = runQueue.pop();
+        uThread* ut = nullptr;
 
         sem.wait();
         ut = runQueue.pop();
+        assert(ut != nullptr);
 
         return ut;
     }

@@ -312,7 +312,7 @@ private:
     }
 
 public:
-    BlockingMPSCQueue(): tail(&stub),head(&stub){}
+    BlockingMPSCQueue(): tail((Link<T>*) ( (uintptr_t)&stub | 1) ),head(&stub){}
 
     //push a single element
     bool push(T& elem){return insert(elem, elem);}
