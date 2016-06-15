@@ -13,6 +13,8 @@ class uThread;
 class NodeCache;
 class IOHandler;
 
+#define NPOLLBULKPUSH
+
 template<typename T>
 class NIBlockingMPSCQueue {
 public:
