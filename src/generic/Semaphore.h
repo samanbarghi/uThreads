@@ -21,17 +21,20 @@ public:
 
     ~semaphore()
     {
-        sem_destroy(&sem_);
+        while(sem_destroy(&sem_) != 0);
     }
 
     void wait()
     {
-        sem_wait(&sem_);
+        while(sem_wait(&sem_) != 0);
+    }
+    bool trywait(){
+        return (sem_trywait(&sem_) == 0);
     }
 
     void post()
     {
-        sem_post(&sem_);
+        while(sem_post(&sem_) != 0);
     }
 
 private:
