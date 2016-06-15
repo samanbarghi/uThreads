@@ -20,7 +20,7 @@ private:
 
     int _Open(int fd, PollData& pd);
     int  _Close(int fd);
-    void _Poll(int timeout);
+    ssize_t _Poll(int timeout);
 
 protected:
     IOPoller(IOHandler&);

@@ -83,7 +83,7 @@ private:
     // First 64 bytes (CACHELINE_SIZE)
 
     //Mutex that protects this  PollData
-    std::mutex mtx;
+    //std::mutex mtx;
 
     /**
      * Reset the variables. Used when PollData is recycled to be used
@@ -114,10 +114,7 @@ public:
     PollData(const PollData&) = delete;
     const PollData& operator=(const PollData&) = delete;
     ~PollData(){};
-
-
-
-};
+} __packed;
 
 /*
  * PollCache is used to cache PollData objects and avoid
@@ -181,7 +178,7 @@ protected:
     Cluster*    localCluster;       //Cluster that this Handler belongs to
 
     //Variables for bulk push to readyQueue
-    size_t bulkCounter;
+    size_t unblockCounter;
 
     kThread    ioKT;               //IO kThread
 
@@ -196,8 +193,7 @@ protected:
     };
 
     void block(PollData &pd, bool isRead);
-    void inline unblock(PollData &pd, bool isRead);
-    void inline unblockBulk(PollData &pd, bool isRead);
+    bool inline unblock(PollData &pd, bool isRead);
 
     static void postSwitchFunc(void* ut, void* args);
 
@@ -206,7 +202,6 @@ protected:
 
     IOHandler(Cluster&);
     void PollReady(PollData &pd, int flag);                   //When there is notification update pollData and unblock the related ut
-    void PollReadyBulk(PollData &pd, int flag, bool isLast);                   //When there is notification update pollData and unblock the related ut
    ~IOHandler(){};  //should be protected
 
 public:
@@ -214,7 +209,7 @@ public:
    void open(PollData &pd);
    int close(PollData &pd);
    void wait(PollData& pd, int flag);
-   void poll(int timeout, int flag);
+   ssize_t poll(int timeout, int flag);
    void reset(PollData &pd);
    //dealing with uThreads
 };

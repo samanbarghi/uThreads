@@ -24,7 +24,7 @@
 #include <iostream>
 #include <sstream>
 
-IOHandler::IOHandler(Cluster& cluster): bulkCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this), poller(*this){}
+IOHandler::IOHandler(Cluster& cluster): unblockCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this), poller(*this){}
 
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
@@ -121,79 +121,54 @@ int IOHandler::close(PollData &pd){
     return res;
 }
 
-void IOHandler::poll(int timeout, int flag){
-    poller._Poll(timeout);
+ssize_t IOHandler::poll(int timeout, int flag){
+    unblockCounter=0;
+    if( poller._Poll(timeout) < 0) return -1;
+#ifndef NPOLLBULKPUSH
+    if(unblockCounter >0){
+        //Bulk push everything to the related cluster ready Queue
+        Scheduler::bulkPush(*localCluster);
+    }
+#endif
+    return unblockCounter;
 }
 
 void IOHandler::reset(PollData& pd){
     pd.reset();
 }
 
-void IOHandler::unblock(PollData &pd, bool isRead){
+bool IOHandler::unblock(PollData &pd, bool isRead){
 
     //if it's closing no need to process
-    if(pd.closing) return;
+    if(pd.closing) return false;
 
     uThread** utp = isRead ? &pd.rut : &pd.wut;
     uThread* old;
 
     while(true){
         old = *utp;
-        if(old == POLL_READY) return;
-        //For now only if io is ready we call the unblock
-        uThread* utnew = nullptr;
-        if(old == nullptr || old == POLL_WAIT) utnew = POLL_READY;
-        if(__atomic_compare_exchange_n(utp, &old, utnew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
-            if(old > POLL_WAIT)
-                old->resume();
-
-            break;
-        }
-    }
-}
-
-void IOHandler::unblockBulk(PollData &pd, bool isRead){
-
-    //if it's closing no need to process
-    if(slowpath(pd.closing)) return;
-
-    uThread** utp = isRead ? &pd.rut : &pd.wut;
-    uThread* old;
-
-    while(true){
-        old = *utp;
-        if(old == POLL_READY) return;
+        if(old == POLL_READY) return false;
         //For now only if io is ready we call the unblock
         uThread* utnew = nullptr;
         if(old == nullptr || old == POLL_WAIT) utnew = POLL_READY;
         if(__atomic_compare_exchange_n(utp, &old, utnew, false, __ATOMIC_RELAXED, __ATOMIC_RELAXED)){
             if(old > POLL_WAIT){
-                //old->state = uThread::State::READY;
+#ifdef NPOLLBULKPUSH
+                old->resume();
+#else
                 Scheduler::prepareBulkPush(old);
-                bulkCounter++;
+#endif
+                return true;
             }
             break;
         }
     }
-    /* It is the responsibility of the caller function
-     * to call scheduleMany to schedule the piled-up
-     * uThreads on the related cluster.
-     */
+    return false;
 }
 
 void IOHandler::PollReady(PollData &pd, int flag){
-    if(flag & Flag::UT_IOREAD) unblock(pd, true);
-    if(flag & Flag::UT_IOWRITE) unblock(pd, false);
-}
-void IOHandler::PollReadyBulk(PollData &pd, int flag, bool isLast){
-    if(flag & Flag::UT_IOREAD) unblockBulk(pd, true);
-    if(flag & Flag::UT_IOWRITE) unblockBulk(pd, false);
-    //if this is the last item return by the poller
-    //Bulk push everything to the related cluster ready Queue
-    if(slowpath(isLast) && bulkCounter >0){
-        Scheduler::bulkPush(*localCluster);
-        bulkCounter=0;
-    }
+    if( (flag & Flag::UT_IOREAD) && unblock(pd, true)) unblockCounter++;
+    if( (flag & Flag::UT_IOWRITE) && unblock(pd, false)) unblockCounter++;
 }
 
 void IOHandler::pollerFunc(void* ioh){

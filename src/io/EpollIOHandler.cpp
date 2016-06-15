@@ -64,24 +64,24 @@ int IOPoller::_Close(int fd){
  * IOHandeler, it is important to make sure this does not add extra overhead.
  */
 
-void IOPoller::_Poll(int timeout){
-    if(slowpath(!epoll_fd))
-        return;
+ssize_t IOPoller::_Poll(int timeout){
+    assert(epoll_fd);
 
     int32_t n, mode;
     struct epoll_event *ev;
 
     //TODO: dedicated thread always blocks but others should not
     n = epoll_wait(epoll_fd, events, MAXEVENTS, timeout);
-    while( n < 0){
-       //TODO: Throw an exception
-        std::cout << "EPOLL ERROR:" << errno << std::endl;
-        n = epoll_wait(epoll_fd, events, MAXEVENTS, timeout);
+
+    if (n == -1) {
+        if (errno != EINTR) {
+            return (-1);
+        }
+        return (0);
     }
 
     //timeout
-    if(slowpath(n == 0 ))
-        return;
+    if(n == 0 ) return 0;
 
     for(int i = 0; i < n; i++) {
         ev = &events[i];
@@ -93,8 +93,9 @@ void IOPoller::_Poll(int timeout){
         if(ev->events & (EPOLLOUT|EPOLLHUP|EPOLLERR))
             mode |= IOHandler::UT_IOWRITE;
         if(fastpath(mode))
-            ioh.PollReadyBulk( *(PollData*) ev->data.ptr , mode, i==n-1);
+            ioh.PollReady( *(PollData*) ev->data.ptr , mode);
     }
+    return n;
 
 }
 
