@@ -10,8 +10,8 @@
 #include "../../generic/IntrusiveContainers.h"
 #include "../../generic/Semaphore.h"
 #include "../kThread.h"
+#include "io/IOHandler.h"
 
-class IOHandler;
 /*
  * Per uThread variable used by scheduler
  */
@@ -86,11 +86,26 @@ private:
     }
 
     uThread* blockingSwitch(kThread& kt){
-        uThread* ut = nullptr;
+
+        /* before blocking inform the poller thread of our
+         * intent.
+         */
+        bool posted = false;
+        if(kt.localCluster->iohandler){
+            kt.localCluster->iohandler->sem.post();
+            posted = true;
+        }
 
         sem.wait();
-        ut = runQueue.pop();
+        uThread* ut = runQueue.pop();
         assert(ut != nullptr);
+
+        /*
+         * if we signaled the poller thread, now it's the time
+         * to signal it again that we are unblocked.
+         */
+        if(posted)
+            while(!kt.localCluster->iohandler->sem.trywait());
 
         return ut;
     }

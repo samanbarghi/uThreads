@@ -173,5 +173,14 @@ void IOHandler::pollerFunc(void* ioh){
     IOHandler* cioh = (IOHandler*)ioh;
     while(true){
        cioh->poll(-1, 0);
+
+       /*
+        * This sequence of wait and post makes sure the poller thread
+        * only polls if  there is a blocked kThread, otherwise it waits
+        * on the semaphore. This works along with post and wait in
+        * the scheduler.
+        */
+       cioh->sem.wait();
+       cioh->sem.post();
    }
 }
