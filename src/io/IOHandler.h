@@ -24,6 +24,7 @@
 #include <mutex>
 #include "runtime/uThread.h"
 #include "runtime/kThread.h"
+#include "generic/Semaphore.h"
 
 #define POLL_READY  ((uThread*)1)
 #define POLL_WAIT   ((uThread*)2)
@@ -173,12 +174,15 @@ class IOHandler{
     friend class Cluster;
     friend class ReadyQueue;
     friend class IOPoller;
+    friend class Scheduler;
 
 protected:
     Cluster*    localCluster;       //Cluster that this Handler belongs to
 
     //Variables for bulk push to readyQueue
     size_t unblockCounter;
+
+    semaphore sem;
 
     kThread    ioKT;               //IO kThread
 

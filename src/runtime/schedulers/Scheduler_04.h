@@ -9,9 +9,10 @@
 #define SRC_RUNTIME_SCHEDULERS_SCHEDULER_02_H_
 #include "../../generic/Semaphore.h"
 #include "../kThread.h"
+#include "io/IOHandler.h"
+
 class uThread;
 class NodeCache;
-class IOHandler;
 
 #define NPOLLBULKPUSH
 
@@ -165,12 +166,24 @@ private:
     }
 
     uThread* blockingSwitch(kThread& kt){
-        uThread* ut = nullptr;
-
+        /* before blocking inform the poller thread of our
+         * intent.
+         */
+        bool posted = false;
+        if(kt.localCluster->iohandler){
+            kt.localCluster->iohandler->sem.post();
+            posted = true;
+        }
         sem.wait();
         auto node = runQueue.pop();
+        /*
+         * if we signaled the poller thread, now it's the time
+         * to signal it again that we are unblocked.
+         */
+        if(posted)
+            while(!kt.localCluster->iohandler->sem.trywait());
 
-        ut = node->getState();
+        uThread* ut = node->getState();
         if(tmpNode != nullptr){
             ut->utvar->node = tmpNode;
         }else{
