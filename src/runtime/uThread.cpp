@@ -21,6 +21,7 @@
 #include "BlockingSync.h"
 #include "uThreadCache.h"
 #include "schedulers/Scheduler.h"
+#include "io/IOHandler.h"
 #include <iostream> //TODO: remove this, add debug object
 #include <cassert>
 
@@ -32,9 +33,11 @@ std::atomic_ulong uThread::totalNumberofUTs(0);
 std::atomic_ulong uThread::uThreadMasterID(0);
 
 uThreadCache uThread::utCache;
+std::vector<Cluster*> Cluster::clusterList;
 Cluster Cluster::defaultCluster;
 uThread* uThread::initUT = nullptr;
 kThread kThread::defaultKT;
+IOHandler IOHandler::iohandler;
 
 /******************************************/
 void uThread::reset(){
