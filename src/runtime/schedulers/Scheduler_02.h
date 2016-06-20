@@ -12,7 +12,6 @@
 #include "../kThread.h"
 #include "io/IOHandler.h"
 
-#define NPOLLBULKPUSH
 /*
  * Per uThread variable used by scheduler
  */
@@ -91,13 +90,13 @@ private:
         /* before blocking inform the poller thread of our
          * intent.
          */
-        IOHandler::iohandler->sem.post();
+        IOHandler::iohandler.sem.post();
 
         sem.wait();
         uThread* ut = runQueue.pop();
         assert(ut != nullptr);
 
-        while(!IOHandler::iohandler->sem.trywait());
+        while(!IOHandler::iohandler.sem.trywait());
 
         return ut;
     }
