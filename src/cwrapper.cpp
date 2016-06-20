@@ -65,7 +65,6 @@ uint64_t    uThread_get_total_number_of_uThreads(){ return uThread::getTotalNumb
 /*************Connection**************/
 WConnection* connection_create(){return reinterpret_cast<WConnection*>( new Connection()); }
 WConnection* connection_create_with_fd(int fd){ return reinterpret_cast<WConnection*>( new Connection(fd)); }
-WConnection* connection_create_on_cluster(WCluster* cluster, int fd){return reinterpret_cast<WConnection*>(new Connection(*reinterpret_cast<Cluster*>(cluster), fd));}
 WConnection* connection_create_socket(int domain, int type, int protocol){ return reinterpret_cast<WConnection*>(new Connection(domain, type, protocol));}
 void         connection_destroy(WConnection* con){ delete reinterpret_cast<Connection*>(con); }
 
@@ -74,9 +73,6 @@ int          connection_accept(WConnection* acceptor, WConnection *conn, struct 
 }
 WConnection* connection_accept_connenction(WConnection* acceptor, struct sockaddr *addr, socklen_t *addrlen){
     return reinterpret_cast<WConnection*>(reinterpret_cast<Connection*>(acceptor)->accept(addr, addrlen));
-}
-WConnection* connection_accept_on_cluster(WConnection* acceptor, WCluster* cluster, struct sockaddr *addr, socklen_t *addrlen){
-    return reinterpret_cast<WConnection*>(reinterpret_cast<Connection*>(acceptor)->accept(*reinterpret_cast<Cluster*>(cluster), addr, addrlen));
 }
 
 int          connection_socket(WConnection* conn, int domain, int type, int protocol){

@@ -12,6 +12,7 @@
 #include "../kThread.h"
 #include "io/IOHandler.h"
 
+#define NPOLLBULKPUSH
 /*
  * Per uThread variable used by scheduler
  */
@@ -90,22 +91,13 @@ private:
         /* before blocking inform the poller thread of our
          * intent.
          */
-        bool posted = false;
-        if(kt.localCluster->iohandler){
-            kt.localCluster->iohandler->sem.post();
-            posted = true;
-        }
+        IOHandler::iohandler->sem.post();
 
         sem.wait();
         uThread* ut = runQueue.pop();
         assert(ut != nullptr);
 
-        /*
-         * if we signaled the poller thread, now it's the time
-         * to signal it again that we are unblocked.
-         */
-        if(posted)
-            while(!kt.localCluster->iohandler->sem.trywait());
+        while(!IOHandler::iohandler->sem.trywait());
 
         return ut;
     }
@@ -119,6 +111,12 @@ private:
         assert(ut->homekThread != nullptr);
         ut->homekThread->ktvar->bulkQueue.push(*ut);
         ut->homekThread->ktvar->bulkCounter++;
+    }
+
+    static void bulkPush(){
+        for (auto& x: Cluster::clusterList){
+            bulkPush(*x);
+        }
     }
 
     static void bulkPush(Cluster &cluster){

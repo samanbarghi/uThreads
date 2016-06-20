@@ -68,14 +68,14 @@ private:
     // First 64 bytes (CACHELINE_SIZE)
     Scheduler* scheduler;                               //(8 bytes)
 
-    IOHandler* iohandler;                               //(8 bytes)
-
     /*
      * Scheduler's defined cluster variables
      */
     ClusterVar* clustervar;                             //(8 bytes)
 
     // First 64 bytes (CACHELINE_SIZE)
+
+    static std::vector<Cluster*> clusterList;
 
     /*
      * last kThread assigned to a uThread,
@@ -158,8 +158,6 @@ public:
     size_t getNumberOfkThreads() const {
         return numberOfkThreads.load();
     }
-
-    IOHandler* getIOHandler();
 };
 
 #endif /* UTHREADS_CLUSTER_H_ */

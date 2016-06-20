@@ -177,7 +177,8 @@ class IOHandler{
     friend class Scheduler;
 
 protected:
-    Cluster*    localCluster;       //Cluster that this Handler belongs to
+
+    static IOHandler* iohandler;
 
     //Variables for bulk push to readyQueue
     size_t unblockCounter;
@@ -204,7 +205,7 @@ protected:
     //Polling IO Function
    static void pollerFunc(void*) __noreturn;
 
-    IOHandler(Cluster&);
+    IOHandler();
     void PollReady(PollData &pd, int flag);                   //When there is notification update pollData and unblock the related ut
    ~IOHandler(){};  //should be protected
 
