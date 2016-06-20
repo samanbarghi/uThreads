@@ -178,7 +178,7 @@ class IOHandler{
 
 protected:
 
-    static IOHandler* iohandler;
+    static IOHandler iohandler;
 
     //Variables for bulk push to readyQueue
     size_t unblockCounter;
