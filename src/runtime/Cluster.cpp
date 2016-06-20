@@ -23,8 +23,9 @@
 
 std::atomic_ushort Cluster::clusterMasterID(0);
 
-Cluster::Cluster() :
-        numberOfkThreads(0), iohandler(nullptr),
+std::vector<Cluster*> Cluster::clusterList;
+
+Cluster::Cluster() : numberOfkThreads(0),
         clustervar(new ClusterVar), ktLast(0) {
     //TODO: IO handler should be only applicable for IO Clusters
     //or be created with the first IO call
@@ -32,21 +33,17 @@ Cluster::Cluster() :
 }
 
 void Cluster::initialSynchronization() {
+    std::lock_guard<std::mutex> lg(Cluster::defaultCluster.mtx);
+
+    //add cluster to the Cluster vector
+    clusterList.emplace_back(this);
+
     if (clusterMasterID + 1 < UINTMAX_MAX)
         clusterID = clusterMasterID++;
     else
         exit(EXIT_FAILURE);
 }
 Cluster::~Cluster() {
-}
-
-IOHandler* Cluster::getIOHandler(){
-    if(slowpath(iohandler == nullptr)){
-        std::unique_lock<std::mutex> ul(mtx);
-        if(iohandler == nullptr)
-            iohandler = new IOHandler(*this);
-    }
-    return iohandler;
 }
 
 void Cluster::addNewkThread(kThread& kt){

@@ -229,7 +229,7 @@ int main(int argc, char* argv[]) {
         };
         sconn->listen(65535);
         for(size_t i=0; ; i= (i+1)%cluster_count){
-                Connection* cconn  = sconn->accept(*clusters[i],(struct sockaddr*)nullptr, nullptr);
+                Connection* cconn  = sconn->accept((struct sockaddr*)nullptr, nullptr);
                 uThread::create()->start(*clusters[i], (void*)handle_connection, (void*)cconn);
         }
         sconn->close();

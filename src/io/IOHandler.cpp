@@ -24,7 +24,9 @@
 #include <iostream>
 #include <sstream>
 
-IOHandler::IOHandler(Cluster& cluster): unblockCounter(0), localCluster(&cluster), ioKT(cluster, &IOHandler::pollerFunc, (ptr_t)this), poller(*this){}
+IOHandler* IOHandler::iohandler = new IOHandler();
+
+IOHandler::IOHandler(): unblockCounter(0), ioKT(Cluster::defaultCluster, &IOHandler::pollerFunc, (ptr_t)this), poller(*this){}
 
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
@@ -125,7 +127,7 @@ ssize_t IOHandler::poll(int timeout, int flag){
 #ifndef NPOLLBULKPUSH
     if(unblockCounter >0){
         //Bulk push everything to the related cluster ready Queue
-        Scheduler::bulkPush(*localCluster);
+        Scheduler::bulkPush();
     }
 #endif
     return unblockCounter;

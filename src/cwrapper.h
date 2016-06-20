@@ -111,8 +111,6 @@ typedef      struct WConnection WConnection;
 WConnection* connection_create();
 /// @copydoc Connection::Connection(int fd)
 WConnection* connection_create_with_fd(int fd);
-/// @copydoc Connection::Connection(Cluster& cluster, int fd)
-WConnection* connection_create_on_cluster(WCluster* cluster, int fd);
 /// @copydoc Connection::Connection(int domain, int type, int protocol)
 WConnection* connection_create_socket(int domain, int type, int protocol);
 /// @copydoc Connection::~Connection()
@@ -123,8 +121,7 @@ void         connection_destory(WConnection* c);
 int          connection_accept(WConnection* acceptor, WConnection *conn, struct sockaddr *addr, socklen_t *addrlen);
 /// @copydoc Connection::accept(struct sockaddr *addr, socklen_t *addrlen)
 WConnection* connection_accept_connenction(WConnection* acceptor, struct sockaddr *addr, socklen_t *addrlen);
-/// @copydoc Connection::accept(Cluster& cluster, struct sockaddr *addr, socklen_t *addrlen)
-WConnection* connection_accept_on_cluster(WConnection* acceptor, WCluster* cluster, struct sockaddr *addr, socklen_t *addrlen);
+
 
 /// @copydoc Connection::socket
 int          connection_socket(WConnection* conn, int domain, int type, int protocol);
