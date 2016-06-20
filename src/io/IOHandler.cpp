@@ -24,8 +24,6 @@
 #include <iostream>
 #include <sstream>
 
-IOHandler* IOHandler::iohandler = new IOHandler();
-
 IOHandler::IOHandler(): unblockCounter(0), ioKT(Cluster::defaultCluster, &IOHandler::pollerFunc, (ptr_t)this), poller(*this){}
 
 void IOHandler::open(PollData &pd){
