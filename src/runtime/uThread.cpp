@@ -34,10 +34,10 @@ std::atomic_ulong uThread::uThreadMasterID(0);
 
 uThreadCache uThread::utCache;
 std::vector<Cluster*> Cluster::clusterList;
+IOHandler IOHandler::iohandler;
 Cluster Cluster::defaultCluster;
 uThread* uThread::initUT = nullptr;
 kThread kThread::defaultKT;
-IOHandler IOHandler::iohandler;
 
 /******************************************/
 void uThread::reset(){

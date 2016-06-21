@@ -9,8 +9,11 @@
 #define SRC_RUNTIME_SCHEDULERS_SCHEDULER_02_H_
 #include "../../generic/IntrusiveContainers.h"
 #include "../../generic/Semaphore.h"
+#include "generic/EventFDSemaphore.h"
 #include "../kThread.h"
 #include "io/IOHandler.h"
+
+#define NPOLLBULKPUSH
 
 /*
  * Per uThread variable used by scheduler
@@ -50,19 +53,20 @@ class Scheduler {
 private:
 
     semaphore sem;
+    EventFDSemaphore esem;
     BlockingMPSCQueue<uThread> runQueue;
     /* ************** Scheduling wrappers *************/
     //Schedule a uThread on a cluster
     static void schedule(uThread* ut, kThread& kt){
         assert(ut != nullptr);
         if(kt.scheduler->runQueue.push(*ut))
-            kt.scheduler->sem.post();
+            kt.scheduler->esem.post();
     }
     //Put uThread in the ready queue to be picked up by related kThreads
     void schedule(uThread* ut) {
         assert(ut != nullptr);
         if(runQueue.push(*ut))
-            sem.post();
+            esem.post();
     }
 
     //Schedule many uThreads
@@ -71,10 +75,11 @@ private:
         uThread* first = queue.front();
         uThread* last = queue.removeAll();
         if(runQueue.push(*first, *last))
-            sem.post();
+            esem.post();
     }
 
     uThread* nonBlockingSwitch(kThread& kt){
+        IOHandler::iohandler.poll(0,0);
         uThread* ut = runQueue.pop();
         if(ut == nullptr){
             if ( kt.currentUT->state == uThread::State::YIELD)
@@ -86,17 +91,21 @@ private:
     }
 
     uThread* blockingSwitch(kThread& kt){
-
+        uThread* ut = nullptr;
         /* before blocking inform the poller thread of our
          * intent.
          */
-        IOHandler::iohandler.sem.post();
+/*        IOHandler::iohandler.sem.post();
 
         sem.wait();
         uThread* ut = runQueue.pop();
         assert(ut != nullptr);
 
-        while(!IOHandler::iohandler.sem.trywait());
+        while(!IOHandler::iohandler.sem.trywait()); */
+        //someone already signaled
+        esem.wait();
+        ut = runQueue.pop();
+        assert(ut != nullptr);
 
         return ut;
     }

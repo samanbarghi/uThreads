@@ -24,8 +24,27 @@
 #include <iostream>
 #include <sstream>
 
-IOHandler::IOHandler(): unblockCounter(0), ioKT(Cluster::defaultCluster, &IOHandler::pollerFunc, (ptr_t)this), poller(*this){}
+IOHandler::IOHandler(): unblockCounter(0), poller(*this){}
 
+void IOHandler::openLT(PollData &pd){
+    assert(pd.fd > 0);
+    bool expected = false;
+
+    //If another uThread called opened already, return
+    //TODO: use a mutex instead?
+    if(!__atomic_compare_exchange_n(&pd.opened, &expected, true, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+        return;
+
+    //Add the file descriptor to the poller struct
+    int res = poller._OpenLT(pd.fd, pd);
+    if(res != 0){
+        __atomic_exchange_n(&pd.opened, false, __ATOMIC_RELAXED);
+        std::cerr << "EPOLL_ERROR: " << errno << std::endl;
+        //TODO: this should be changed to an exception
+        exit(EXIT_FAILURE);
+    }
+    //TODO: handle epoll errors
+}
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
     bool expected = false;
@@ -169,20 +188,4 @@ bool IOHandler::unblock(PollData &pd, bool isRead){
 void IOHandler::PollReady(PollData &pd, int flag){
     if( (flag & Flag::UT_IOREAD) && unblock(pd, true)) unblockCounter++;
     if( (flag & Flag::UT_IOWRITE) && unblock(pd, false)) unblockCounter++;
-}
-
-void IOHandler::pollerFunc(void* ioh){
-    IOHandler* cioh = (IOHandler*)ioh;
-    while(true){
-       cioh->poll(-1, 0);
-
-       /*
-        * This sequence of wait and post makes sure the poller thread
-        * only polls if  there is a blocked kThread, otherwise it waits
-        * on the semaphore. This works along with post and wait in
-        * the scheduler.
-        */
-       cioh->sem.wait();
-       cioh->sem.post();
-   }
 }

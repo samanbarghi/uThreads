@@ -44,6 +44,17 @@ int IOPoller::_Open(int fd, PollData &pd){
     return res;
 }
 
+int IOPoller::_OpenLT(int fd, PollData &pd){
+    struct epoll_event ev;
+    ev.events = EPOLLIN|EPOLLRDHUP;
+    ev.data.ptr = (void*)&pd;
+
+    int res = epoll_ctl(epoll_fd,EPOLL_CTL_ADD, fd, &ev);
+    if(slowpath(res < 0))
+        std::cerr<< "EPOLL ADD ERROR: " << errno << std::endl;
+    return res;
+}
+
 int IOPoller::_Close(int fd){
    struct epoll_event ev;
    int res;

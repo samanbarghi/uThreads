@@ -19,6 +19,7 @@ private:
     IOHandler& ioh;
 
     int _Open(int fd, PollData& pd);
+    int _OpenLT(int fd, PollData& pd);
     int  _Close(int fd);
     ssize_t _Poll(int timeout);
 

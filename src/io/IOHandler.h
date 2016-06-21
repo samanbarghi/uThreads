@@ -30,6 +30,7 @@
 #define POLL_WAIT   ((uThread*)2)
 
 class Connection;
+class EventFDSemaphore;
 /**
  * @cond  HIDDEN_SYMBOLS
  * @class PollData
@@ -39,6 +40,7 @@ class Connection;
 class PollData : public Link<PollData>{
     friend IOHandler;
     friend Connection;
+    friend EventFDSemaphore;
 private:
 
     /*
@@ -175,7 +177,7 @@ class IOHandler{
     friend class ReadyQueue;
     friend class IOPoller;
     friend class Scheduler;
-
+    friend EventFDSemaphore;
 protected:
 
     static IOHandler iohandler;
@@ -184,8 +186,6 @@ protected:
     size_t unblockCounter;
 
     semaphore sem;
-
-    kThread    ioKT;               //IO kThread
 
     PollCache pollCache;
 
@@ -212,6 +212,7 @@ protected:
 public:
     /* public interfaces */
    void open(PollData &pd);
+   void openLT(PollData &pd);
    int close(PollData &pd);
    void wait(PollData& pd, int flag);
    ssize_t poll(int timeout, int flag);
