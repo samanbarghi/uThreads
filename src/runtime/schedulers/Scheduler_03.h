@@ -114,18 +114,16 @@ private:
         /* before blocking inform the poller thread of our
          * intent.
          */
-        bool posted = false;
-        if(kt.localCluster->iohandler){
-            kt.localCluster->iohandler->sem.post();
-            posted = true;
-        }
+        IOHandler::iohandler.sem.post();
+
         uThread* ut = __Pop();
+
         /*
-         * if we signaled the poller thread, now it's the time
+         * We signaled the poller thread, now it's the time
          * to signal it again that we are unblocked.
          */
-        if(posted)
-            while(!kt.localCluster->iohandler->sem.trywait());
+        while(!IOHandler::iohandler.sem.trywait());
+
         return ut;
     }
 

@@ -96,6 +96,10 @@ private:
         uThread* ut = runQueue.pop();
         assert(ut != nullptr);
 
+        /*
+         * We signaled the poller thread, now it's the time
+         * to signal it again that we are unblocked.
+         */
         while(!IOHandler::iohandler.sem.trywait());
 
         return ut;
