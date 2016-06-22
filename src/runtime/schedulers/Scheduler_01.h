@@ -350,11 +350,7 @@ private:
         /* before blocking inform the poller thread of our
          * intent.
          */
-        bool posted = false;
-        if(kt.localCluster->iohandler){
-            kt.localCluster->iohandler->sem.post();
-            posted = true;
-        }
+        IOHandler::iohandler.sem.post();
 
         ssize_t res = __popMany(kt.ktlocal->lrq);
 
@@ -362,8 +358,7 @@ private:
          * if we signaled the poller thread, now it's the time
          * to signal it again that we are unblocked.
          */
-        if(posted)
-            while(!kt.localCluster->iohandler->sem.trywait());
+        while(!IOHandler::iohandler.sem.trywait());
 
 
         if(res ==0) return nullptr;
