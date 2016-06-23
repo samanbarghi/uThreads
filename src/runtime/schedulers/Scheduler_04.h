@@ -145,6 +145,7 @@ private:
     }
 
     uThread* nonBlockingSwitch(kThread& kt){
+        IOHandler::iohandler.nonblockingPoll();
         uThread* ut = nullptr;
         auto node = runQueue.pop();
 

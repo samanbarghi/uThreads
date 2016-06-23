@@ -325,6 +325,7 @@ private:
     }
 
     uThread* nonBlockingSwitch(kThread& kt){
+        IOHandler::iohandler.nonblockingPoll();
         uThread* ut = nullptr; /*  First check the local queue */
         IntrusiveQueue<uThread>& ktrq = kt.ktlocal->lrq;
         if (!ktrq.empty()) {   //If not empty, grab a uThread and run it

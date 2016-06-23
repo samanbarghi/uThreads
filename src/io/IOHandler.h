@@ -183,6 +183,8 @@ protected:
     //Variables for bulk push to readyQueue
     size_t unblockCounter;
 
+    std::atomic_flag isPolling;
+
     semaphore sem;
 
     kThread    ioKT;               //IO kThread
@@ -215,6 +217,7 @@ public:
    int close(PollData &pd);
    void wait(PollData& pd, int flag);
    ssize_t poll(int timeout, int flag);
+   ssize_t nonblockingPoll();
    void reset(PollData &pd);
    //dealing with uThreads
 };

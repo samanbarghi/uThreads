@@ -75,6 +75,7 @@ private:
     }
 
     uThread* nonBlockingSwitch(kThread& kt){
+        IOHandler::iohandler.nonblockingPoll();
         uThread* ut = runQueue.pop();
         if(ut == nullptr){
             if ( kt.currentUT->state == uThread::State::YIELD)
