@@ -129,7 +129,7 @@ ssize_t IOHandler::poll(int timeout, int flag){
         //Bulk push everything to the related cluster ready Queue
         Scheduler::bulkPush();
     }
-#endif
+#endif //NPOLLBULKPUSH
     return unblockCounter;
 }
 
@@ -157,7 +157,7 @@ bool IOHandler::unblock(PollData &pd, bool isRead){
                 old->resume();
 #else
                 Scheduler::prepareBulkPush(old);
-#endif
+#endif //NPOLLBULKPUSH
                 return true;
             }
             break;
@@ -175,12 +175,18 @@ ssize_t IOHandler::nonblockingPoll(){
     ssize_t counter = -1;
 
 #ifndef NPOLLNONBLOCKING
+
+#ifdef NPOLLBULKPUSH
+        counter = poll(0,0);
+#else
     if(!isPolling.test_and_set(std::memory_order_acquire)){
         //do a nonblocking poll
         counter = poll(0,0);
         isPolling.clear(std::memory_order_release);
     }
-#endif
+#endif //NPOLLBULKPUSH
+
+#endif //NPOLLNONBLOCKING
     return counter;
 }
 
@@ -188,16 +194,16 @@ void IOHandler::pollerFunc(void* ioh){
     IOHandler* cioh = (IOHandler*)ioh;
     while(true){
 
-#ifndef NPOLLNONBLOCKING
+#if defined(NPOLLNONBLOCKING) || defined(NPOLLBULKPUSH)
+        //do a blocking poll
+        cioh->poll(-1, 0);
+#else
         if(!cioh->isPolling.test_and_set(std::memory_order_acquire)){
             //do a blocking poll
             cioh->poll(-1, 0);
             cioh->isPolling.clear(std::memory_order_release);
         }
-#else
-        //do a blocking poll
-        cioh->poll(-1, 0);
-#endif
+#endif //NPOLLNONBLOCKING || NPOLLBULKPUSH
 
        /*
         * This sequence of wait and post makes sure the poller thread
