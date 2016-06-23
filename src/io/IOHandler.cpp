@@ -24,7 +24,9 @@
 #include <iostream>
 #include <sstream>
 
-IOHandler::IOHandler(): unblockCounter(0), ioKT(Cluster::defaultCluster, &IOHandler::pollerFunc, (ptr_t)this), poller(*this){}
+IOHandler::IOHandler(): unblockCounter(0),
+                        ioKT(Cluster::defaultCluster, &IOHandler::pollerFunc, (ptr_t)this),
+                        poller(*this), isPolling(ATOMIC_FLAG_INIT){}
 
 void IOHandler::open(PollData &pd){
     assert(pd.fd > 0);
@@ -171,10 +173,33 @@ void IOHandler::PollReady(PollData &pd, int flag){
     if( (flag & Flag::UT_IOWRITE) && unblock(pd, false)) unblockCounter++;
 }
 
+ssize_t IOHandler::nonblockingPoll(){
+    ssize_t counter = -1;
+
+#ifndef NPOLLNONBLOCKING
+    if(!isPolling.test_and_set(std::memory_order_acquire)){
+        //do a nonblocking poll
+        counter = poll(0,0);
+        isPolling.clear(std::memory_order_release);
+    }
+#endif
+    return counter;
+}
+
 void IOHandler::pollerFunc(void* ioh){
     IOHandler* cioh = (IOHandler*)ioh;
     while(true){
-       cioh->poll(-1, 0);
+
+#ifndef NPOLLNONBLOCKING
+        if(!cioh->isPolling.test_and_set(std::memory_order_acquire)){
+            //do a blocking poll
+            cioh->poll(-1, 0);
+            cioh->isPolling.clear(std::memory_order_release);
+        }
+#else
+        //do a blocking poll
+        cioh->poll(-1, 0);
+#endif
 
        /*
         * This sequence of wait and post makes sure the poller thread

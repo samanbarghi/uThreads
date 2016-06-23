@@ -100,6 +100,7 @@ private:
     }
 
     uThread* nonBlockingSwitch(kThread& kt){
+        IOHandler::iohandler.nonblockingPoll();
         uThread* ut = __tryPop();
         if(ut == nullptr){
             if ( kt.currentUT->state == uThread::State::YIELD)
