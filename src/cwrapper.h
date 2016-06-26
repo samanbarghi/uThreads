@@ -114,7 +114,7 @@ WConnection* connection_create_with_fd(int fd);
 /// @copydoc Connection::Connection(int domain, int type, int protocol)
 WConnection* connection_create_socket(int domain, int type, int protocol);
 /// @copydoc Connection::~Connection()
-void         connection_destory(WConnection* c);
+void         connection_destroy(WConnection* c);
 
 
 /// @copydoc Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen)
