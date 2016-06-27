@@ -17,7 +17,7 @@
 #ifndef _IntrusiveContainer_h_
 #define _IntrusiveContainer_h_ 1
 
-#include "generic/basics.h"
+#include "basics.h"
 #include <assert.h>
 #include <atomic>
 

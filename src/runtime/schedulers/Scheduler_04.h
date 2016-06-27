@@ -9,7 +9,7 @@
 #define SRC_RUNTIME_SCHEDULERS_SCHEDULER_02_H_
 #include "../../generic/Semaphore.h"
 #include "../kThread.h"
-#include "io/IOHandler.h"
+#include "../../io/IOHandler.h"
 
 class uThread;
 class NodeCache;

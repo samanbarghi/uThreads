@@ -19,7 +19,7 @@
 #define UTHREADS_CACHE_H_
 
 #include <mutex>
-#include "generic/IntrusiveContainers.h"
+#include "../generic/IntrusiveContainers.h"
 #include "uThread.h"
 
 /**

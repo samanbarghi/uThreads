@@ -17,7 +17,7 @@
 
 #ifndef UTHREADS_INCLUDE_NETWORK_H_
 #define UTHREADS_INCLUDE_NETWORK_H_
-#include "io/IOHandler.h"
+#include "IOHandler.h"
 
 /**
  * @class Connection

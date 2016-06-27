@@ -18,7 +18,7 @@
 #ifndef UTHREADS_BLOKING_SYNC_H
 #define UTHREADS_BLOKING_SYNC_H
 
-#include "generic/IntrusiveContainers.h"
+#include "../generic/IntrusiveContainers.h"
 #include <cassert>
 #include <mutex>
 #include <iostream>

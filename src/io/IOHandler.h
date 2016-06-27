@@ -22,9 +22,9 @@
 #include <vector>
 #include <sys/socket.h>
 #include <mutex>
-#include "runtime/uThread.h"
-#include "runtime/kThread.h"
-#include "generic/Semaphore.h"
+#include "../runtime/uThread.h"
+#include "../runtime/kThread.h"
+#include "../generic/Semaphore.h"
 
 #define POLL_READY  ((uThread*)1)
 #define POLL_WAIT   ((uThread*)2)
