@@ -201,7 +201,11 @@ private:
         std::cerr << "BulkPush is not supported with this scheduler" << std::endl;
         exit(EXIT_FAILURE);
     }
+    static void bulkPush(){
+        std::cerr << "BulkPush is not supported with this scheduler" << std::endl;
+        exit(EXIT_FAILURE);
 
+    }
     static void bulkPush(Cluster &cluster){
         std::cerr << "BulkPush is not supported with this scheduler" << std::endl;
         exit(EXIT_FAILURE);
