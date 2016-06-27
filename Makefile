@@ -64,7 +64,7 @@ test: $(TESTOBJECTS)
 $(BIN_DIR)/%: $(TEST_DIR)/%.$(SRCEXT)
 	@mkdir -p $(BIN_DIR)
 	$(eval HTTP := $(if $(findstring webserver,$(<)), $(HTTP_PARSER), ))
-	$(CXX)  $(CXXFLAGS) $(INC) -L$(LIB_DIR) -o $@ $(HTTP) $< -luThreads
+	$(CXX) -O3 -g $(INC) -o $@ $(HTTP) $< -luThreads
 
 clean:
 	@echo " Cleaning..."
