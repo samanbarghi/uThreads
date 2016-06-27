@@ -175,17 +175,11 @@ ssize_t IOHandler::nonblockingPoll(){
     ssize_t counter = -1;
 
 #ifndef NPOLLNONBLOCKING
-
-#ifdef NPOLLBULKPUSH
-        counter = poll(0,0);
-#else
     if(!isPolling.test_and_set(std::memory_order_acquire)){
         //do a nonblocking poll
         counter = poll(0,0);
         isPolling.clear(std::memory_order_release);
     }
-#endif //NPOLLBULKPUSH
-
 #endif //NPOLLNONBLOCKING
     return counter;
 }
@@ -194,7 +188,7 @@ void IOHandler::pollerFunc(void* ioh){
     IOHandler* cioh = (IOHandler*)ioh;
     while(true){
 
-#if defined(NPOLLNONBLOCKING) || defined(NPOLLBULKPUSH)
+#if defined(NPOLLNONBLOCKING)
         //do a blocking poll
         cioh->poll(-1, 0);
 #else
@@ -203,7 +197,7 @@ void IOHandler::pollerFunc(void* ioh){
             cioh->poll(-1, 0);
             cioh->isPolling.clear(std::memory_order_release);
         }
-#endif //NPOLLNONBLOCKING || NPOLLBULKPUSH
+#endif //NPOLLNONBLOCKING
 
        /*
         * This sequence of wait and post makes sure the poller thread
