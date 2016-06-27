@@ -139,6 +139,12 @@ private:
         ut->homekThread->ktvar->bulkCounter++;
     }
 
+    static void bulkPush(){
+        for (auto& x: Cluster::clusterList){
+            bulkPush(*x);
+        }
+    }
+
     static void bulkPush(Cluster &cluster){
         for (auto& x: cluster.ktVector){
             if(x->ktvar->bulkCounter > 0)

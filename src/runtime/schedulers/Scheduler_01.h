@@ -385,6 +385,12 @@ private:
         ut->currentCluster->clustervar->bulkCounter++;
     }
 
+    static void bulkPush(){
+        for (auto& x: Cluster::clusterList){
+            bulkPush(*x);
+        }
+    }
+
     static void bulkPush(Cluster &cluster){
         cluster.scheduler->schedule(cluster.clustervar->bulkQueue, cluster.clustervar->bulkCounter);
         cluster.clustervar->bulkCounter =0;
