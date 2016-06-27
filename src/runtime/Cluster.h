@@ -22,8 +22,8 @@
 #include <atomic>
 #include <vector>
 #include <assert.h>
-#include "generic/basics.h"
-#include "generic/IntrusiveContainers.h"
+#include "../generic/basics.h"
+#include "../generic/IntrusiveContainers.h"
 
 class uThread;
 class IOHandler;

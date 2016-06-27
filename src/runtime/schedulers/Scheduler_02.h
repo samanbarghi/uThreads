@@ -10,7 +10,7 @@
 #include "../../generic/IntrusiveContainers.h"
 #include "../../generic/Semaphore.h"
 #include "../kThread.h"
-#include "io/IOHandler.h"
+#include "../../io/IOHandler.h"
 
 /*
  * Per uThread variable used by scheduler

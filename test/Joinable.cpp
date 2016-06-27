@@ -4,7 +4,7 @@
  *  Created on: Feb 6, 2016
  *      Author: saman
  */
-#include "uThreads.h"
+#include <uThreads/uThreads.h>
 #include <iostream>
 #include <sstream>
 

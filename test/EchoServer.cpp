@@ -6,7 +6,7 @@
  */
 
 
-#include "uThreads.h"
+#include <uThreads/uThreads.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <string.h>

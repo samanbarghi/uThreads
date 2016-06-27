@@ -20,7 +20,7 @@
 #include "../../generic/IntrusiveContainers.h"
 #include "../Cluster.h"
 #include "../kThread.h"
-#include "io/IOHandler.h"
+#include "../../io/IOHandler.h"
 
 /*
  * Per uThread variable used by scheduler

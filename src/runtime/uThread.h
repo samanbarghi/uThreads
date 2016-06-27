@@ -20,8 +20,8 @@
 
 #include <mutex>
 #include <atomic>
-#include "generic/basics.h"
-#include "generic/IntrusiveContainers.h"
+#include "../generic/basics.h"
+#include "../generic/IntrusiveContainers.h"
 #include "Stack.h"
 #include "BlockingSync.h"
 

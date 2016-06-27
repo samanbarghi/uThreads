@@ -22,9 +22,9 @@
 #include <mutex>
 #include <condition_variable>
 #include <functional>
-#include "generic/basics.h"
-#include "runtime/Cluster.h"
-#include "runtime/uThread.h"
+#include "../generic/basics.h"
+#include "Cluster.h"
+#include "uThread.h"
 
 class KTLocal;
 class KTVar;
