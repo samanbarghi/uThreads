@@ -392,8 +392,10 @@ private:
     }
 
     static void bulkPush(Cluster &cluster){
-        cluster.scheduler->schedule(cluster.clustervar->bulkQueue, cluster.clustervar->bulkCounter);
-        cluster.clustervar->bulkCounter =0;
+        if(cluster.clustervar->bulkCounter > 0){
+            cluster.scheduler->schedule(cluster.clustervar->bulkQueue, cluster.clustervar->bulkCounter);
+            cluster.clustervar->bulkCounter =0;
+        }
     }
 };
 #endif /* SRC_RUNTIME_SCHEDULER_01_H_ */
