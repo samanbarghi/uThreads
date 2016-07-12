@@ -15,16 +15,16 @@
 /*
  * Per uThread variable used by scheduler
  */
-struct UTVar{};
+struct UTVar{
+    uint64_t pollCounter;
+    UTVar():pollCounter(0){};
+};
 
 /*
  * Local kThread objects related to the
  * scheduler. will be instantiated by static __thread
  */
-struct KTLocal{
-    uint64_t pollCounter;
-    KTLocal():pollCounter(0){};
-};
+struct KTLocal{};
 /*
  * Per kThread variable related to the scheduler
  */
@@ -78,9 +78,11 @@ private:
     }
 
     uThread* nonBlockingSwitch(kThread& kt){
-        if(kt.ktlocal->pollCounter == IOHandler::iohandler.pollCounter)
+        uThread* cut = uThread::currentUThread();
+        if(cut->utvar->pollCounter == IOHandler::iohandler.pollCounter){
             IOHandler::iohandler.nonblockingPoll();
-        kt.ktlocal->pollCounter = IOHandler::iohandler.pollCounter;
+        }
+        cut->utvar->pollCounter = IOHandler::iohandler.pollCounter;
 
         uThread* ut = runQueue.pop();
         if(ut == nullptr){
