@@ -21,7 +21,10 @@ struct UTVar{};
  * Local kThread objects related to the
  * scheduler. will be instantiated by static __thread
  */
-struct KTLocal{};
+struct KTLocal{
+    uint64_t pollCounter;
+    KTLocal():pollCounter(0){};
+};
 /*
  * Per kThread variable related to the scheduler
  */
@@ -75,7 +78,10 @@ private:
     }
 
     uThread* nonBlockingSwitch(kThread& kt){
-        IOHandler::iohandler.nonblockingPoll();
+        if(kt.ktlocal->pollCounter == IOHandler::iohandler.pollCounter)
+            IOHandler::iohandler.nonblockingPoll();
+        kt.ktlocal->pollCounter = IOHandler::iohandler.pollCounter;
+
         uThread* ut = runQueue.pop();
         if(ut == nullptr){
             if ( kt.currentUT->state == uThread::State::YIELD)

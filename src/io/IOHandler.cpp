@@ -180,6 +180,7 @@ ssize_t IOHandler::nonblockingPoll(){
     if(!isPolling.test_and_set(std::memory_order_acquire)){
         //do a nonblocking poll
         counter = poll(0,0);
+        ++pollCounter;
         isPolling.clear(std::memory_order_release);
     }
 #endif //NPOLLNONBLOCKING
@@ -197,6 +198,7 @@ void IOHandler::pollerFunc(void* ioh){
         if(!cioh->isPolling.test_and_set(std::memory_order_acquire)){
             //do a blocking poll
             cioh->poll(-1, 0);
+            ++cioh->pollCounter;
             cioh->isPolling.clear(std::memory_order_release);
         }
 #endif //NPOLLNONBLOCKING

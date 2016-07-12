@@ -185,6 +185,8 @@ protected:
 
     std::atomic_flag isPolling;
 
+    volatile uint64_t pollCounter;
+
     semaphore sem;
 
     kThread    ioKT;               //IO kThread
