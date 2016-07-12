@@ -188,11 +188,15 @@ ssize_t IOHandler::nonblockingPoll(){
 
 void IOHandler::pollerFunc(void* ioh){
     IOHandler* cioh = (IOHandler*)ioh;
+    bool timedOut = false;
     while(true){
 
 #if defined(NPOLLNONBLOCKING)
-        //do a blocking poll
-        cioh->poll(-1, 0);
+        if(timedOut)
+            cioh->poll(0,0);
+        else
+            //do a blocking poll
+            cioh->poll(-1, 0);
 #else
         if(!cioh->isPolling.test_and_set(std::memory_order_acquire)){
             //do a blocking poll
@@ -207,7 +211,7 @@ void IOHandler::pollerFunc(void* ioh){
         * on the semaphore. This works along with post and wait in
         * the scheduler.
         */
-       cioh->sem.wait();
-       cioh->sem.post();
+       if( !(timedOut = cioh->sem.timedwait(5)) )
+           cioh->sem.post();
    }
 }
