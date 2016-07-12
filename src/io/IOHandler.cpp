@@ -192,11 +192,8 @@ void IOHandler::pollerFunc(void* ioh){
     while(true){
 
 #if defined(NPOLLNONBLOCKING)
-        if(timedOut)
-            cioh->poll(0,0);
-        else
-            //do a blocking poll
-            cioh->poll(-1, 0);
+        //do a blocking poll
+        cioh->poll(-1, 0);
 #else
         if(!cioh->isPolling.test_and_set(std::memory_order_acquire)){
             //do a blocking poll
