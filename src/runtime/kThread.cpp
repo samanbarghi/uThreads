@@ -83,12 +83,6 @@ void kThread::initialSynchronization() {
     if(totalNumberofKTs + 1 > UINTMAX_MAX)
         exit(EXIT_FAILURE);
     totalNumberofKTs++;
-    /*
-     * Increase the number of kThreads in the cluster.
-     * Since this is always < totalNumberofKTs will
-     * not overflow.
-     */
-    localCluster->numberOfkThreads++;
 
     //set kernel thread variables
     threadID = (this == &defaultKT) ? std::this_thread::get_id() : this->threadSelf.get_id();
