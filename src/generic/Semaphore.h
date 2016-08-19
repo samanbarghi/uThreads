@@ -7,9 +7,12 @@
 
 #ifndef SEMAPHORE_H_
 #define SEMAPHORE_H_
-#include <semaphore.h>
 
 #if defined(__linux__)
+
+#include <semaphore.h>
+#include <time.h>
+#include <errno.h>
 
 class semaphore
 {
@@ -32,10 +35,19 @@ public:
         return (sem_trywait(&sem_) == 0);
     }
 
+    bool timedwait(struct timespec &ts){
+        while(sem_timedwait(&sem_, &ts) == -1){
+            if(errno == ETIMEDOUT)
+                return true;
+        }
+        return false;
+    }
+
     void post()
     {
         while(sem_post(&sem_) != 0);
     }
+
 
 private:
     sem_t               sem_;
