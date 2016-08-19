@@ -23,6 +23,7 @@
 #include <sys/types.h>
 #include <iostream>
 #include <sstream>
+#include <time.h>
 
 IOHandler::IOHandler(): unblockCounter(0),
                         ioKT(Cluster::defaultCluster, &IOHandler::pollerFunc, (ptr_t)this),
@@ -186,7 +187,30 @@ ssize_t IOHandler::nonblockingPoll(){
 
 void IOHandler::pollerFunc(void* ioh){
     IOHandler* cioh = (IOHandler*)ioh;
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    const long BILLION = 1000000000;
+    const long MS = 1000000;
+
     while(true){
+
+       /*
+        * This sequence of wait and post makes sure the poller thread
+        * only polls if  there is a blocked kThread, otherwise it waits
+        * on the semaphore. This works along with post and wait in
+        * the scheduler.
+        */
+
+       if( !(cioh->sem.timedwait(ts)) )
+            cioh->sem.post();
+       else{
+            ts.tv_nsec = ts.tv_nsec + MS;
+            if slowpath(ts.tv_nsec >= BILLION) {
+                ts.tv_sec = ts.tv_sec + 1;
+                ts.tv_nsec = ts.tv_nsec - BILLION;
+            }
+       }
 
 #if defined(NPOLLNONBLOCKING)
         //do a blocking poll
@@ -199,13 +223,5 @@ void IOHandler::pollerFunc(void* ioh){
         }
 #endif //NPOLLNONBLOCKING
 
-       /*
-        * This sequence of wait and post makes sure the poller thread
-        * only polls if  there is a blocked kThread, otherwise it waits
-        * on the semaphore. This works along with post and wait in
-        * the scheduler.
-        */
-       cioh->sem.wait();
-       cioh->sem.post();
-   }
+  }
 }
