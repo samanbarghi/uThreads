@@ -15,7 +15,7 @@ LIB_NAME=libuThreads.so
 LIB_FULL_NAME=$(LIB_NAME).$(VERSION)
 
 CXX		 := g++ -std=c++1y
-CXXFLAGS := -O3 -g -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread -DNDEBUG
+CXXFLAGS := -O3 -g -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread -DNDEBUG -DNPOLLNONBLOCKING
 
 SRCEXT 	:= cpp
 ASMEXT 	:= S
@@ -82,3 +82,4 @@ install: all
 	ln -s $(DEST_DIR)/lib/$(LIB_FULL_NAME) $(DEST_DIR)/lib/$(LIB_NAME)
 	cp $(INCLUDE_DIR)/*	$(DEST_DIR)/include/uThreads
 	cd $(SRC_DIR); find . -type f -name '*.h' | cpio -updm $(DEST_DIR)/include/uThreads
+	ldconfig
