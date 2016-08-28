@@ -55,6 +55,7 @@ kThread::kThread(Cluster& cluster, std::function<void(ptr_t)> func, ptr_t args) 
         scheduler(Scheduler::getScheduler(cluster)),
         threadSelf(&kThread::runWithFunc, this, func,
                 args) {
+    threadSelf.detach();
     initialSynchronization();
 }
 
