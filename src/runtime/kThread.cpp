@@ -63,6 +63,7 @@ kThread::kThread(Cluster& cluster) :
         localCluster(&cluster), ktvar(new KTVar()),
         scheduler(Scheduler::getScheduler(cluster)),
         threadSelf(&kThread::run, this) {
+    threadSelf.detach();
     /*
      * Add the kThread to the list of kThreads in the Cluster
      */
