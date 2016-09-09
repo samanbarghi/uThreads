@@ -40,7 +40,7 @@ public:
 
     int join(){
         assert(ut != nullptr);
-        cout << ut->getID() << endl;
+        //cout << ut->getID() << endl;
         ut->join();
         return this->result;
     }
