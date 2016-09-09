@@ -114,17 +114,21 @@ private:
    /* Variables for Joinable uThread */
    Mutex   joinMtx;
    ConditionVariable joinWait;
+   Semaphore    afterJoin;
 
    /*
     * Wait or Signal the other thread
     */
-   inline void waitOrSignal(){
+   inline void waitOrSignal(bool caller){
        joinMtx.acquire();
        if(joinWait.empty()){
            joinWait.wait(joinMtx);
            joinMtx.release();
+           if(caller) afterJoin.V();
+
        }else{
            joinWait.signal(joinMtx);
+           if(!caller) afterJoin.P();
        }
    }
 
