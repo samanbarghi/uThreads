@@ -137,7 +137,7 @@ void uThread::resume() {
 }
 void uThread::terminate(){
     if(currentUThread()->jState != JState::DETACHED){
-        currentUThread()->waitOrSignal();
+        currentUThread()->waitOrSignal(false);
     }
      currentUThread()->state = State::TERMINATED;
     /*
@@ -154,7 +154,7 @@ bool uThread::join(){
      */
     if(jState != JState::JOINABLE) return false;
     jState = JState::JOINING;
-    waitOrSignal();
+    waitOrSignal(true);
     return true;
 }
 
