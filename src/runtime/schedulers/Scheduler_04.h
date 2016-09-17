@@ -12,7 +12,6 @@
 #include "../../io/IOHandler.h"
 
 class uThread;
-class NodeCache;
 
 #define NPOLLBULKPUSH
 
@@ -21,7 +20,6 @@ class NIBlockingMPSCQueue {
 public:
     class Node {
         friend class NIBlockingMPSCQueue<T>;
-        friend class NodeCache;
         Node* volatile next;
         T*  state;
       public:
@@ -31,7 +29,7 @@ public:
 
     } __packed;
 private:
-    Node*               head;
+    Node* volatile      head;
     Node                stub;
 
     std::atomic<Node*>  tail;
