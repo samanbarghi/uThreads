@@ -58,8 +58,8 @@ l_retry:
         Node* next = head->next;
         if(next){
             head = next;
-            head->state = next->state;
-            return head;
+            hhead->state = next->state;
+            return hhead;
         }
         Node* ttail = tail;
         if(((uintptr_t)ttail & 1) != 0) return nullptr;
