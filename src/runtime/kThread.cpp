@@ -178,8 +178,11 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args = nullptr) {
             break;
         case uThread::State::YIELD:
             ck->currentUT->resume();
-            ;
             break;
+        case uThread::State::SWITCHSTAGE:
+        	ck->currentUT->_switchStage();
+
+        	break;
         case uThread::State::MIGRATE:
             ck->currentUT->resume();
             break;
@@ -189,6 +192,7 @@ void kThread::postSwitchFunc(uThread* nextuThread, void* args = nullptr) {
             postSuspendFunc((void*)ck->currentUT, args);
             break;
         }
+
         default:
             break;
         }

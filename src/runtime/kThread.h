@@ -188,6 +188,7 @@ public:
      */
     kThread(Cluster&);
     virtual ~kThread();
+    void* 	userVar = nullptr;
 
     ///kThread cannot be copied or assigned.
     kThread(const kThread&) = delete;

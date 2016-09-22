@@ -15,7 +15,7 @@ LIB_NAME=libuThreads.so
 LIB_FULL_NAME=$(LIB_NAME).$(VERSION)
 
 CXX		 := g++ -std=c++1y
-CXXFLAGS := -O3 -g -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread -DNDEBUG -DNPOLLNONBLOCKING
+CXXFLAGS := -O3 -g -m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -pthread -DNPOLLNONBLOCKING -DSCHEDULERNO=5
 
 SRCEXT 	:= cpp
 ASMEXT 	:= S
@@ -64,7 +64,7 @@ test: $(TESTOBJECTS)
 $(BIN_DIR)/%: $(TEST_DIR)/%.$(SRCEXT)
 	@mkdir -p $(BIN_DIR)
 	$(eval HTTP := $(if $(findstring webserver,$(<)), $(HTTP_PARSER), ))
-	$(CXX) -O3 -g -o $@ $(HTTP) $< -luThreads
+	$(CXX) -O3 -g -o $@ $(HTTP) $< -luThreads 
 
 clean:
 	@echo " Cleaning..."

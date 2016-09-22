@@ -45,6 +45,7 @@ void uThread::reset(){
     currentCluster = nullptr;
     state = State::INITIALIZED;
     jState = JState::DETACHED;
+    lastHome = nullptr;
 }
 
 void uThread::invoke(funcvoid3_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3) {
@@ -108,12 +109,38 @@ void uThread::yield() {
     ck->switchContext();
 }
 
+void uThread::switchStage(){
+	kThread* ck = kThread::currentkThread();
+    assert(ck != nullptr);
+    assert(ck->currentUT != nullptr);
+    ck->currentUT->state = State::SWITCHSTAGE;
+    ck->switchContext();
+
+}
+void uThread::_switchStage(){
+#ifdef STAGEDEXEC
+	kThread* ck = kThread::currentkThread();
+    assert(ck != nullptr);
+    assert(ck->currentUT != nullptr);
+    if(ck->ktlocal->currentStage < ck->ktlocal->NUMBEROFSTAGES){
+		ck->ktlocal->stages[ck->ktlocal->currentStage].push(*(ck->currentUT));
+	}else{
+		ck->currentUT->resume();
+	}
+#endif
+}
+
 void uThread::migrate(Cluster* cluster) {
     assert(cluster != nullptr);
     if (slowpath(kThread::currentkThread()->localCluster == cluster)) //no need to migrate
         return;
     currentUThread()->currentCluster = cluster;
-    currentUThread()->homekThread = cluster->assignkThread();
+    kThread* tmp = currentUThread()->lastHome;
+    currentUThread()->lastHome = currentUThread()->homekThread;
+    if(tmp != nullptr)
+    	currentUThread()->homekThread = tmp;
+    else
+    	currentUThread()->homekThread = cluster->assignkThread();
     currentUThread()->state = State::MIGRATE;
     kThread::currentkThread()->switchContext();
 }
@@ -127,7 +154,7 @@ void uThread::suspend(funcvoid2_t func, void* args) {
 void uThread::resume() {
     if (fastpath(
             state == State::WAITING || state == State::INITIALIZED
-                    || state == State::MIGRATE || state == State::YIELD)) {
+                    || state == State::MIGRATE || state == State::YIELD || state == State::SWITCHSTAGE)) {
 
         state = State::READY;
         if(homekThread == nullptr)

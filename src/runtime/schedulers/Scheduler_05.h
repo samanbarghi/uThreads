@@ -11,6 +11,9 @@
 #include "../../generic/Semaphore.h"
 #include "../kThread.h"
 #include "../../io/IOHandler.h"
+#include <vector>
+
+#define STAGEDEXEC
 
 /*
  * Per uThread variable used by scheduler
@@ -21,7 +24,16 @@ struct UTVar{};
  * Local kThread objects related to the
  * scheduler. will be instantiated by static __thread
  */
-struct KTLocal{};
+struct KTLocal{
+	static const size_t NUMBEROFSTAGES 	= 1;
+    static const size_t UTHREADPERSTAGE 	= 30;
+
+    size_t totalProcessed 			= 0;	//should always be less than UTHREDPERSTAGE
+    size_t currentStage 			= 0;	//0 means pop from the ReadyQueue, >0 means pop from one of the local arrays
+
+    IntrusiveStack<uThread> stages[NUMBEROFSTAGES];
+
+};
 /*
  * Per kThread variable related to the scheduler
  */
@@ -36,6 +48,7 @@ struct KTVar{
      * For now it is only used in IOHandler
      */
     IntrusiveQueue<uThread> bulkQueue;
+
 
     KTVar(): bulkCounter(0){};
 };
@@ -74,14 +87,58 @@ private:
             sem.post();
     }
 
+    uThread* stageSwitch(kThread& kt){
+    		uThread* ut = nullptr;
+
+//        	std::cout << "Processing Stage: " << kt.ktlocal->currentStage  << ", processed:" << kt.ktlocal->totalProcessed << "Empty Stack:" << (kt.ktlocal->stages[kt.ktlocal->currentStage-1].empty()) << std::endl;
+
+        	while(kt.ktlocal->currentStage != 0){
+				if(!(kt.ktlocal->stages[kt.ktlocal->currentStage-1].empty())){
+//					std::cout << "Processed" << std::endl;
+					ut = kt.ktlocal->stages[kt.ktlocal->currentStage-1].pop();
+					--kt.ktlocal->totalProcessed;
+					assert(ut != nullptr);
+					return ut;
+				}else
+					kt.ktlocal->currentStage = (++kt.ktlocal->currentStage)%kt.ktlocal->NUMBEROFSTAGES;
+        	}
+        	//reset totalProcessed since currentStage = 0
+			kt.ktlocal->totalProcessed = 0;
+        	return ut;
+    }
+
     uThread* nonBlockingSwitch(kThread& kt){
         IOHandler::iohandler.nonblockingPoll();
-        uThread* ut = runQueue.pop();
-        if(ut == nullptr){
-            if ( kt.currentUT->state == uThread::State::YIELD)
-                return nullptr; //if the running uThread yielded, continue running it
-            ut = kt.mainUT;
+        uThread* ut = nullptr;
+
+        while( ut == nullptr){
+        	if(kt.ktlocal->currentStage > 0 ) ut = stageSwitch(kt);
+        	else {
+        		ut = runQueue.pop();
+
+				if(ut == nullptr){
+//					std::cout << "Here" << std::endl;
+					//if ( kt.currentUT->state == uThread::State::YIELD)
+					//	return nullptr; //if the running uThread yielded, continue running it
+					if(!kt.ktlocal->stages[0].empty()){
+//						std::cout << "And Here" << std::endl;
+						kt.ktlocal->currentStage++;
+					}else
+						ut = kt.mainUT;
+				}else{
+					if(++kt.ktlocal->totalProcessed >= kt.ktlocal->UTHREADPERSTAGE )
+					{
+						if(kt.ktlocal->stages[0].empty())
+							kt.ktlocal->totalProcessed = 0;
+						else
+							kt.ktlocal->currentStage++;
+					}
+				}
+        	}
+//        	std::cout << "Stage: " << kt.ktlocal->currentStage  << ", processed:" << kt.ktlocal->totalProcessed << std::endl;
         }
+
+
         assert(ut != nullptr);
         return ut;
     }
@@ -95,8 +152,8 @@ private:
         uThread* ut = nullptr;
 
         while(ut == nullptr){
-        	sem.wait();
-        	ut = runQueue.pop();
+			sem.wait();
+			ut = runQueue.pop();
         }
         assert(ut != nullptr);
 

@@ -97,6 +97,8 @@ protected:
     UTVar*  utvar;
     // First 64 bytes (CACHELINE_SIZE)
     uint64_t uThreadID;                         //unique Id for this uThread (8 bytes)
+
+    kThread* lastHome;							//last kThread assigned to this uThread
 private:
 
     /*
@@ -140,6 +142,7 @@ protected:
         READY,                                      //uThread is in a ReadyQueue
         RUNNING,                                           //<uThread is Running
         YIELD,                                             //uThread is Yielding
+		SWITCHSTAGE,
         MIGRATE,                                  //Migrating to another cluster
         WAITING,                                            //uThread is Blocked
         TERMINATED                    //uThread is done and should be terminated
@@ -165,7 +168,7 @@ protected:
     uThread(vaddr sb, size_t ss) :
             stackPointer(vaddr(this)), stackBottom(sb), stackSize(ss), state(
                     State::INITIALIZED), uThreadID(uThreadMasterID++), currentCluster(
-                    nullptr), jState(JState::DETACHED), homekThread(nullptr), utvar(nullptr) {
+                    nullptr), jState(JState::DETACHED), homekThread(nullptr), lastHome(nullptr), utvar(nullptr) {
         totalNumberofUTs++;
     }
 
@@ -302,6 +305,9 @@ public:
      * @brief Detach a joinable thread.
      */
     void detach();
+
+    static void switchStage();
+    void _switchStage();
 
 
     /**

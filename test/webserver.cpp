@@ -11,7 +11,7 @@
 #include "include/http_parser.h"
 
 #define PORT 8800
-#define INPUT_BUFFER_LENGTH 4*1024 //4 KB
+#define INPUT_BUFFER_LENGTH 256 //4 KB
 #define MAXIMUM_THREADS_PER_CLUSTER 8
 
 /* HTTP responses*/
@@ -44,6 +44,8 @@ Connection* sconn; //Server socket
 
 http_parser_settings settings;
 
+    int failedOpen = 0;
+    int failedScan = 0;
 typedef struct {
     Connection* conn;
     bool keep_alive;
@@ -119,10 +121,20 @@ int on_header_field(http_parser* parser, const char* header, long unsigned int s
 }
 
 void intHandler(int sig){
+	printf("Failed open: %d, Failed Scan: %d", failedOpen, failedScan);
     sconn->close();
 	exit(1);
 }
 
+static int callback(void *NotUsed, int argc, char **argv, char **azColName){
+	int i;
+	char name[255];
+	for(i=0; i<argc; i++){
+		//printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+		sprintf(name, "%s", argv[i]);
+	}
+	return 0;
+}
 /* handle connection after accept */
 void *handle_connection(void *arg){
 
@@ -148,7 +160,10 @@ void *handle_connection(void *arg){
 
     do{
 
-        bzero(buffer, INPUT_BUFFER_LENGTH);
+#ifndef STAGEDEXEC
+    	uThread::yield();
+#endif
+    	bzero(buffer, INPUT_BUFFER_LENGTH);
         //Since we only accept GET, just try to read INPUT_BUFFER_LENGTH
         nrecvd = read_http_request(*cconn, buffer, INPUT_BUFFER_LENGTH -1);
         if(nrecvd<0){
@@ -163,12 +178,31 @@ void *handle_connection(void *arg){
 
         nparsed = http_parser_execute(parser, &settings, buffer, nrecvd);
         if(nrecvd == 0) break;
+#ifdef STAGEDEXEC
+        uThread::switchStage();
+#endif
         if(nparsed != nrecvd){
             LOG_ERROR("Erorr in Parsing the request!");
         }else{
             //We only handle GET Requests
             if(parser->method == 1)
             {
+            	//uThread::migrate(&writeCluster);
+
+				/*FILE *fp;
+				char buff[255];
+				fp = fopen("/tmp/test.txt", "r");
+				if(fp != nullptr){
+					if(fscanf(fp, "%s", buff))
+						buff[254] = 0;
+					else
+						++failedScan;
+				}else
+					++failedOpen;
+				fclose(fp);
+				*/
+
+				//uThread::migrate(&Cluster::getDefaultCluster());
                 //Write the response
                 writen(*cconn, RESPONSE_OK, sizeof(RESPONSE_OK));
             }else{
@@ -176,6 +210,9 @@ void *handle_connection(void *arg){
                 writen(*cconn, RESPONSE_METHOD_NOT_ALLOWED, sizeof(RESPONSE_METHOD_NOT_ALLOWED));
             }
         }
+#ifdef STAGEDEXEC
+    	uThread::switchStage();
+#endif
         //reset data
         my_data->url_length =0;
     }while(my_data->keep_alive);
@@ -210,7 +247,6 @@ int main(int argc, char* argv[]) {
     kThread* kThreads[thread_count];
     for(size_t i=1; i < thread_count-1; i++)
         kThreads[i] = new kThread(*clusters[i%cluster_count]);
-
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
