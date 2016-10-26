@@ -77,9 +77,9 @@ install: all
 	mkdir -p $(DEST_DIR)/include/uThreads
 	[ -d $(DEST_DIR)/lib ] || mkdir -p $(DEST_DIR)/lib
 	rm -rf $(DEST_DIR)/lib/$(LIB_NAME)*
-	cp lib/$(LIB_FULL_NAME) $(DEST_DIR)/lib
+	install lib/$(LIB_FULL_NAME) $(DEST_DIR)/lib
 	ln -s $(DEST_DIR)/lib/$(LIB_FULL_NAME) $(DEST_DIR)/lib/$(LIB_NAME).$(VERSION_MAJOR)
 	ln -s $(DEST_DIR)/lib/$(LIB_FULL_NAME) $(DEST_DIR)/lib/$(LIB_NAME)
-	cp $(INCLUDE_DIR)/*	$(DEST_DIR)/include/uThreads
+	install $(INCLUDE_DIR)/*	$(DEST_DIR)/include/uThreads
 	cd $(SRC_DIR); find . -type f -name '*.h' | cpio -updm $(DEST_DIR)/include/uThreads
 	ldconfig
