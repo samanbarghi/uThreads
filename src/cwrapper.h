@@ -32,6 +32,7 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
+#include <stdbool.h>
 
 /**************Cluster*************/
 /** @name Cluster
