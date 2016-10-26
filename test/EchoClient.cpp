@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
     struct sockaddr_in server;
     server.sin_addr.s_addr = inet_addr("127.0.0.1");
     server.sin_family = AF_INET;
-    server.sin_port = htons( 8888 );
+    server.sin_port = htons(clientPort );
 
     std::string msg;
     std::vector<char>  reply(1025);
