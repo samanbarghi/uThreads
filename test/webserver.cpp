@@ -60,6 +60,7 @@ ssize_t read_http_request(Connection& cconn, void *vptr, size_t n){
 	ptr = (char *)vptr;
 	nleft = n;
 
+	uThread::yield(); //yield before read
     while(nleft >0){
     	if( (nread = cconn.recv( ptr, INPUT_BUFFER_LENGTH - 1, 0)) <0){
     		if (errno == EINTR)
