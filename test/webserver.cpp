@@ -200,17 +200,11 @@ int main(int argc, char* argv[]) {
     struct sockaddr_in serv_addr; //structure containing an internet address
     bzero((char*) &serv_addr, sizeof(serv_addr));
 
-    //Create clusters
-    Cluster* clusters[cluster_count];
-    //Start with adding kThreads to the default Cluster
-    clusters[0] = &Cluster::getDefaultCluster();
-    for(size_t i=1; i < cluster_count; i++)
-        clusters[i] = new Cluster();
-
+    Cluster& defaultCluster = Cluster::getDefaultCluster();
     //Create kThreads, default thread is already started --> i=1
-    kThread* kThreads[thread_count];
+    kThread* kThreads[thread_count-1];
     for(size_t i=1; i < thread_count-1; i++)
-        kThreads[i] = new kThread(*clusters[i%cluster_count]);
+        kThreads[i] = new kThread(defaultCluster);
 
 
     serv_addr.sin_family = AF_INET;
@@ -229,9 +223,9 @@ int main(int argc, char* argv[]) {
             exit(1);
         };
         sconn->listen(65535);
-        for(size_t i=0; ; i= (i+1)%cluster_count){
+        while(true){
                 Connection* cconn  = sconn->accept((struct sockaddr*)nullptr, nullptr);
-                uThread::create()->start(*clusters[i], (void*)handle_connection, (void*)cconn);
+                uThread::create()->start(defaultCluster, (void*)handle_connection, (void*)cconn);
         }
         sconn->close();
     }catch(std::system_error& error){
@@ -239,7 +233,6 @@ int main(int argc, char* argv[]) {
         sconn->close();
     }
 
-    for(Cluster* cluster : clusters) delete cluster;
-    for(kThread* kt: kThreads) delete kt;
+   for(kThread* kt: kThreads) delete kt;
     return 0;
 }
