@@ -1,4 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classMutex.html" title="A user&#45;level Mutex. " alt="" coords="5,5,64,32"/>
-<area shape="rect" id="node2" href="$classOwnerLock.html" title="an Owner Mutex where owner can recursively acquire the Mutex " alt="" coords="112,5,200,32"/>
-</map>

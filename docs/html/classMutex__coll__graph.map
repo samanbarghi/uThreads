@@ -1,6 +1,0 @@
-<map id="Mutex" name="Mutex">
-<area shape="rect" id="node2" href="$classBlockingQueue.html" title="A queue used to keep track of blocked uThreads. " alt="" coords="65,112,175,139"/>
-<area shape="rect" id="node3" href="$classuThread.html" title="user&#45;level threads (fiber) " alt="" coords="200,112,269,139"/>
-<area shape="rect" id="node5" href="$classuThreadCache.html" title="Data structure to cache uThreads. " alt="" coords="181,13,288,40"/>
-<area shape="rect" id="node6" href="$classCluster.html" title="Scheduler and Cluster of kThreads. " alt="" coords="312,13,376,40"/>
-</map>
