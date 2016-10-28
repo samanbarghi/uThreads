@@ -10,7 +10,7 @@ uThreads is a concurrent library based on cooperative scheduling of user-level t
 
 Cooperative user-level threads, on the other hand, provide light weight context switches and omit the additional overhead of preemption and kernel scheduling. Most Operating Systems only support a 1:1 thread mapping (1 user-level thread to 1 kernel-level thread), where multiple kernel threads execute at the same time to utilize multiple cores and provide parallelism. e.g., Linux supports only 1:1 thread mapping. There is also N:1 thread mapping, where multiple user-level threads can be mapped to a single kernel-level thread. The kernel thread is not aware of the user-level threads existence. For example, [Facebook's folly::fiber](https://github.com/facebook/folly/tree/master/folly/fibers), [libmill](http://libmill.org/), and [libtask](https://swtch.com/libtask/) use N:1 mapping. Having N:1 mapping means if the application blocks at the kernel level, all user-level threads are blocked and application cannot move forward. One way to address this is to only block on user level, hence, blocking user-level threads. This setting works very well with IO bound applications, however, if a user thread requires using a CPU for a while, it can block other user threads and the task is better to be executed asynchronously on another core to prevent this from happening. In order to avoid this problem, user threads can be mapped to multiple kernel-level threads. Thus, creating the third scenario with M:N or hybrid mapping. e.g., [go](https://golang.org/) and [uC++](https://plg.uwaterloo.ca/usystem/uC++.html) use M:N mapping.
 
-uThreads supports M:N mapping of *uThreads* (user-level threads) over *kThreads* (kernel-level threads) with cooperative scheduling. kThreads can be grouped together by *Clusters*, and uThreads can migrate among Clusters. Figure 1 shows the structure of an application implemented using uThreads using a single ReadyQueue Scheduler. You can find the documentation here [http://samanbarghi.github.io/uThreads](http://samanbarghi.github.io/uThreads) 
+uThreads supports M:N mapping of *uThreads* (user-level threads) over *kThreads* (kernel-level threads) with cooperative scheduling. kThreads can be grouped together by *Clusters*, and uThreads can migrate among Clusters. Figure 1 shows the structure of an application implemented using uThreads using a single ReadyQueue Scheduler. You can find the documentation here [http://samanbarghi.github.io/uThreads](http://samanbarghi.github.io/uThreads/latest) 
 
 ![Figure 1: uThreads Architecture](architecture.png)
 
@@ -33,7 +33,7 @@ Currently, everything is installed under /usr/local/lib and /usr/local/include/u
 * Include "uThreads/uThreads.h" in your source file.
 * Link your program with uThreads library (-luThreads) at compile time.
 
-There are sample applications under _test_ directory, to compile them issue `make test`, and you can find the binaries under _bin_ directory. Refer to the [documentation](http://samanbarghi.github.io/uThreads/annotated.html) for more information.
+There are sample applications under _test_ directory, to compile them issue `make test`, and you can find the binaries under _bin_ directory. Refer to the [documentation](http://samanbarghi.github.io/uThreads/latest) for more information.
 
 ## uThreads structure ##
 
