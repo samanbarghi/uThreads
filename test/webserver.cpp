@@ -11,7 +11,7 @@
 #include "include/http_parser.h"
 
 #define PORT 8800
-#define INPUT_BUFFER_LENGTH 4*1024 //4 KB
+#define INPUT_BUFFER_LENGTH 1024 //4 KB
 #define MAXIMUM_THREADS_PER_CLUSTER 8
 
 /* HTTP responses*/
@@ -39,6 +39,7 @@
 #define LOG(msg) puts(msg);
 #define LOGF(fmt, params...) printf(fmt "\n", params);
 #define LOG_ERROR(msg) perror(msg);
+#define	HTTP_REQUEST_HEADER_END	"\n\r\n\r"
 
 Connection* sconn; //Server socket
 
@@ -72,8 +73,8 @@ ssize_t read_http_request(Connection& cconn, void *vptr, size_t n){
 
     	nleft -= nread;
 
-    	//If we are at the end of the http_request
-    	if(ptr[nread-1] == '\n' && ptr[nread-2] == '\r' && ptr[nread-3] == '\n' && ptr[nread-4] == '\r')
+    	//Check whether we are at the end of the http_request
+    	if(memcmp((const void*)&ptr[nread-4], HTTP_REQUEST_HEADER_END, 4))
     		break;
 
     	ptr += nread;
@@ -144,12 +145,12 @@ void *handle_connection(void *arg){
 
 
     char buffer[INPUT_BUFFER_LENGTH]; //read buffer from the socket
+    bzero(buffer, INPUT_BUFFER_LENGTH);
+
     size_t nparsed;
     ssize_t nrecvd; //return value for for the read() and write() calls.
 
     do{
-
-        bzero(buffer, INPUT_BUFFER_LENGTH);
         //Since we only accept GET, just try to read INPUT_BUFFER_LENGTH
         nrecvd = read_http_request(*cconn, buffer, INPUT_BUFFER_LENGTH -1);
         if(nrecvd<0){
