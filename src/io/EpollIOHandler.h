@@ -13,7 +13,7 @@
 class IOPoller {
     friend IOHandler;
 private:
-    static const int MAXEVENTS  = 128;//Maximum number of events this thread can monitor, TODO: do we want this to be modified?
+    static const int MAXEVENTS  = 32;//Maximum number of events this thread can monitor, TODO: do we want this to be modified?
     int epoll_fd = -1;
     struct epoll_event* events;
     IOHandler& ioh;
