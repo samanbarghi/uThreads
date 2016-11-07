@@ -1,4 +1,4 @@
-uThreads: Concurrent User Threads in C++(and C)
+uThreads: Concurrent User Threads in C++(and C)             {#mainpage}
 ============
 
 ## What are uThreads? ##
@@ -13,6 +13,26 @@ Cooperative user-level threads, on the other hand, provide light weight context 
 uThreads supports M:N mapping of *uThreads* (user-level threads) over *kThreads* (kernel-level threads) with cooperative scheduling. kThreads can be grouped together by *Clusters*, and uThreads can migrate among Clusters. Figure 1 shows the structure of an application implemented using uThreads using a single ReadyQueue Scheduler. You can find the documentation here [http://samanbarghi.github.io/uThreads](http://samanbarghi.github.io/uThreads/latest)
 
 ![Figure 1: uThreads Architecture](http://samanbarghi.github.io/uThreads/v0.3.0/architecture.png)
+
+## Webserver throughput results
+
+Here are a comparsion of a simple webserver throughput with
+[fasthttp](https://github.com/valyala/fasthttp),
+[cppsp](http://xa.us.to/cppsp/index.cppsp), and nodejs. Experiments are executed
+on my laptop (i7 quad core). Note that not much optimization is applied to any
+of the applications, thus there might me some space to squeeze more throughput
+out of these applications. You can check the source code of
+the sample webserver under the test directory. All servers return a "hello
+world" response, and the client (in this case wrk) throws a huge number of
+concurrent and pipelined requests at each server. This experiment shows the
+overhead of each framework since the response is kept very small (similar to
+[TechEmpower "plaintext"
+benchmark"](https://www.techempower.com/benchmarks/#section=data-r12&hw=peak&test=plaintext)).
+
+![HTTP throughput with a single
+thread](http://samanbarghi.github.io/uThreads/v0.3.0/webserver.1.png)
+![HTTP throughput with 2 threads](http://samanbarghi.github.io/uThreads/v0.3.0/webserver.2.png)
+![HTTP throughput with 3 threads](http://samanbarghi.github.io/uThreads/v0.3.0/webserver.3.png)
 
 ## Dependencies ##
 Currently uThreads only supports Linux on x86_64 platforms. It also depends on the following:
@@ -56,7 +76,8 @@ Currently, uThreads only supports **fixed** stack sizes for performance purposes
 As Explained earlier, each *Cluster* has a local *Scheduler* which is responsible for distributing *uThreads* among the *kThreads* whithin that *Cluster*. Currently, there are 4 different schedulers, which will be explained below. These schedulers do not support any work sharing or work stealing at the moment and based on the type of the Scheduler either uThreads are assigned in a round robin manner, or kThreads ask the Scheduler for more uThreads when they run out of work. The type of the scheduler is determined at compile time by defining **SCHEDULERNO** and pass the related scheduler number. The default scheduler is Scheduler #2, with local instrusive Multiple-Producer-Single-Consumer Queues per kThread (since it provides better performance and scalability).
 
 * __Global ReadyQueue per *Cluster*__:  The first scheduler is implemented using an unbounded intrusive ReadyQueue per Cluster, and C++ synchronization primitievs (std::mutex and std::condition\_variable) are used to orchestrate kThreads to access the ReadyQueue. To avoid the high overhead of mutex and condition\_variable (in linux: pthread\_mutex and pthread\_cond) under contention, a local queue is added to each kThread, so everytime a kThread runs out of work, it simply removes many uThreads, based on the size of the ReadyQueue and the number of kThreads in that Cluster, instead of one. The local queue is only accessed by a single kThread and thus does not require mutual exclusion. The following shows the design:
-![Figure 2: Scheduler with a global ReadyQueue](http://samanbarghi.github.io/uThreads/v0.3.0/readyQueue.png)
+![Figure 2: Scheduler with a global
+ReadyQueue](http://samanbarghi.github.io/uThreads/v0.3.0/readyQueue.png)
 
 To measure the performance of different schedulers, the follwing experiment is designed:
 * The experiment starts with 2 Clusters.
@@ -68,23 +89,28 @@ To measure the performance of different schedulers, the follwing experiment is d
 
 Figure 3 shows result for the first Scheduler:
 
-![Figure 3: Result for Scheduler #1](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-1.png)
+![Figure 3: Result for Scheduler
+#1](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-1.png)
 Based on the results, this approach is not very scalable past 4 kThreads per Cluster.
 
 * __Local RunQueue per kThread using mutex and cv__: To provide better scalability, we can remove the global ReadyQueue to avoid the contention for mutex. Thus, the next scheduler (#3, numbering does not follow the story line here), provides local unbounded intrusive queue per kThread and removes the global ReadyQueue. The scheduler assign the uThreads to kThreads in a round-robin manner. Each queue is protected with a std::mutex and std::condition\_variable, and the following figure shows the design:
-![Figure 4: Scheduler with local queue per kThread](http://samanbarghi.github.io/uThreads/v0.3.0/runQueue.png)
+![Figure 4: Scheduler with local queue per
+kThread](http://samanbarghi.github.io/uThreads/v0.3.0/runQueue.png)
 
 and here are the results:
-![Figure 5: Result for Scheduler #3](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-2.png)
+![Figure 5: Result for Scheduler
+#3](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-2.png)
 Removing the bottleneck and getting rid of the central lock seems to provide better scalability, but can we do better?
 
 * __Local RunQueue per kThread using lock-free non-intrusive Multiple-Producer-Single-Consumer Queue__: Since the only consumer for each local queue, is a single kThread, to reduce the synchronization overhead it is better to use a lock-free Multiple-Producer-Single-Consumer queue. The queue that is being used is a non-intrusive queue (you can find an implementation in the source code or [here](https://github.com/samanbarghi/MPSCQ)). With this queue, there is no contention on the consumer side and producers rarely block the consumer, and to push to the queue producers using an atomic exchange. Here is the result for using Scheduler #4:
 
-![Figure 6: Result for Scheduler #4](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-3.png)
+![Figure 6: Result for Scheduler
+#4](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-3.png)
 
 * __Local RunQueue per kThread using lock-free intrusive Multiple-Producer-Single-Consumer Queue__: To avoid managing an extra state, the above queue is modified to be intrusive, and here are the results for using the intrusive queue:
 
-![Figure 7: Result for Scheduler #2](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-4.png)
+![Figure 7: Result for Scheduler
+#2](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-4.png)
 
 
 For lower number of threads the global queue seems to do better, but as the number increases the intrusive lock-free MPSC Queue is a better Choice. The default scheduler for uThreads is Scheduler #2 (intrusive MPSCQ), which can be changed at compile time by definding **SCHEDULERNO** and set it to the appropriate scheduler.
@@ -190,3 +216,7 @@ There is also a simple [webserver](https://github.com/samanbarghi/uThreads/blob/
 
 For performance comparisons, memached code has been updated to use uThreads instead of event loops (except the thread that accepts connections), where tasks are assigned to uThreads instead of using the underlying event library. The code can be found [here](https://github.com/samanbarghi/memcached/tree/uThreads-1.4.27).
 
+Acknowledgement
+----------------------------------
+This work made possible through invaluable helps and advices I received from [Martin
+Karsten](https://cs.uwaterloo.ca/~mkarsten/).
