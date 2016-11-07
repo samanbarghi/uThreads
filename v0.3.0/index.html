@@ -1,3 +1,4 @@
+<!-- HTML header for doxygen 1.8.11-->
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -15,9 +16,11 @@
   $(document).ready(function() { init_search(); });
 </script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="customdoxygen.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<a href="https://github.com/samanbarghi/uThreads"><img style="z-index:10000; position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
 <div id="titlearea">
 <table cellspacing="0" cellpadding="0">
  <tbody>
@@ -26,6 +29,7 @@
    <div id="projectname">uThreads
    &#160;<span id="projectnumber">0.3.0</span>
    </div>
+   <div id="projectbrief">uThreads: Concurrent User Threads in C++</div>
   </td>
  </tr>
  </tbody>
@@ -80,14 +84,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h2>What are uThreads?</h2>
-<p>uThreads is a concurrent library based on cooperative scheduling of user-level threads(fibers) implemented in C++. User-level threads are lightweight threads that execute on top of kernel threads to provide concurrency as well as parallelism. Kernel threads are necessary to utilize processors, but they come with the following drawbacks:</p>
+<p><a href="https://github.com/samanbarghi/uThreads">uThreads</a> is a concurrent library based on cooperative scheduling of user-level threads(fibers) implemented in C++. User-level threads are lightweight threads that execute on top of kernel threads to provide concurrency as well as parallelism. Kernel threads are necessary to utilize processors, but they come with the following drawbacks:</p>
 <ul>
 <li>Each suspend/resume operation involves a kernel context switch</li>
 <li>Thread preemption causes additional overhead</li>
 <li>Thread priorities and advanced scheduling causes additional overhead</li>
 </ul>
 <p>Cooperative user-level threads, on the other hand, provide light weight context switches and omit the additional overhead of preemption and kernel scheduling. Most Operating Systems only support a 1:1 thread mapping (1 user-level thread to 1 kernel-level thread), where multiple kernel threads execute at the same time to utilize multiple cores and provide parallelism. e.g., Linux supports only 1:1 thread mapping. There is also N:1 thread mapping, where multiple user-level threads can be mapped to a single kernel-level thread. The kernel thread is not aware of the user-level threads existence. For example, <a href="https://github.com/facebook/folly/tree/master/folly/fibers">Facebook's folly::fiber</a>, <a href="http://libmill.org/">libmill</a>, and <a href="https://swtch.com/libtask/">libtask</a> use N:1 mapping. Having N:1 mapping means if the application blocks at the kernel level, all user-level threads are blocked and application cannot move forward. One way to address this is to only block on user level, hence, blocking user-level threads. This setting works very well with IO bound applications, however, if a user thread requires using a CPU for a while, it can block other user threads and the task is better to be executed asynchronously on another core to prevent this from happening. In order to avoid this problem, user threads can be mapped to multiple kernel-level threads. Thus, creating the third scenario with M:N or hybrid mapping. e.g., <a href="https://golang.org/">go</a> and <a href="https://plg.uwaterloo.ca/usystem/uC++.html">uC++</a> use M:N mapping.</p>
-<p>uThreads supports M:N mapping of <em>uThreads</em> (user-level threads) over <em>kThreads</em> (kernel-level threads) with cooperative scheduling. kThreads can be grouped together by <em>Clusters</em>, and uThreads can migrate among Clusters. Figure 1 shows the structure of an application implemented using uThreads using a single ReadyQueue Scheduler. You can find the documentation here <a href="http://samanbarghi.github.io/uThreads/latest">http://samanbarghi.github.io/uThreads</a></p>
+<p>uThreads supports M:N mapping of <em>uThreads</em> (user-level threads) over <em>kThreads</em> (kernel-level threads) with cooperative scheduling. kThreads can be grouped together by <em>Clusters</em>, and uThreads can migrate among Clusters. Figure 1 shows the structure of an application implemented using uThreads using a single ReadyQueue Scheduler. You can find the documentation here <a href="http://samanbarghi.github.io/uThreads/latest">http://samanbarghi.github.io/uThreads</a>.</p>
 <div class="image">
 <img src="architecture.png" alt="architecture.png"/>
 <div class="caption">
@@ -189,11 +193,14 @@ Figure 7: Result for Scheduler #2</div></div>
 <p>There is also a simple <a href="https://github.com/samanbarghi/uThreads/blob/master/test/webserver.cpp">webserver</a> to test uThreads functionality.</p>
 <p>For performance comparisons, memached code has been updated to use uThreads instead of event loops (except the thread that accepts connections), where tasks are assigned to uThreads instead of using the underlying event library. The code can be found <a href="https://github.com/samanbarghi/memcached/tree/uThreads-1.4.27">here</a>.</p>
 <h2>Acknowledgement </h2>
-<p>This work made possible through invaluable helps and advices I received from <a href="https://cs.uwaterloo.ca/~mkarsten/">Martin Karsten</a>. </p>
+<p>This work made possible through invaluable helps and advices I received from <a href="https://cs.uwaterloo.ca/~mkarsten/">Martin Karsten</a>.</p>
+<h2>Source code </h2>
+<p>You can find the source code here: <a href="https://github.com/samanbarghi/uThreads">https://github.com/samanbarghi/uThreads</a>. </p>
 </div></div><!-- contents -->
+<!-- HTML footer for doxygen 1.8.11-->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Nov 7 2016 02:54:33 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Nov 7 2016 12:02:27 for uThreads by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.11
 </small></address>
