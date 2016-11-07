@@ -1,4 +1,4 @@
-uThreads: Concurrent User Threads in C++(and C)             {#mainpage}
+uThreads: Concurrent User Threads in C++(and C)
 ============
 
 ## What are uThreads? ##
@@ -89,28 +89,23 @@ To measure the performance of different schedulers, the follwing experiment is d
 
 Figure 3 shows result for the first Scheduler:
 
-![Figure 3: Result for Scheduler
-#1](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-1.png)
+![Figure 3: Result for Scheduler #1](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-1.png)
 Based on the results, this approach is not very scalable past 4 kThreads per Cluster.
 
 * __Local RunQueue per kThread using mutex and cv__: To provide better scalability, we can remove the global ReadyQueue to avoid the contention for mutex. Thus, the next scheduler (#3, numbering does not follow the story line here), provides local unbounded intrusive queue per kThread and removes the global ReadyQueue. The scheduler assign the uThreads to kThreads in a round-robin manner. Each queue is protected with a std::mutex and std::condition\_variable, and the following figure shows the design:
-![Figure 4: Scheduler with local queue per
-kThread](http://samanbarghi.github.io/uThreads/v0.3.0/runQueue.png)
+![Figure 4: Scheduler with local queue per kThread](http://samanbarghi.github.io/uThreads/v0.3.0/runQueue.png)
 
 and here are the results:
-![Figure 5: Result for Scheduler
-#3](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-2.png)
+![Figure 5: Result for Scheduler #3](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-2.png)
 Removing the bottleneck and getting rid of the central lock seems to provide better scalability, but can we do better?
 
 * __Local RunQueue per kThread using lock-free non-intrusive Multiple-Producer-Single-Consumer Queue__: Since the only consumer for each local queue, is a single kThread, to reduce the synchronization overhead it is better to use a lock-free Multiple-Producer-Single-Consumer queue. The queue that is being used is a non-intrusive queue (you can find an implementation in the source code or [here](https://github.com/samanbarghi/MPSCQ)). With this queue, there is no contention on the consumer side and producers rarely block the consumer, and to push to the queue producers using an atomic exchange. Here is the result for using Scheduler #4:
 
-![Figure 6: Result for Scheduler
-#4](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-3.png)
+![Figure 6: Result for Scheduler #4](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-3.png)
 
 * __Local RunQueue per kThread using lock-free intrusive Multiple-Producer-Single-Consumer Queue__: To avoid managing an extra state, the above queue is modified to be intrusive, and here are the results for using the intrusive queue:
 
-![Figure 7: Result for Scheduler
-#2](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-4.png)
+![Figure 7: Result for Scheduler #2](http://samanbarghi.github.io/uThreads/v0.3.0/migration-results-4.png)
 
 
 For lower number of threads the global queue seems to do better, but as the number increases the intrusive lock-free MPSC Queue is a better Choice. The default scheduler for uThreads is Scheduler #2 (intrusive MPSCQ), which can be changed at compile time by definding **SCHEDULERNO** and set it to the appropriate scheduler.
