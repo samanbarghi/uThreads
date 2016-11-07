@@ -22,7 +22,12 @@ Here are a comparsion of a simple webserver throughput with
 on my laptop (i7 quad core). Note that not much optimization is applied to any
 of the applications, thus there might me some space to squeeze more throughput
 out of these applications. You can check the source code of
-the sample webserver under the test directory.
+the sample webserver under the test directory. All servers return a "hello
+world" response, and the client (in this case wrk) throws a huge number of
+concurrent and pipelined requests at each server. This experiment shows the
+overhead of each framework since the response is kept very small (similar to
+[TechEmpower "plaintext"
+benchmark"](https://www.techempower.com/benchmarks/#section=data-r12&hw=peak&test=plaintext)).
 
 ![HTTP throughput with a single thread](webserver.1.png)
 ![HTTP throughput with 2 threads](webserver.2.png)
