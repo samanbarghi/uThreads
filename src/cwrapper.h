@@ -57,11 +57,20 @@ size_t      cluster_get_number_of_kThreads(WCluster* cluster);
 /**********************************/
 
 /*************kThread**************/
-struct WkThread;
-typedef struct WkThread WkThread;
-WkThread* kThread_create(WCluster* cluster);
-void kThread_destroy(WkThread* kt);
-WkThread* kThread_get_current();
+/** @name kThread
+ *  C interface for class kThread.
+ *  @{
+ */
+struct      WkThread;
+typedef     struct WkThread WkThread;
+/** @copydoc kThread::kThread */
+WkThread*   kThread_create(WCluster* cluster);
+/** @copydoc kThread::~kThread */
+void        kThread_destroy(WkThread* kt);
+/** @copydoc kThread::getTotalNumberOfkThreads*/
+uint64_t    kThread_get_total_number_of_kThreads();
+/** @copydoc kThread::currentkThread */
+WkThread*   kThread_get_current();
 //if linux
 /** @copydoc kThread::getThreadNativeHandle */
 pthread_t   kThread_get_current_pthread_id(); //return pthread_t for current running thread
