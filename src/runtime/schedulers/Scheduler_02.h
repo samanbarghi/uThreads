@@ -93,8 +93,11 @@ private:
          */
         IOHandler::iohandler.sem.post();
 
-        sem.wait();
-        uThread* ut = runQueue.pop();
+        uThread* ut = nullptr;
+        while(ut == nullptr){
+            sem.wait();
+            ut = runQueue.pop();
+        }
         assert(ut != nullptr);
 
         /*
