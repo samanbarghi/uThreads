@@ -43,6 +43,7 @@ IOHandler IOHandler::iohandler;
 void uThread::reset(){
     stackPointer = (vaddr) this;                //reset stack pointer
     currentCluster = nullptr;
+    homekThread = nullptr;
     state = State::INITIALIZED;
     jState = JState::DETACHED;
 }
