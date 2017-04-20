@@ -8,7 +8,9 @@
 #include <signal.h>
 #include <errno.h>
 
-#include "include/http_parser.h"
+extern "C" {
+#include "http-parser/http_parser.h"
+}
 
 #define PORT 8800
 #define INPUT_BUFFER_LENGTH 1024 //4 KB

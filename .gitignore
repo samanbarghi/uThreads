@@ -1,8 +1,6 @@
-src/**/*.d
-src/**/*.o
-lib/*
 .cproject
-bin/*
+build/*
+debug/*
 tags
 src/tags
 .settings
