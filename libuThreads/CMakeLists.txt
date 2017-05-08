@@ -5,7 +5,7 @@ enable_language(ASM)
 file(GLOB_RECURSE LIBUTHREADS_SRCS src  "*.cpp")
 file(GLOB_RECURSE LIBUTHREADS_HDRS uThreads  "*.h")
 
-add_library(uThreads SHARED ${LIBUTHREADS_SRCS} src/runtime/Stack.S ${LIBUTHREADS_SRCS})
+add_library(uThreads SHARED STATIC ${LIBUTHREADS_SRCS} src/runtime/Stack.S ${LIBUTHREADS_SRCS})
 
 target_include_directories(uThreads PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/uThreads/generic>
