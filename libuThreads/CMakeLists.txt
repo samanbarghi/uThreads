@@ -2,8 +2,13 @@
 project(libuThreads VERSION 0.3.0 LANGUAGES CXX)
 enable_language(ASM)
 
+SET(GCC_COVERAGE_COMPILE_FLAGS "-m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -DNPOLLNONBLOCKING")
 file(GLOB_RECURSE LIBUTHREADS_SRCS src  "*.cpp")
 file(GLOB_RECURSE LIBUTHREADS_HDRS uThreads  "*.h")
+
+
+#set compiler flags
+add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
 
 add_library(uThreads SHARED STATIC ${LIBUTHREADS_SRCS} src/runtime/Stack.S ${LIBUTHREADS_SRCS})
 
