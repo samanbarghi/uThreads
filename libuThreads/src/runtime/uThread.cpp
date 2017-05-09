@@ -30,7 +30,7 @@
  *  initialize all static members here
  ***************************************/
 std::atomic_ulong uThread::totalNumberofUTs(0);
-std::atomic_ulong uThread::uThreadMasterID(0);
+std::atomic_ulong uThread::uThreadMasterID(1000000);
 
 uThreadCache uThread::utCache;
 std::vector<Cluster*> Cluster::clusterList;
