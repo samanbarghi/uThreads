@@ -25,6 +25,16 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
+using uThreads::runtime::uThread;
+using uThreads::runtime::kThread;
+using uThreads::runtime::Cluster;
+using uThreads::runtime::uThreadPool;
+using uThreads::runtime::Semaphore;
+using uThreads::runtime::ConditionVariable;
+using uThreads::runtime::Mutex;
+using uThreads::runtime::OwnerLock;
+using uThreads::io::Connection;
+using uThreads::io::IOHandler;
 /**************Cluster*************/
 WCluster*   cluster_create(){  return reinterpret_cast<WCluster*>( new Cluster( ) );}
 void        cluster_destroy(WCluster* cluster){ delete reinterpret_cast<Cluster*>(cluster); }

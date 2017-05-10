@@ -17,7 +17,11 @@
 
 #ifndef UTHREADS_INCLUDE_NETWORK_H_
 #define UTHREADS_INCLUDE_NETWORK_H_
+
 #include "IOHandler.h"
+
+namespace uThreads {
+namespace io {
 
 /**
  * @class Connection
@@ -32,10 +36,10 @@
  */
 class Connection {
     friend IOHandler;
-private:
+ private:
     /* used whith polling */
-    PollData* pd = nullptr;
-    //related file descriptor
+    PollData *pd = nullptr;
+    // related file descriptor
     int fd = -1;
 
     /**
@@ -50,7 +54,7 @@ private:
         this->pd->fd = fd;
     }
 
-public:
+ public:
 
     /**
      * @brief Create a Connection that does not have
@@ -59,9 +63,10 @@ public:
      * a Connection object without fd being set
      */
     Connection() :
-            fd(-1){
+            fd(-1) {
         init();
     }
+
     /**
      * @brief Create a connection object with the provided fd
      * @param fd
@@ -69,7 +74,7 @@ public:
      * If the connection is already established by other means, set the
      * fd and add it to the polling structure
      */
-    Connection(int fd) :
+    Connection (int fd) :
             fd(fd) {
         init();
     }
@@ -104,7 +109,8 @@ public:
      *
      * Throws a std::system_error exception on error. Never call from C.
      */
-    Connection* accept(struct sockaddr *addr, socklen_t *addrlen) throw(std::system_error);
+    Connection *accept(struct sockaddr *addr, socklen_t *addrlen)
+            throw(std::system_error);
 
     /**
      * @brief Same as socket syscall, set the fd for current connection
@@ -133,7 +139,8 @@ public:
      * @brief Same as connect syscall
      * @return Same as connect syscall
      */
-    int connect(const struct sockaddr *addr,socklen_t addrlen);
+    int connect(const struct sockaddr *addr, socklen_t addrlen);
+
     /**
      * @brief Call the underlying system call on Connection's file descriptor
      * @return Same as what the related systemcall returns
@@ -151,27 +158,35 @@ public:
      *  when an error occurs or the socket is ready.
      */
     ssize_t recv(void *buf, size_t len, int flags);
+
     /// @copydoc recv
-    ssize_t recvfrom(void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
+    ssize_t recvfrom(void *buf, size_t len, int flags,
+                     struct sockaddr *src_addr, socklen_t *addrlen);
+
     /// @copydoc recv
     ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+
     /// @copydoc recv
     int recvmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
                  unsigned int flags, struct timespec *timeout);
 
     /// @copydoc recv
     ssize_t send(const void *buf, size_t len, int flags);
+
     /// @copydoc recv
     ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
-            const struct sockaddr *dest_addr, socklen_t addrlen);
+                   const struct sockaddr *dest_addr, socklen_t addrlen);
+
     /// @copydoc recv
     ssize_t sendmsg(const struct msghdr *msg, int flags);
+
     /// @copydoc recv
     int sendmmsg(int sockfd, struct mmsghdr *msgvec, unsigned int vlen,
                  unsigned int flags);
 
     /// @copydoc recv
     ssize_t read(void *buf, size_t count);
+
     /// @copydoc recv
     ssize_t write(const void *buf, size_t count);
 
@@ -184,6 +199,7 @@ public:
      * @brief Block uThread, waiting for fd to become ready for write
      * */
     void blockOnWrite();
+
     /**
      * @brief closes the socket
      * @return the same as close system call
@@ -194,8 +210,9 @@ public:
      * @brief return the Connection's file descriptor
      * @return file descriptor
      */
-    int getFd() const {return fd;}
+    int getFd() const { return fd; }
 
 };
-
+}  // namespace io
+}  // namespace uThreads
 #endif /* UTHREADS_INCLUDE_NETWORK_H_ */

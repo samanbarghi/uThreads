@@ -21,6 +21,8 @@
 
 
 using namespace std;
+using namespace uThreads::runtime;
+
 static void voidrun(void* args){
 
 	cout << "uThreadID : " << uThread::currentUThread()->getID() << " | Total uts: " << uThread::currentUThread()->getTotalNumberofUTs() << endl;

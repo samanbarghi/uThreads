@@ -9,6 +9,7 @@
 #include <sstream>
 
 using namespace std;
+using namespace uThreads::runtime;
 
 void run(void* args){
     int* value = (int*)args;

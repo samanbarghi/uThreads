@@ -14,47 +14,48 @@
 #include <time.h>
 #include <errno.h>
 
-class semaphore
-{
-public:
-    semaphore()
-    {
+namespace uThreads {
+namespace generic {
+class semaphore {
+ public:
+    semaphore() {
         sem_init(&sem_, 0, 0);
     }
 
-    ~semaphore()
-    {
-        while(sem_destroy(&sem_) != 0);
+    ~semaphore() {
+        while (sem_destroy(&sem_) != 0) {}
     }
 
-    void wait()
-    {
-        while(sem_wait(&sem_) != 0);
+    void wait() {
+        while (sem_wait(&sem_) != 0) {}
     }
-    bool trywait(){
+
+    bool trywait() {
         return (sem_trywait(&sem_) == 0);
     }
 
-    bool timedwait(struct timespec &ts){
-        while(sem_timedwait(&sem_, &ts) == -1){
-            if(errno == ETIMEDOUT)
+    bool timedwait(const struct timespec &ts) {
+        while (sem_timedwait(&sem_, &ts) == -1) {
+            if (errno == ETIMEDOUT)
                 return true;
         }
         return false;
     }
 
-    void post()
-    {
-        while(sem_post(&sem_) != 0);
+    void post() {
+        while (sem_post(&sem_) != 0) {}
     }
 
 
-private:
-    sem_t               sem_;
+ private:
+    sem_t sem_;
 
-    semaphore(semaphore const&);
-    semaphore& operator = (semaphore const&);
+    semaphore(semaphore const &);
+
+    semaphore &operator=(semaphore const &);
 };
+}  // namespace generic
+}  // namespace uThreads
 #else
 #error undefined platform: only __linux__ supported at this time
 #endif

@@ -9,7 +9,7 @@
 #include <cstdlib>
 
 using namespace std;
-
+using namespace uThreads::runtime;
 
 #ifdef _DEBUG
 #define DEBUGPRINT(x)  cout << x;

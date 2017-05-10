@@ -13,6 +13,8 @@
 #include <iostream>
 
 using namespace std;
+using namespace uThreads::runtime;
+using namespace uThreads::io;
 
 void echo(void* c){
 

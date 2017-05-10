@@ -20,9 +20,18 @@
 
 #include "../generic/basics.h"
 // initialize stack for invocation of 'func(arg1,arg2,arg3, arg4)'
+namespace uThreads {
+namespace runtime {
 class uThread;
-extern "C" vaddr stackInit(vaddr stack, ptr_t func, ptr_t arg1, ptr_t arg2, ptr_t arg3, ptr_t arg4);
-extern "C" void stackSwitch(uThread* nextuThread, ptr_t args, vaddr* currSP, vaddr nextSP, void (*func)(uThread*,void*));
+}
+}
+using uThreads::runtime::uThread;
+
+extern "C" vaddr stackInit(vaddr stack, ptr_t func, ptr_t arg1,
+                           ptr_t arg2, ptr_t arg3, ptr_t arg4);
+extern "C" void
+stackSwitch(uThread *nextuThread, ptr_t args, vaddr *currSP,
+            vaddr nextSP, void (*func)(uThread *, void *));
 
 
 #endif /* UTHREADS_STACK_H_*/

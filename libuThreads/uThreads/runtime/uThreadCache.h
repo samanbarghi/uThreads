@@ -22,6 +22,10 @@
 #include "../generic/IntrusiveContainers.h"
 #include "uThread.h"
 
+namespace uThreads {
+namespace runtime {
+using uThreads::generic::IntrusiveStack;
+
 /**
  * @class uThreadCache
  * @brief Data structure to cache uThreads
@@ -32,16 +36,18 @@
  */
 class uThreadCache {
 
-private:
-    //global mutex for protecting the underlying data structure
+ private:
+    // global mutex for protecting the underlying data structure
     std::mutex mtx;
     IntrusiveStack<uThread> stack;
     size_t count;
     size_t size;
 
-public:
-    uThreadCache(size_t size = defaultuThreadCacheSize) : count(0), size(size){};
-    ~uThreadCache(){}
+ public:
+    explicit uThreadCache(size_t size = defaultuThreadCacheSize) :
+            count(0), size(size) {}
+
+    ~uThreadCache() {}
 
     /**
      * @brief adds a uThread to the cache
@@ -53,10 +59,10 @@ public:
      * operation has failed and the function returns -1. Otherwise, it adds the
      * uThread to the list and return the size of the cache.
      */
-    ssize_t push(uThread* ut){
+    ssize_t push(uThread *ut) {
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
-        //do not block just to grab this lock
-        if(!mlock.owns_lock() || count == size) return -1;
+        // do not block just to grab this lock
+        if (!mlock.owns_lock() || count == size) return -1;
         ut->reset();
         stack.push(*ut);
         return ++count;
@@ -66,13 +72,14 @@ public:
      * @brief pop a uThread from the list in FIFO order and return it
      * @return nullptr on failure, or a pointer to a uThread on success
      */
-    uThread* pop(){
+    uThread *pop() {
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
-        //do not block just to grab this lock
-        if(!mlock.owns_lock() || count == 0) return nullptr;
+        // do not block just to grab this lock
+        if (!mlock.owns_lock() || count == 0) return nullptr;
         count--;
         return stack.pop();
     }
 };
-
+}  // namespace runtime
+}  // namepsace uThreads
 #endif /* UTHREADS_CACHE_H_ */

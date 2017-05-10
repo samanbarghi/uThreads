@@ -20,26 +20,32 @@
 
 #include <unordered_map>
 #include <vector>
-#include <sys/socket.h>
 #include <mutex>
 #include "../runtime/uThread.h"
 #include "../runtime/kThread.h"
 #include "../generic/Semaphore.h"
+#include <sys/socket.h>
 
 #define POLL_READY  ((uThread*)1)
 #define POLL_WAIT   ((uThread*)2)
 
+namespace uThreads {
+namespace io {
+using uThreads::runtime::kThread;
+using uThreads::runtime::uThread;
+
 class Connection;
+
 /**
  * @cond  HIDDEN_SYMBOLS
  * @class PollData
  * @brief Used to maintain file descriptor status while polling for activity
  *
  */
-class PollData : public Link<PollData>{
+class PollData : public uThreads::generic::Link<PollData> {
     friend IOHandler;
     friend Connection;
-private:
+ private:
 
     /*
      * Potentially there is only the poller thread and maximum two
@@ -66,8 +72,8 @@ private:
      * 4- uThread*: uThread is parked and is waiting on fd to become ready
      *              for read/write
      */
-    uThread* rut = nullptr;
-    uThread* wut = nullptr;
+    uThread *rut = nullptr;
+    uThread *wut = nullptr;
 
     /** Whether the fd is closing or not */
     bool closing;
@@ -91,30 +97,33 @@ private:
      * for the same FD. The mutex should always be acquired before calling
      * this function.
      */
-    void reset(){
-       fd = -1;
-       rut = nullptr;
-       wut = nullptr;
-       closing = false;
-       opened = false;
+    void reset() {
+        fd = -1;
+        rut = nullptr;
+        wut = nullptr;
+        closing = false;
+        opened = false;
     };
 
-public:
+ public:
     /**
      * @brief Create a PollData structure with the assigned fd
      * @param fd file descriptor
      */
-    PollData( int fd) : fd(fd), closing(false), opened(false), isBlockingOnRead(false){};
+    PollData(int fd) : fd(fd), closing(false), opened(false), isBlockingOnRead(false) {};
 
     /**
      * @brief Create a PollData structure but do not assign any fd
      *
      * Usually used before accept
      */
-    PollData(): fd(-1), closing(false), opened(false), isBlockingOnRead(false){};
-    PollData(const PollData&) = delete;
-    const PollData& operator=(const PollData&) = delete;
-    ~PollData(){};
+    PollData() : fd(-1), closing(false), opened(false), isBlockingOnRead(false) {};
+
+    PollData(const PollData &) = delete;
+
+    const PollData &operator=(const PollData &) = delete;
+
+    ~PollData() {};
 } __packed;
 
 /*
@@ -131,37 +140,45 @@ public:
  * a stale notification can only cause an unnecessary unblock of the
  * new uThread(if the PollData is assigned to a new Connection).
  */
-class PollCache{
+class PollCache {
     friend class IOHandler;
+
     friend class Connection;
-protected:
-    IntrusiveQueue<PollData> cache;
+
+ protected:
+    uThreads::generic::IntrusiveQueue<PollData> cache;
     std::mutex mtx;
 
-    PollData* getPollData(){
+    PollData *getPollData() {
         std::unique_lock<std::mutex> mlock(mtx);
-        if(cache.empty()){
-            for(int i=0 ; i < 128; i++){
-               PollData* pd = new PollData();
-               cache.push(*pd);
+        if (cache.empty()) {
+            for (int i = 0; i < 128; i++) {
+                PollData *pd = new PollData();
+                cache.push(*pd);
             }
         }
-        PollData* pd = cache.front();
+        PollData *pd = cache.front();
         cache.pop();
         return pd;
     }
 
-    void pushPollData(PollData* pd){
+    void pushPollData(PollData *pd) {
         std::unique_lock<std::mutex> mlock(mtx);
         cache.push(*pd);
     }
 };
+}  // namespace io
+}  // namespace uThreads
 #if defined (__linux__)
+
 #include "EpollIOHandler.h"
+
 #else
 #error unsupported system: only __linux__ supported at this moment
 #endif
 
+namespace uThreads {
+namespace io {
 /*
  * This class is a virtual class to provide nonblocking I/O
  * to uThreads. select/poll/epoll or other type of nonblocking
@@ -169,25 +186,29 @@ protected:
  * The purpose of this class is to be used as a thread local
  * I/O handler per kThread.
  */
-class IOHandler{
+class IOHandler {
     friend class Connection;
-    friend class Cluster;
-    friend class ReadyQueue;
-    friend class IOPoller;
-    friend class Scheduler;
 
-protected:
+    friend class Cluster;
+
+    friend class ReadyQueue;
+
+    friend class IOPoller;
+
+    friend class uThreads::runtime::Scheduler;
+
+ protected:
 
     static IOHandler iohandler;
 
-    //Variables for bulk push to readyQueue
+    // Variables for bulk push to readyQueue
     size_t unblockCounter;
 
     std::atomic_flag isPolling;
 
-    semaphore sem;
+    uThreads::generic::semaphore sem;
 
-    kThread    ioKT;               //IO kThread
+    kThread ioKT;               // IO kThread
 
     PollCache pollCache;
 
@@ -195,33 +216,42 @@ protected:
 
     /* polling flags */
     enum Flag {
-        UT_IOREAD    = 1 << 0,                           //READ
-        UT_IOWRITE   = 1 << 1                            //WRITE
+        UT_IOREAD = 1 << 0,     // READ
+        UT_IOWRITE = 1 << 1     // WRITE
     };
 
     void block(PollData &pd, bool isRead);
+
     bool inline unblock(PollData &pd, bool isRead);
 
-    static void postSwitchFunc(void* ut, void* args);
+    static void postSwitchFunc(void *ut, void *args);
 
     //Polling IO Function
-   static void pollerFunc(void*) __noreturn;
+    static void pollerFunc(void *) __noreturn;
 
     IOHandler();
-    void PollReady(PollData &pd, int flag);                   //When there is notification update pollData and unblock the related ut
-   ~IOHandler(){};  //should be protected
 
-public:
+    // When there is notification update pollData and unblock the related ut
+    void PollReady(PollData &pd,
+                   int flag);
+    ~IOHandler() {}
+
+ public:
     /* public interfaces */
-   void open(PollData &pd);
-   int close(PollData &pd);
-   void wait(PollData& pd, int flag);
-   ssize_t poll(int timeout, int flag);
-   ssize_t nonblockingPoll();
-   void reset(PollData &pd);
-   //dealing with uThreads
+    void open(PollData &pd);
+
+    int close(PollData &pd);
+
+    void wait(PollData &pd, int flag);
+
+    ssize_t poll(int timeout, int flag);
+
+    ssize_t nonblockingPoll();
+
+    void reset(PollData &pd);
+    //dealing with uThreads
 };
-
-
 /** @endcond */
+}  // namespace io
+}  // namespace uThreads
 #endif /* IOHANDLER_H_ */

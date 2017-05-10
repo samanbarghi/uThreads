@@ -19,11 +19,13 @@
 #include <iostream>
 #include <unistd.h>
 
+using namespace std;
+using namespace uThreads::runtime;
+
 static Mutex mtx;
 static Semaphore s(1);
 static int counter = 0;
 
-using namespace std;
 static void run(void* args){
 	//assume args is an int
 	int value = *(int*)args;

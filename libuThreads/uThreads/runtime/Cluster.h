@@ -25,10 +25,18 @@
 #include "../generic/basics.h"
 #include "../generic/IntrusiveContainers.h"
 
-class uThread;
+
+namespace uThreads {
+namespace io {
 class IOHandler;
+}  // namespace io
+namespace runtime {
+class uThread;
+
 class Scheduler;
+
 class kThread;
+
 class ClusterVar;
 
 /**
@@ -60,22 +68,27 @@ class ClusterVar;
  */
 class Cluster {
     friend class kThread;
+
     friend class uThread;
+
     friend class Connection;
-    friend class IOHandler;
+
+    friend class uThreads::io::IOHandler;
+
     friend class Scheduler;
-private:
+
+ private:
     // First 64 bytes (CACHELINE_SIZE)
-    Scheduler* scheduler;                               //(8 bytes)
+    Scheduler *scheduler;                               // (8 bytes)
 
     /*
      * Scheduler's defined cluster variables
      */
-    ClusterVar* clustervar;                             //(8 bytes)
+    ClusterVar *clustervar;                             // (8 bytes)
 
     // First 64 bytes (CACHELINE_SIZE)
 
-    static std::vector<Cluster*> clusterList;
+    static std::vector<Cluster *> clusterList;
 
     /*
      * last kThread assigned to a uThread,
@@ -84,17 +97,17 @@ private:
      */
     std::atomic<size_t> ktLast;
 
-    std::atomic_uint numberOfkThreads;                  //Number of kThreads in this Cluster
+    std::atomic_uint numberOfkThreads;          // Number of kThreads in this Cluster
     /*
      * Vector of kThreads in this Cluster
      */
-    std::vector<kThread*> ktVector;
+    std::vector<kThread *> ktVector;
 
-    uint64_t clusterID;                                 //Current Cluster ID
+    uint64_t clusterID;                         // Current Cluster ID
 
-    std::mutex mtx;                                     //Mutex used for initializations
+    std::mutex mtx;                             // Mutex used for initializations
 
-    static std::atomic_ushort clusterMasterID;          //Global cluster ID holder
+    static std::atomic_ushort clusterMasterID;  // Global cluster ID holder
 
 
 
@@ -113,36 +126,39 @@ private:
     /*
      * Add a new kThread to this Cluster
      */
-    void addNewkThread(kThread&);
+    void addNewkThread(kThread &);
 
     /*
      * Assign a kThread to the requesting uThread
      */
-    kThread* assignkThread();
+    kThread *assignkThread();
 
-public:
+ public:
     /**
      * Create a new Cluster
      */
     Cluster();
+
     virtual ~Cluster();
 
     /**
      * Cluster cannot be copied or assigned.
      */
-    Cluster(const Cluster&) = delete;
-    /// @copydoc Cluster(const Cluster&)
-    const Cluster& operator=(const Cluster&) = delete;
+    Cluster(const Cluster &) = delete;
 
-   /**
-     * @copybrief Cluster::defaultCluster
-     * @return defaultCluster
-     *
-     * @copydetails defaultCluster
-     */
-    static Cluster& getDefaultCluster(){
+    /// @copydoc Cluster(const Cluster&)
+    const Cluster &operator=(const Cluster &) = delete;
+
+    /**
+      * @copybrief Cluster::defaultCluster
+      * @return defaultCluster
+      *
+      * @copydetails defaultCluster
+      */
+    static Cluster &getDefaultCluster() {
         return defaultCluster;
     }
+
     /**
      * @brief Get the ID of Cluster
      * @return The ID of the cluster
@@ -151,6 +167,7 @@ public:
     uint64_t getID() const {
         return clusterID;
     }
+
     /**
      * @brief Total number of kThreads belonging to this cluster
      * @return Total number of kThreads belonging to this cluster
@@ -159,5 +176,6 @@ public:
         return numberOfkThreads.load();
     }
 };
-
+}  // namespace runtime
+}  // namespace uThreads
 #endif /* UTHREADS_CLUSTER_H_ */

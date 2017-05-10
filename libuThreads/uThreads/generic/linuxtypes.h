@@ -20,13 +20,14 @@
 
 #include <cstddef>
 #include <cstdint>
+
 #if defined (__x86_64__)
 
 typedef uint64_t        mword;
 typedef  int64_t        sword;
 
-typedef intptr_t        vaddr;                                  //memory address
-typedef void*           ptr_t;                                  //Pointer type
+typedef intptr_t        vaddr;  // Memory address
+typedef void*           ptr_t;  // Pointer type
 
 typedef void (*funcvoid0_t)();
 typedef void (*funcvoid1_t)(ptr_t);

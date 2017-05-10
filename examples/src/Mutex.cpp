@@ -19,10 +19,12 @@
 #include <iostream>
 #include <unistd.h>
 
+using namespace std;
+using namespace uThreads::runtime;
+
 static Mutex mtx;
 static mword counter = 0;
 
-using namespace std;
 static void run(void* args){
 	//assume args is an int
 	int value = *(int*)args;

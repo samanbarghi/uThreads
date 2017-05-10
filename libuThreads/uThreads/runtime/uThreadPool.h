@@ -20,38 +20,48 @@
 
 #include <atomic>
 #include <queue>
+#include <utility>
 #include "BlockingSync.h"
 #include "uThread.h"
 
+namespace uThreads {
+namespace runtime {
 class uThreadPool {
-private:
-    struct Argument{                                             //This struct is replaced by the args the first time a uThread is created
-        funcvoid1_t         func;
-        void*               args;
+ private:
+    // This struct is replaced by the args the first time a uThread is created
+    struct Argument {
+        funcvoid1_t func;
+        void *args;
 
-        uThreadPool*        utp;
+        uThreadPool *utp;
 
-        Argument(funcvoid1_t func, void* args, uThreadPool* utp): func(func), args(args), utp(utp){};
+        Argument(funcvoid1_t func, void *args, uThreadPool *utp) :
+                func(func), args(args), utp(utp) {}
 
     };
+    // Total number of uThreads belonging to this thread pool
+    std::atomic<unsigned int> totalnumuThreads;
+    // idle uThreads
+    std::atomic<unsigned int> idleuThreads;
 
-    std::atomic<unsigned int>    totalnumuThreads;                //Total number of uThreads belonging to this thread pool
-    std::atomic<unsigned int>    idleuThreads;                   //idle uThreads
+    // Mutex to protect data structures in thread pool
+    Mutex mutex;
+    // Condition variable to block idle uThreads on
+    ConditionVariable cv;
 
-    Mutex       mutex;                                          //Mutex to protect data structures in thread pool
-    ConditionVariable   cv;                                     //condition variable to block idle uThreads on
+    std::queue<std::pair<funcvoid1_t, void *>> taskList;
 
-    std::queue<std::pair<funcvoid1_t, void*>>  taskList;
-
-    static void run(void*);
+    static void run(void *);
 
 
-public:
+ public:
     uThreadPool();
+
     virtual ~uThreadPool();
 
-   void uThreadExecute(funcvoid1_t, void*, Cluster&);
+    void uThreadExecute(funcvoid1_t, void *, Cluster &);
 
-};
-
+};  // class uThreadPool
+}  // namespace runtime
+}  // namespace uThreads
 #endif /* UTHREADS_UTHREAD_POOL_H_ */

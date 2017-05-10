@@ -12,8 +12,9 @@
 #include <iostream>
 #include <algorithm>
 
-
 using namespace std;
+using namespace uThreads::runtime;
+using namespace uThreads::io;
 
 int main(int argc, char* argv[]){
 

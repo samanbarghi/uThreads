@@ -22,8 +22,8 @@
 
 #if defined(__linux__)
 
-#define fastpath(x)  (__builtin_expect((bool(x)),true))
-#define slowpath(x)  (__builtin_expect((bool(x)),false))
+#define fastpath(x)  (__builtin_expect((bool(x)), true))
+#define slowpath(x)  (__builtin_expect((bool(x)), false))
 
 #define __section(x) __attribute__((__section__(x)))
 #define __aligned(x) __attribute__((__aligned__(x)))
@@ -43,8 +43,11 @@
 /*
 * Constant variables
 */
-static const size_t defaultStackSize        = (8 * 1024);           //8k stack size, TODO: determine what is the best stack size, or implement dynamic stack allocation
-static const size_t defaultuThreadCacheSize = 1000;                 //Maximum number of uThreads that should be cached
+// 8k stack,
+// TODO(saman): determine what is the best stack size, or dynamic?
+static const size_t defaultStackSize        = (8 * 1024);
+// Maximum number of uThreads to cache
+static const size_t defaultuThreadCacheSize = 1000;
 
 
 /*

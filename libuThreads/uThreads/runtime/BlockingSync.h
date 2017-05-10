@@ -23,9 +23,13 @@
 #include <mutex>
 #include <iostream>
 
+namespace uThreads {
+namespace runtime {
 //TODO: implement timeouts for all synchronization and mutual exclusion variables
 class Mutex;
+
 class uThread;
+
 /**
  * @class BlockingQueue
  * @brief A queue used to keep track of blocked uThreads
@@ -35,24 +39,32 @@ class uThread;
  */
 class BlockingQueue {
     friend class uThread;
+
     friend class Mutex;
+
     friend class OwnerLock;
+
     friend class ConditionVariable;
+
     friend class Semaphore;
 
-    IntrusiveList<uThread> queue;
+    uThreads::generic::IntrusiveList<uThread> queue;
 
-    //temporary fix to avoid including uThread.h
-    uThread* getCurrentUThread();
-public:
+    // temporary fix to avoid including uThread.h
+    uThread *getCurrentUThread();
+
+ public:
     BlockingQueue() = default;
+
     ~BlockingQueue() {
         assert(empty());
     }
+
     /// @brief BlockingQueue cannot be copied or assigned
-    BlockingQueue(const BlockingQueue&) = delete;
+    BlockingQueue(const BlockingQueue &) = delete;
+
     /// @copybrief BlockingQueue(const BlockingQueue&)
-    const BlockingQueue& operator=(const BlockingQueue&) = delete;
+    const BlockingQueue &operator=(const BlockingQueue &) = delete;
 
     ///@brief Whether the queue is empty or not
     bool empty() const {
@@ -67,10 +79,10 @@ public:
      *  Suspends the uThread and adds it to the BlockingQueue.
      *
      */
-    bool suspend(std::mutex& lock);
+    bool suspend(std::mutex &lock);
 
     /// @copydoc suspend(std::mutex& lock);
-    bool suspend(Mutex&);
+    bool suspend(Mutex &);
 //  bool suspend(mutex& lock, mword timeout);
 
     /**
@@ -79,15 +91,15 @@ public:
      * @param owner passed to support atomic setting of Mutex::owner
      * @return true if a uThread was unblocked, and false otherwise
      */
-    bool signal(std::mutex& lock, uThread*& owner); //Used along with Mutex
+    bool signal(std::mutex &lock, uThread *&owner); //Used along with Mutex
 
     /**
      * @brief unblock one blocked, used  for Mutex
      * @param lock mutex to be released after signal is done
      * @return true if a uThread was unblocked, and false otherwise
      */
-    bool signal(std::mutex& lock) {
-        uThread* dummy = nullptr;
+    bool signal(std::mutex &lock) {
+        uThread *dummy = nullptr;
         return signal(lock, dummy);
     }
 
@@ -96,21 +108,21 @@ public:
      * @param Mutex that is released after signal is done
      * @return true if a uThread was unblocked, and false otherwise
      */
-    bool signal(Mutex&);
+    bool signal(Mutex &);
 
     /**
      * @brief unblock all blocked uThreads, used for Condition Variable
      * @param Mutex to be released after signallAll is done
      */
-    void signalAll(Mutex&);
+    void signalAll(Mutex &);
 
     template<typename T>
-    static void postSwitchFunc(void* ut, void* args){
+    static void postSwitchFunc(void *ut, void *args) {
         assert(args != nullptr);
         assert(ut != nullptr);
-        uThread* utt = (uThread*)ut;
+        uThread *utt = (uThread *) ut;
 
-        auto bqp = (std::pair<T*, BlockingQueue*>*)args;
+        auto bqp = (std::pair<T *, BlockingQueue *> *) args;
         bqp->second->queue.push_back(*utt);
         bqp->first->unlock();
     }
@@ -122,9 +134,12 @@ public:
  */
 class Mutex {
     friend class ConditionVariable;
+
     friend class Semaphore;
+
     friend class BlockingQueue;
-protected:
+
+ protected:
     /*
      * std::mutex acting as the base lock. Usually this is implemented as a
      * spinlock, but since we are interested in blocking in user level and this
@@ -136,9 +151,10 @@ protected:
     /* The blocking queue used for this Mutex to block and unblock uThreads */
     BlockingQueue bq;
     /* Owner of the Mutex */
-    uThread* owner;
+    uThread *owner;
 
-    template<bool OL> // OL: owner lock
+    template<bool OL>
+    // OL: owner lock
     bool internalAcquire(mword timeout) {
 
         lock.lock();
@@ -146,7 +162,7 @@ protected:
         //to make sure the following is happening
         //Mutex cannot have recursive locking
         assert(OL || owner != bq.getCurrentUThread());
-        if(fastpath(owner != nullptr && (!OL || owner != bq.getCurrentUThread()))) {
+        if (fastpath(owner != nullptr && (!OL || owner != bq.getCurrentUThread()))) {
             return bq.suspend(lock); // release lock, false: timeout
         } else {
             /*
@@ -169,7 +185,7 @@ protected:
         lock.unlock();
     }
 
-public:
+ public:
     Mutex() : owner(nullptr) {}
 
     /**
@@ -178,42 +194,45 @@ public:
      *
      * The return value is only for when timeouts are implemented
      */
-    template<bool OL=false>
-    bool acquire() {return internalAcquire<OL>(0);}
+    template<bool OL = false>
+    bool acquire() { return internalAcquire<OL>(0); }
 
     //TODO: implement tryAcquire after timeouts are implemented
-//  template<bool OL=false>
-//  bool tryAcquire(mword t = 0) { return internalAcquire<true,OL>(t); }
+    //  template<bool OL=false>
+    //  bool tryAcquire(mword t = 0) { return internalAcquire<true,OL>(t); }
 
     /**
      * @brief release the Mutex
      */
     void release() {
         lock.lock();
-        assert(owner == bq.getCurrentUThread()); //Attempt to release lock by non-owner
+        // Attempt to release lock by non-owner
+        assert(owner == bq.getCurrentUThread());
         internalRelease();
     }
-    //temporary solution for the postSwitchFunc
-    void unlock(){release();}
+
+    // temporary solution for the postSwitchFunc
+    void unlock() { release(); }
 };
 
 /**
  * @class OwnerLock
  * @brief an Owner Mutex where owner can recursively acquire the Mutex
  */
-class OwnerLock: protected Mutex {
+class OwnerLock : protected Mutex {
     /*
      * Counter to keep track of how many time this has been acquired
      * by the owner.
      */
     mword counter;
-public:
+ public:
     /**
      * @brief Create a new OwnerLock
      */
     OwnerLock() :
             counter(0) {
     }
+
     /**
      * @brief Acquire the OwnerLock
      * @return The number of times current owner acquired the lock
@@ -224,10 +243,10 @@ public:
         else
             return 0;
     }
-//  mword tryAcquire(mword t = 0) {
-//    if (internalAcquire<true,true>(t)) return ++counter;
-//    else return 0;
-//  }
+    //  mword tryAcquire(mword t = 0) {
+    //    if (internalAcquire<true,true>(t)) return ++counter;
+    //    else return 0;
+    //  }
     /**
      * @brief Release the OwnerLock once
      * @return The number of times current owner acquired the lock, if lock is
@@ -254,12 +273,12 @@ public:
 class ConditionVariable {
     BlockingQueue bq;
 
-public:
+ public:
     /**
      * @brief Block uThread on the condition variable using the provided mutex
      * @param mutex used to synchronize access to the condition
      */
-    void wait(Mutex& mutex) {
+    void wait(Mutex &mutex) {
         bq.suspend(mutex);
         mutex.acquire();
     }
@@ -268,20 +287,21 @@ public:
      * @brief Unblock one uThread waiting on the condition variable
      * @param mutex The mutex to be released after unblocking is done
      */
-    void signal(Mutex& mutex) {
-        if(slowpath(!bq.signal(mutex))) mutex.release();}
+    void signal(Mutex &mutex) {
+        if (slowpath(!bq.signal(mutex))) mutex.release();
+    }
 
     /**
      * @brief unblock all uThreads waiting on the condition variable
      * @param mutex The mutex to be released after unblocking is done
      */
-    void signalAll(Mutex& mutex) {bq.signalAll(mutex);}
+    void signalAll(Mutex &mutex) { bq.signalAll(mutex); }
 
     /**
      * @brief Whether the waiting list is empty or not
      * @return Whether the waiting list is empty or not
      */
-    bool empty(){ return bq.empty(); }
+    bool empty() { return bq.empty(); }
 };
 
 /**
@@ -298,8 +318,8 @@ class Semaphore {
 
     template<bool TO>
     bool internalP(mword timeout) {
-        if(fastpath(counter < 1)) {
-            return bq.suspend(mutex); // release lock, false: timeout
+        if (fastpath(counter < 1)) {
+            return bq.suspend(mutex);  // release lock, false: timeout
         } else {
             counter -= 1;
             mutex.release();
@@ -307,7 +327,7 @@ class Semaphore {
         }
     }
 
-public:
+ public:
     /**
      * @brief Create a new Semaphore
      * @param c Initial value of the Semaphore
@@ -323,10 +343,10 @@ public:
         return internalP<false>(0);
     }
 
-//	bool tryP(mword t = 0, SpinLock* l = nullptr) {
-//		if (l) lock.acquire(*l); else lock.acquire();
-//		return internalP<true>(t);
-//	}
+    //	bool tryP(mword t = 0, SpinLock* l = nullptr) {
+    //		if (l) lock.acquire(*l); else lock.acquire();
+    //		return internalP<true>(t);
+    //	}
 
     /**
      * @brief increment the value of the Semaphore
@@ -339,5 +359,6 @@ public:
         mutex.release();
     }
 };
-
+}  // namespace runtime
+}  // namepace uthreads
 #endif /* UTHREADS_BLOKING_SYNC_H */

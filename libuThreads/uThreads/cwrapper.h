@@ -30,7 +30,7 @@
  */
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif
 #include <stdbool.h>
 
@@ -39,20 +39,20 @@ extern "C"{
  *  C interface for class Cluster.
  *  @{
  */
-struct      WCluster;
-typedef     struct WCluster WCluster;
+struct WCluster;
+typedef struct WCluster WCluster;
 /** @copydoc Cluster::Cluster */
-WCluster*   cluster_create();
+WCluster *cluster_create();
 /** @copydoc Cluster::~Cluster */
-void        cluster_destroy(WCluster* cluster);
+void cluster_destroy(WCluster *cluster);
 /** @copydoc Cluster::getDefaultCluster */
-WCluster*   cluster_get_default();//return default Cluster
+WCluster *cluster_get_default();//return default Cluster
 /** @copydoc uThread::getCurrent*/
-WCluster*   cluster_get_current();
+WCluster *cluster_get_current();
 /** @copydoc Cluster::getID */
-uint64_t    cluster_get_id(WCluster* cluster);
+uint64_t cluster_get_id(WCluster *cluster);
 /** @copydoc Cluster::getNumberOfkThreads */
-size_t      cluster_get_number_of_kThreads(WCluster* cluster);
+size_t cluster_get_number_of_kThreads(WCluster *cluster);
 /** @} **/
 /**********************************/
 
@@ -61,22 +61,26 @@ size_t      cluster_get_number_of_kThreads(WCluster* cluster);
  *  C interface for class kThread.
  *  @{
  */
-struct      WkThread;
-typedef     struct WkThread WkThread;
+struct WkThread;
+typedef struct WkThread WkThread;
 /** @copydoc kThread::kThread */
-WkThread*   kThread_create(WCluster* cluster);
+WkThread *kThread_create(WCluster *cluster);
 /** @copydoc kThread::~kThread */
-void        kThread_destroy(WkThread* kt);
+void kThread_destroy(WkThread *kt);
 /** @copydoc kThread::getTotalNumberOfkThreads*/
-uint64_t    kThread_get_total_number_of_kThreads();
+uint64_t kThread_get_total_number_of_kThreads();
 /** @copydoc kThread::currentkThread */
-WkThread*   kThread_get_current();
-//if linux
+WkThread *kThread_get_current();
+#if defined (__linux__)
 /** @copydoc kThread::getThreadNativeHandle */
-pthread_t   kThread_get_current_pthread_id(); //return pthread_t for current running thread
+// return pthread_t for current running thread
+pthread_t kThread_get_current_pthread_id();
 /** @copydoc kThread::getThreadNativeHandle */
-pthread_t   kThread_get_pthread_id(WkThread* kt); //return pthread_t for the provided kThread
-//endif linux
+// returns pthread_t for the provided kThread
+pthread_t kThread_get_pthread_id(WkThread *kt);
+#else
+#error unsupported system: only __linux__ supported at this moment
+#endif
 /** @} */
 /**********************************/
 
@@ -85,26 +89,26 @@ pthread_t   kThread_get_pthread_id(WkThread* kt); //return pthread_t for the pro
  *  C interface for class uThread.
  *  @{
  */
-struct      WuThread;
-typedef     struct WuThread WuThread;
+struct WuThread;
+typedef struct WuThread WuThread;
 /** @copydoc uThread::create **/
-WuThread*   uThread_create(bool joinable);
+WuThread *uThread_create(bool joinable);
 /** @copydoc uThread::start **/
-void        uThread_start(WuThread* ut, WCluster* cluster, void *func, void *arg1 , void* arg2, void* arg3);
+void uThread_start(WuThread *ut, WCluster *cluster, void *func, void *arg1, void *arg2, void *arg3);
 /** @copydoc uThread::migrate **/
-void        uThread_migrate(WCluster* cluster);
+void uThread_migrate(WCluster *cluster);
 /** @copydoc uThread::terminate **/
-void        uThread_terminate(WuThread* ut);
+void uThread_terminate(WuThread *ut);
 /** @copydoc uThread::yield **/
-void        uThread_yield();
+void uThread_yield();
 /** @copydoc uThread::join **/
-bool        uThread_join(WuThread* ut);
+bool uThread_join(WuThread *ut);
 /** @copydoc uThread::detach **/
-void        uThread_detach(WuThread* ut);
+void uThread_detach(WuThread *ut);
 /** @copydoc uThread::getID **/
-uint64_t    uThread_get_id(WuThread* ut);
+uint64_t uThread_get_id(WuThread *ut);
 /** @copydoc uThread::currentUThread**/
-WuThread*   uThread_get_current();
+WuThread *uThread_get_current();
 /** @copydoc uThread::getTotalNumberofUTs **/
 uint64_t uThread_get_total_number_of_uThreads();
 ///@}
@@ -115,68 +119,71 @@ uint64_t uThread_get_total_number_of_uThreads();
  *  C interface for class Connection.
  *  @{
  */
-struct       WConnection;
-typedef      struct WConnection WConnection;
+struct WConnection;
+typedef struct WConnection WConnection;
 /// @copydoc Connection::Connection()
-WConnection* connection_create();
+WConnection *connection_create();
 /// @copydoc Connection::Connection(int fd)
-WConnection* connection_create_with_fd(int fd);
+WConnection *connection_create_with_fd(int fd);
 /// @copydoc Connection::Connection(int domain, int type, int protocol)
-WConnection* connection_create_socket(int domain, int type, int protocol);
+WConnection *connection_create_socket(int domain, int type, int protocol);
 /// @copydoc Connection::~Connection()
-void         connection_destroy(WConnection* c);
+void connection_destroy(WConnection *c);
 
 
 /// @copydoc Connection::accept(Connection *conn, struct sockaddr *addr, socklen_t *addrlen)
-int          connection_accept(WConnection* acceptor, WConnection *conn, struct sockaddr *addr, socklen_t *addrlen);
+int connection_accept(WConnection *acceptor, WConnection *conn, struct sockaddr *addr, socklen_t *addrlen);
 /// @copydoc Connection::accept(struct sockaddr *addr, socklen_t *addrlen)
-WConnection* connection_accept_connenction(WConnection* acceptor, struct sockaddr *addr, socklen_t *addrlen);
+WConnection *connection_accept_connenction(WConnection *acceptor, struct sockaddr *addr, socklen_t *addrlen);
 
 
 /// @copydoc Connection::socket
-int          connection_socket(WConnection* conn, int domain, int type, int protocol);
+int connection_socket(WConnection *conn, int domain, int type, int protocol);
 
 /// @copydoc Connection::listen
-int          connection_listen(WConnection* conn, int backlog);
+int connection_listen(WConnection *conn, int backlog);
 /// @copydoc Connection::bind
-int          connection_bind(WConnection* conn, const struct sockaddr *addr,socklen_t addrlen);
+int connection_bind(WConnection *conn, const struct sockaddr *addr, socklen_t addrlen);
 /// @copydoc Connection::connect
-int          connection_connect(WConnection* conn, const struct sockaddr *addr,socklen_t addrlen);
+int connection_connect(WConnection *conn, const struct sockaddr *addr, socklen_t addrlen);
 /// @copydoc Connection::close
-int          connection_close(WConnection* conn);
+int connection_close(WConnection *conn);
 
 /// @copydoc Connection::recv
-ssize_t     connection_recv(WConnection* conn, void *buf, size_t len, int flags);
+ssize_t connection_recv(WConnection *conn, void *buf, size_t len, int flags);
 /// @copydoc Connection::recv
-ssize_t     connection_recvfrom(WConnection* conn, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
+ssize_t
+connection_recvfrom(WConnection *conn, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen);
 /// @copydoc Connection::recv
-ssize_t     connection_recvmsg(WConnection* conn, int sockfd, struct msghdr *msg, int flags);
+ssize_t connection_recvmsg(WConnection *conn, int sockfd, struct msghdr *msg, int flags);
 /// @copydoc Connection::recv
-int         connection_recvmmsg(WConnection* conn, int sockfd, struct mmsghdr *msgvec, unsigned int vlen, unsigned int flags, struct timespec *timeout);
+int connection_recvmmsg(WConnection *conn, int sockfd, struct mmsghdr *msgvec, unsigned int vlen, unsigned int flags,
+                        struct timespec *timeout);
 
 /// @copydoc Connection::recv
-ssize_t     connection_send(WConnection* conn, const void *buf, size_t len, int flags);
+ssize_t connection_send(WConnection *conn, const void *buf, size_t len, int flags);
 /// @copydoc Connection::recv
-ssize_t     connection_sendto(WConnection* conn, int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen);
+ssize_t connection_sendto(WConnection *conn, int sockfd, const void *buf, size_t len, int flags,
+                          const struct sockaddr *dest_addr, socklen_t addrlen);
 /// @copydoc Connection::recv
-ssize_t     connection_sendmsg(WConnection* conn, const struct msghdr *msg, int flags);
+ssize_t connection_sendmsg(WConnection *conn, const struct msghdr *msg, int flags);
 /// @copydoc Connection::recv
-int         connection_sendmmsg(WConnection* conn, int sockfd, struct mmsghdr *msgvec, unsigned int vlen, unsigned int flags);
+int connection_sendmmsg(WConnection *conn, int sockfd, struct mmsghdr *msgvec, unsigned int vlen, unsigned int flags);
 
 /// @copydoc Connection::recv
-ssize_t     connection_read(WConnection* conn, void *buf, size_t count);
+ssize_t connection_read(WConnection *conn, void *buf, size_t count);
 /// @copydoc Connection::recv
-ssize_t     connection_write(WConnection* conn, const void *buf, size_t count);
+ssize_t connection_write(WConnection *conn, const void *buf, size_t count);
 
 
 /** @copydoc Connection::blockOnRead */
-void        connection_block_on_read(WConnection* conn);
+void connection_block_on_read(WConnection *conn);
 
 /** @copydoc Connection::blockOnWrite **/
-void        connection_block_on_write(WConnection* conn);
+void connection_block_on_write(WConnection *conn);
 
 /// @copydoc Connection::getFD
-int         connection_get_fd(WConnection* conn);
+int connection_get_fd(WConnection *conn);
 ///@}
 /**********************************/
 
@@ -186,16 +193,16 @@ int         connection_get_fd(WConnection* conn);
  *  C interface for class Mutex.
  *  @{
  */
-struct      WMutex;
-typedef     struct WMutex WMutex;
+struct WMutex;
+typedef struct WMutex WMutex;
 /** @copydoc Mutex::Mutex */
-WMutex*     mutex_create();
+WMutex *mutex_create();
 /** @copydoc Mutex::~Mutex */
-void        mutex_destroy(WMutex* mutex);
+void mutex_destroy(WMutex *mutex);
 /** @copydoc Mutex::acquire */
-bool        mutex_acquire(WMutex* mutex);
+bool mutex_acquire(WMutex *mutex);
 /** @copydoc Mutex::release */
-void        mutex_release(WMutex* mutex);
+void mutex_release(WMutex *mutex);
 ///@}
 /**********************************/
 
@@ -204,16 +211,16 @@ void        mutex_release(WMutex* mutex);
  *  C interface for class OwnerLock.
  *  @{
  */
-struct      WOwnerLock;
-typedef     struct WOwnerLock WOwnerLock;
+struct WOwnerLock;
+typedef struct WOwnerLock WOwnerLock;
 /** @copydoc OwnlerLock::OwnlerLock */
-WOwnerLock* ownerlock_create();
+WOwnerLock *ownerlock_create();
 /** @copydoc OwnlerLock::~OwnlerLock */
-void        ownerlock_destroy(WOwnerLock* olock);
+void ownerlock_destroy(WOwnerLock *olock);
 /** @copydoc OwnlerLock::acquire */
-uint64_t        ownerlock_acquire(WOwnerLock* olock);
+uint64_t ownerlock_acquire(WOwnerLock *olock);
 /** @copydoc OwnlerLock::release */
-void        ownerlock_release(WOwnerLock* olock);
+void ownerlock_release(WOwnerLock *olock);
 ///@}
 /**********************************/
 
@@ -222,20 +229,20 @@ void        ownerlock_release(WOwnerLock* olock);
  *  C interface for class ConditionVariable.
  *  @{
  */
-struct      WConditionVariable;
-typedef     struct WConditionVariable WConditionVariable;
+struct WConditionVariable;
+typedef struct WConditionVariable WConditionVariable;
 /** @copydoc ConditionVariable::ConditionVariable */
-WConditionVariable* condition_variable_create();
+WConditionVariable *condition_variable_create();
 /** @copydoc ConditionVariable::~ConditionVariable */
-void                condition_variable_destroy(WConditionVariable* cv);
+void condition_variable_destroy(WConditionVariable *cv);
 /** @copydoc ConditionVariable::wait */
-void                condition_variable_wait(WConditionVariable* cv, WMutex* mutex);
+void condition_variable_wait(WConditionVariable *cv, WMutex *mutex);
 /** @copydoc ConditionVariable::signal */
-void                condition_variable_signal(WConditionVariable* cv, WMutex* mutex);
+void condition_variable_signal(WConditionVariable *cv, WMutex *mutex);
 /** @copydoc ConditionVariable::signalAll */
-void                condition_variable_signall_all(WConditionVariable* cv, WMutex* mutex);
+void condition_variable_signall_all(WConditionVariable *cv, WMutex *mutex);
 /** @copydoc ConditionVariable::empty */
-bool                condition_variable_empty(WConditionVariable* cv);
+bool condition_variable_empty(WConditionVariable *cv);
 ///@}
 /**********************************/
 
@@ -244,16 +251,16 @@ bool                condition_variable_empty(WConditionVariable* cv);
  *  C interface for class Semaphore.
  *  @{
  */
-struct      WSemaphore;
-typedef     struct WSemaphore WSemaphore;
+struct WSemaphore;
+typedef struct WSemaphore WSemaphore;
 /** @copydoc Semaphore::Semaphore */
-WSemaphore* semaphore_create();
+WSemaphore *semaphore_create();
 /** @copydoc Semaphore::~Semaphore */
-void        semaphore_destroy(WSemaphore* sem);
+void semaphore_destroy(WSemaphore *sem);
 /** @copydoc Semaphore::P */
-bool        semaphore_p(WSemaphore* sem);
+bool semaphore_p(WSemaphore *sem);
 /** @copydoc Semaphore::V */
-void        semaphore_v(WSemaphore* sem);
+void semaphore_v(WSemaphore *sem);
 ///@}
 /**********************************/
 
@@ -264,9 +271,10 @@ void        semaphore_v(WSemaphore* sem);
  */
 struct WuThreadPool;
 typedef struct WuThreadPool WuThreadPool;
-WuThreadPool* uthreadpool_create();
-void uthreadpool_destory(WuThreadPool* utp);
-void uthreadpool_execute(WuThreadPool* utp, WCluster* cluster, void *(*start_routine) (void *), void *arg);
+WuThreadPool *uthreadpool_create();
+void uthreadpool_destory(WuThreadPool *utp);
+void uthreadpool_execute(WuThreadPool *utp, WCluster *cluster,
+                         void *(*start_routine)(void *), void *arg);
 ///@}
 /**********************************/
 #ifdef __cplusplus

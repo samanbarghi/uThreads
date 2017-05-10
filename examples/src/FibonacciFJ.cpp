@@ -9,6 +9,7 @@
 #include <cstdlib>
 
 using namespace std;
+using namespace uThreads::runtime;
 
 class Task{
 public:

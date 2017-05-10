@@ -7,7 +7,8 @@
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
-
+using namespace uThreads::runtime;
+using namespace uThreads::io;
 extern "C" {
 #include "http-parser/http_parser.h"
 }

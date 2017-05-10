@@ -1,8 +1,6 @@
 #include <uThreads/cwrapper.h>
 #include <stdio.h>
 
-
-
 static void run(void* args){
     int value = *(int*)args;
     uint64_t id = uThread_get_id(uThread_get_current());

@@ -26,8 +26,7 @@
 #include "Cluster.h"
 #include "uThread.h"
 
-class KTLocal;
-class KTVar;
+
 
 /**
  * @class kThread
@@ -51,12 +50,23 @@ class KTVar;
  * kThreads can be created by passing a Cluster to the constructor of
  * the kThread.
  */
-class kThread: public Link<kThread> {
+namespace uThreads {
+namespace runtime {
+
+class KTLocal;
+
+class KTVar;
+
+class kThread : public uThreads::generic::Link<kThread> {
     friend class uThread;
+
     friend class Cluster;
-    friend class IOHandler;
+
     friend class Scheduler;
-private:
+
+    friend class uThreads::io::IOHandler;
+
+ private:
     // First 64 bytes (CACHELINE_SIZE)
     /*
      * Pointer to the cluster this kThread
@@ -66,20 +76,20 @@ private:
      * can however push uThreads to ReadyQueue
      * of other clusters upon uThread migration.
      */
-    Cluster* localCluster; // (8 bytes)
+    Cluster *localCluster;  // (8 bytes)
 
     /*
      * Scheduler object
      */
-    Scheduler* scheduler; // (8 bytes)
+    Scheduler *scheduler;  // (8 bytes)
 
 
-    KTVar* ktvar;         // (8 bytes)
+    KTVar *ktvar;         // (8 bytes)
 
     /*
      * Pointer to the current running uThread
      */
-    uThread* currentUT;   // (8 bytes)
+    uThread *currentUT;   // (8 bytes)
 
     /*
      * Each kThread has a main uThread that is
@@ -88,11 +98,11 @@ private:
      * this uThread and block on the ReadyQueue waiting
      * for more uThreads to arrive.
      */
-    uThread* mainUT;    // (8 bytes)
+    uThread *mainUT;    // (8 bytes)
 
     // First 64 bytes (CACHELINE_SIZE)
 
-     /* Holds the id of the underlying kernel thread */
+    /* Holds the id of the underlying kernel thread */
     std::thread::id threadID;
 
     /*
@@ -102,15 +112,16 @@ private:
     std::thread threadSelf;
 
 
-    //Only used for defaultKT
+    // Only used for defaultKT
     kThread();
+
     /*
      * Create kThreads that runs a single uThread
      * with the assigned function. These kThreads do
      * not consumer from the ReadyQueu or switch context
      * to another uThread.
      */
-    kThread(Cluster&, std::function<void(ptr_t)>, ptr_t);
+    kThread(const Cluster &, std::function<void(ptr_t)>, ptr_t);
 
     /*
      * defaultKT represents the main thread
@@ -126,22 +137,25 @@ private:
      * is used by running uThreads to identify the current
      * kThread that they are being executed over.
      */
-    static __thread kThread* currentKT;
+    static __thread kThread *currentKT;
 
     static std::atomic_uint totalNumberofKTs;
+
     /*
      * This function initializes the required
      * variables for the kThread and then call
      * defaultRun.
      */
     void run();
+
     /*
      * The main loop of the kThread. This function
      * is only used by mainUT of the kThread. It loops
      * and pulls uThreads from the ReadyQueue or
      * blocks until uThreads are available.
      */
-    static void defaultRun(void*) __noreturn;
+    static void defaultRun(void *) __noreturn;
+
     /*
      * Same as run() but instead of running the defaultRun
      * run the passed function. It is used to create kThreads
@@ -149,14 +163,18 @@ private:
      * IOHandler thread.
      */
     void runWithFunc(std::function<void(ptr_t)>, ptr_t);
-    //Initialization function for kThread
+
+    // Initialization function for kThread
     void initialize();
-    //Initialize mainUT
+
+    // Initialize mainUT
     void initializeMainUT(bool);
-     //Switch the context to the passed uThread.
-    void switchContext(uThread*, void* args = nullptr);
-    //Pull a uThread from readyQueue and switch the context
-    void switchContext(void* args = nullptr);
+
+    // Switch the context to the passed uThread.
+    void switchContext(uThread *, void *args = nullptr);
+
+    // Pull a uThread from readyQueue and switch the context
+    void switchContext(void *args = nullptr);
 
     /*
      * This function is called after context of the uThread
@@ -164,7 +182,7 @@ private:
      * previous thread or perform the required maintentance
      * before gonig forward.
      */
-    static inline void postSwitchFunc(uThread*, void*) __noreturn;
+    static inline void postSwitchFunc(uThread *, void *) __noreturn;
 
     /*
      * This struct points to an argument and a function. The function
@@ -175,24 +193,25 @@ private:
     static __thread funcvoid2_t postSuspendFunc;
 
 
-    static __thread KTLocal* ktlocal;
+    static __thread KTLocal *ktlocal;
 
     void initialSynchronization();
 
-
-public:
-    //TODO: add a function to create multiple kThreads on a given cluster
+ public:
+    // TODO(saman): add a func to create multiple kThreads on a given cluster
     /**
      * @brief Create a kThread on the passed cluster
      * @param The Cluster this kThread belongs to.
      */
-    kThread(Cluster&);
+    kThread(const Cluster &);
+
     virtual ~kThread();
 
-    ///kThread cannot be copied or assigned.
-    kThread(const kThread&) = delete;
+    /// kThread cannot be copied or assigned.
+    kThread(const kThread &) = delete;
+
     /// @copydoc kThread(const kThread&)
-    const kThread& operator=(const kThread&) = delete;
+    const kThread &operator=(const kThread &) = delete;
 
     /**
      * @brief return the native hanlde for the kernel thread
@@ -201,6 +220,7 @@ public:
      * In linux this is pthread_t representation of the thread.
      */
     std::thread::native_handle_type getThreadNativeHandle();
+
     /**
      * @brief returns the kernel thread ID
      * @return the kThread ID
@@ -216,14 +236,15 @@ public:
      * This is necessary when a uThread wants to find which
      * kThread it is being executed over.
      */
-    static kThread* currentkThread(){return kThread::currentKT;}
+    static kThread *currentkThread() { return kThread::currentKT; }
 
     /**
      *
      * @return total number of kThreads running under
      * the program.
      */
-    static uint getTotalNumberOfkThreads(){return totalNumberofKTs.load();}
+    static uint getTotalNumberOfkThreads() { return totalNumberofKTs.load(); }
 };
-
+}  // namespace runtime
+}  // namespace uThreads
 #endif /* UTHREADS_KTHREADS_H_ */

@@ -16,24 +16,23 @@
  *******************************************************************************/
 
 #include <runtime/schedulers/Scheduler.h>
-#include <stdlib.h>
-#include "Cluster.h"
-#include "kThread.h"
-#include "io/IOHandler.h"
+
+using uThreads::runtime::Cluster;
+using uThreads::runtime::kThread;
 
 std::atomic_ushort Cluster::clusterMasterID(0);
 
 Cluster::Cluster() : numberOfkThreads(0),
-        clustervar(new ClusterVar), ktLast(0) {
-    //TODO: IO handler should be only applicable for IO Clusters
-    //or be created with the first IO call
+                     clustervar(new ClusterVar), ktLast(0) {
+    // TODO(saman): IO handler should be only applicable for IO Clusters
+    // or be created with the first IO call
     initialSynchronization();
 }
 
 void Cluster::initialSynchronization() {
     std::lock_guard<std::mutex> lg(Cluster::defaultCluster.mtx);
 
-    //add cluster to the Cluster vector
+    // add cluster to the Cluster vector
     Cluster::clusterList.push_back(this);
 
     if (clusterMasterID + 1 < UINTMAX_MAX)
@@ -44,7 +43,7 @@ void Cluster::initialSynchronization() {
 
 Cluster::~Cluster() {}
 
-void Cluster::addNewkThread(kThread& kt){
+void Cluster::addNewkThread(kThread &kt) {
     std::lock_guard<std::mutex> lg(mtx);
     ktVector.emplace_back(&kt);
 
@@ -53,12 +52,12 @@ void Cluster::addNewkThread(kThread& kt){
      * Since this is always < totalNumberofKTs, it will
      * not overflow.
      */
-     numberOfkThreads++;
+    numberOfkThreads++;
 }
 
-kThread* Cluster::assignkThread(){
+kThread *Cluster::assignkThread() {
     assert(!ktVector.empty());
-    size_t next = (ktLast+1)%(ktVector.size());
+    size_t next = (ktLast + 1) % (ktVector.size());
     size_t kt = ktLast.exchange(next, std::memory_order_relaxed);
     return ktVector[kt];
 }

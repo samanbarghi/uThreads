@@ -15,68 +15,67 @@
  *     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-#include <iostream>
 #include "uThreadPool.h"
 
+using uThreads::runtime::uThread;
+using uThreads::runtime::uThreadPool;
+
 uThreadPool::uThreadPool() {
-    //atomic operations
-    totalnumuThreads    = 0;
-    idleuThreads        = 0;
+    // atomic operations
+    totalnumuThreads = 0;
+    idleuThreads = 0;
 }
 
 uThreadPool::~uThreadPool() {
 }
 
+void uThreadPool::uThreadExecute(funcvoid1_t func, void *args,
+                                 Cluster &cluster) {
 
-void uThreadPool::uThreadExecute(funcvoid1_t func, void* args, Cluster& cluster){
+    // check if there is idle threads
+    if (idleuThreads.load() == 0) {
 
+        Argument *runArgs = new Argument(func, args, this);
+        // create a new uThread
 
-    //check if there is idle threads
-    if(idleuThreads.load() == 0){
-
-        Argument* runArgs = new Argument(func, args, this);
-        //create a new uThread
-
-        uThread* ut = uThread::create();
-        ut->start(cluster, (ptr_t)(this->run), (void*)runArgs);
-        //atomically increase the total number of threads
+        uThread *ut = uThread::create();
+        ut->start(cluster, (ptr_t) (this->run), (void *) runArgs);
+        // atomically increase the total number of threads
         totalnumuThreads++;
-    }else{
-       //if there are uThreads waiting wake one up to continue
-       this->mutex.acquire();
-       taskList.emplace(func, args);
-       this->cv.signal(mutex);
+    } else {
+        // if there are uThreads waiting wake one up to continue
+        this->mutex.acquire();
+        taskList.emplace(func, args);
+        this->cv.signal(mutex);
     }
-
-
 }
 
-void uThreadPool::run(void* args){
-    Argument* funcArg = (Argument*) args;
+void uThreadPool::run(void *args) {
+    Argument *funcArg = (Argument *) args;
 
-    funcvoid1_t func        =   funcArg->func;
-    void* fargs             =   funcArg->args;
-    uThreadPool* utp        =   funcArg->utp;
-    delete(funcArg);
+    funcvoid1_t func = funcArg->func;
+    void *fargs = funcArg->args;
+    uThreadPool *utp = funcArg->utp;
+    delete (funcArg);
 
-    //run the first passed function
+    // run the first passed function
     func(fargs);
 
-    //This thread is about to become idle
+    // This thread is about to become idle
     utp->idleuThreads++;
-    //now block on cv in a loop until the next function is available
-    while(true){
+    // now block on cv in a loop until the next function is available
+    while (true) {
         utp->mutex.acquire();
 
-        while(utp->taskList.empty()){
+        while (utp->taskList.empty()) {
             utp->cv.wait(utp->mutex);
         }
         utp->idleuThreads--;
-        auto task   = utp->taskList.front();
+        auto task = utp->taskList.front();
         utp->taskList.pop();
         utp->mutex.release();
 
-        //run the function
+        // run the function
         task.first(task.second);
         utp->idleuThreads++;
     }

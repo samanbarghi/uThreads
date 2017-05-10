@@ -18,28 +18,37 @@
 #include "BlockingSync.h"
 #include "uThread.h"
 
+using uThreads::runtime::uThread;
+using uThreads::runtime::BlockingQueue;
+using uThreads::runtime::Mutex;
+
 bool BlockingQueue::suspend(std::mutex& lock) {
-	std::pair<std::mutex*, BlockingQueue*> bqp(&lock, this);
+    std::pair<std::mutex*, BlockingQueue*> bqp(&lock, this);
 	/*
 	 * It is safe to pass the pair to another function as after suspend,
 	 * this block won't reach its end and the pair will not be deallocated.
 	 */
-    uThread::currentUThread()->suspend((funcvoid2_t)BlockingQueue::postSwitchFunc<std::mutex>, (void*)&bqp);
-    //TODO: we do not have any cancellation yet, so this line will not be reached before switching
+    uThread::currentUThread()->suspend(
+            (funcvoid2_t)BlockingQueue::postSwitchFunc<std::mutex>,
+            (void*)&bqp);
+    // TODO(saman): we do not have any cancellation yet,
+    // so this line will not be reached before switching
     return true;
 }
 
 bool BlockingQueue::suspend(Mutex& mutex) {
-	std::pair<Mutex*, BlockingQueue*> bqp(&mutex, this);
-    uThread::currentUThread()->suspend((funcvoid2_t)BlockingQueue::postSwitchFunc<Mutex>, (void*)&bqp);
+    std::pair<Mutex*, BlockingQueue*> bqp(&mutex, this);
+    uThread::currentUThread()->suspend(
+            (funcvoid2_t)BlockingQueue::postSwitchFunc<Mutex>,
+            (void*)&bqp);
     return true;
 }
 
 bool BlockingQueue::signal(std::mutex& lock, uThread*& owner) {
-    //TODO: handle cancellation
-    //Fetch one thread and put it back to ready queue
+    // TODO(saman): handle cancellation
+    // Fetch one thread and put it back to ready queue
     if (queue.front() != queue.fence()) {
-        owner = queue.front();//FIFO?
+        owner = queue.front();  // FIFO?
         queue.pop_front();
         lock.unlock();
         owner->resume();
@@ -49,11 +58,11 @@ bool BlockingQueue::signal(std::mutex& lock, uThread*& owner) {
 }
 
 bool BlockingQueue::signal(Mutex& mutex) {
-    //TODO: handle cancellation
+    // TODO(saman): handle cancellation
     uThread* owner = nullptr;
-    //Fetch one thread and put it back to ready queue
+    // Fetch one thread and put it back to ready queue
     if (!queue.empty()) {
-        owner = queue.front();//FIFO?
+        owner = queue.front();  // FIFO?
         queue.pop_front();
         mutex.release();
         owner->resume();
