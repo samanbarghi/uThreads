@@ -51,6 +51,9 @@
  * the kThread.
  */
 namespace uThreads {
+namespace io {
+class IOHandler;
+}  // namespace io
 namespace runtime {
 
 class KTLocal;
@@ -83,6 +86,7 @@ class kThread : public uThreads::generic::Link<kThread> {
      */
     Scheduler *scheduler;  // (8 bytes)
 
+    uThreads::io::IOHandler *iohandler; // (8 bytes)
 
     KTVar *ktvar;         // (8 bytes)
 

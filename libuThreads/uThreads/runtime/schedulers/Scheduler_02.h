@@ -102,7 +102,7 @@ class Scheduler {
     }
 
     uThread *nonBlockingSwitch(const kThread &kt) {
-        IOHandler::iohandler.nonblockingPoll();
+        kt.iohandler->nonblockingPoll();
         uThread *ut = runQueue.pop();
         if (ut == nullptr) {
             // if the running uThread yielded, continue running it
@@ -119,7 +119,7 @@ class Scheduler {
         /* before blocking inform the poller thread of our
          * intent.
          */
-        IOHandler::iohandler.sem.post();
+        kt.iohandler->sem.post();
 
         uThread *ut = nullptr;
         while (ut == nullptr) {
@@ -132,7 +132,7 @@ class Scheduler {
          * We signaled the poller thread, now it's the time
          * to signal it again that we are unblocked.
          */
-        while (!IOHandler::iohandler.sem.trywait()) {}
+        while (!kt.iohandler->sem.trywait()) {}
 
         return ut;
     }

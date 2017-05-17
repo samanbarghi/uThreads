@@ -34,8 +34,9 @@ __thread funcvoid2_t kThread::postSuspendFunc = nullptr;
 kThread::kThread() :
         threadSelf(),
         ktvar(new KTVar()),
-        scheduler(Scheduler::getScheduler(Cluster::defaultCluster)) {
+        scheduler(Scheduler::getScheduler(Cluster::defaultCluster)){
     localCluster = &Cluster::defaultCluster;
+    iohandler = IOHandler::getkThreadIOHandler(*this);
     initialize();
     initializeMainUT(true);
     uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
@@ -65,6 +66,7 @@ kThread::kThread(const Cluster &cluster, std::function<void(ptr_t)> func, ptr_t 
 kThread::kThread(const Cluster &cluster) :
         localCluster((Cluster*)&cluster), ktvar(new KTVar()),
         scheduler(Scheduler::getScheduler(cluster)),
+        iohandler(IOHandler::getkThreadIOHandler(*this)),
         threadSelf(&kThread::run, this) {
     threadSelf.detach();
     /*

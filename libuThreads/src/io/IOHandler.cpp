@@ -27,6 +27,24 @@ IOHandler::IOHandler() : unblockCounter(0),
                               &IOHandler::pollerFunc, (ptr_t) this),
                          poller(*this), isPolling(ATOMIC_FLAG_INIT) {}
 
+IOHandler*  IOHandler::getClusterIOHandler(uThreads::runtime::Cluster &cluster) {
+#ifdef IOCLUSTER
+    return new IOHandler();
+#else
+    return &IOHandler::iohandler;
+#endif
+}
+
+IOHandler* IOHandler::getkThreadIOHandler(kThread &kt) {
+#ifdef IOKTHREAD
+    return new IOHandler();
+#elif defined IOCLUSTER
+    return IOHandler::getClusterIOHandler(*kt.localCluster);
+#else
+    return &IOHandler::iohandler;
+#endif
+}
+
 void IOHandler::open(PollData &pd) {
     assert(pd.fd > 0);
     bool expected = false;

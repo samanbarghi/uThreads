@@ -23,10 +23,12 @@ using uThreads::runtime::kThread;
 std::atomic_ushort Cluster::clusterMasterID(0);
 
 Cluster::Cluster() : numberOfkThreads(0),
-                     clustervar(new ClusterVar), ktLast(0) {
+                     clustervar(new ClusterVar), ktLast(0),
+                    iohandler(IOHandler::getClusterIOHandler(*this)){
     // TODO(saman): IO handler should be only applicable for IO Clusters
     // or be created with the first IO call
     initialSynchronization();
+
 }
 
 void Cluster::initialSynchronization() {

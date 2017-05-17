@@ -81,6 +81,8 @@ class Cluster {
     // First 64 bytes (CACHELINE_SIZE)
     Scheduler *scheduler;                               // (8 bytes)
 
+    uThreads::io::IOHandler *iohandler;                  // (8 bytes)
+
     /*
      * Scheduler's defined cluster variables
      */

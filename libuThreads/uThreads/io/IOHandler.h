@@ -189,7 +189,7 @@ namespace io {
 class IOHandler {
     friend class Connection;
 
-    friend class Cluster;
+    friend class uThreads::runtime::Cluster;
 
     friend class ReadyQueue;
 
@@ -250,6 +250,12 @@ class IOHandler {
 
     void reset(PollData &pd);
     //dealing with uThreads
+
+    // assign an IOHandler to a kThread based on the provided policy
+    static IOHandler* getkThreadIOHandler(kThread& kt);
+
+    // assign an IOHandler to a Cluster based on the provided policy
+    static IOHandler* getClusterIOHandler(uThreads::runtime::Cluster& cluster);
 };
 /** @endcond */
 }  // namespace io
