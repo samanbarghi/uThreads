@@ -2,13 +2,15 @@
 project(libuThreads VERSION 0.3.0 LANGUAGES CXX)
 enable_language(ASM)
 
-SET(GCC_COVERAGE_COMPILE_FLAGS "-m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init -DNPOLLNONBLOCKING")
+SET(GCC_COVERAGE_COMPILE_FLAGS "-m64 -fpermissive -mtls-direct-seg-refs -fno-extern-tls-init")
 file(GLOB_RECURSE LIBUTHREADS_SRCS src  "*.cpp")
 file(GLOB_RECURSE LIBUTHREADS_HDRS uThreads  "*.h")
 
 
 #set compiler flags
 add_definitions(${GCC_COVERAGE_COMPILE_FLAGS})
+add_definitions(-DNPOLLNONBLOCKING)
+#add_definitions(-DIOCLUSTER)
 
 add_library(uThreads SHARED STATIC ${LIBUTHREADS_SRCS} src/runtime/Stack.S ${LIBUTHREADS_SRCS})
 
@@ -27,8 +29,10 @@ target_compile_features(uThreads
 #    PUBLIC cxx_auto_type
 #    PRIVATE cxx_variadic_templates)
 
-# Depend on a library that we defined in the top-level file
-target_link_libraries(uThreads pthread)
+# library dependencies
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(uThreads Threads::Threads)
 
 # 'make install' to the correct location
 install(TARGETS uThreads EXPORT uThreadsConfig
