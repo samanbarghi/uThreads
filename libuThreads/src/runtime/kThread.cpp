@@ -36,7 +36,7 @@ kThread::kThread() :
         ktvar(new KTVar()),
         scheduler(Scheduler::getScheduler(Cluster::defaultCluster)){
     localCluster = &Cluster::defaultCluster;
-    iohandler = IOHandler::getkThreadIOHandler(*this);
+    iohandler = IOHandler::getIOHandler(*this);
     initialize();
     initializeMainUT(true);
     uThread::initUT = uThread::createMainUT(Cluster::defaultCluster);
@@ -59,16 +59,14 @@ kThread::kThread(const Cluster &cluster, std::function<void(ptr_t)> func, ptr_t 
         scheduler(Scheduler::getScheduler(cluster)),
         threadSelf(&kThread::runWithFunc, this, func,
                    args) {
-    threadSelf.detach();
     initialSynchronization();
 }
 
 kThread::kThread(const Cluster &cluster) :
         localCluster((Cluster*)&cluster), ktvar(new KTVar()),
         scheduler(Scheduler::getScheduler(cluster)),
-        iohandler(IOHandler::getkThreadIOHandler(*this)),
+        iohandler(IOHandler::getIOHandler(*this)),
         threadSelf(&kThread::run, this) {
-    threadSelf.detach();
     /*
      * Add the kThread to the list of kThreads in the Cluster
      */
