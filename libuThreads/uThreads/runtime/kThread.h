@@ -53,6 +53,8 @@
 namespace uThreads {
 namespace io {
 class IOHandler;
+
+class Connection;
 }  // namespace io
 namespace runtime {
 
@@ -68,6 +70,8 @@ class kThread : public uThreads::generic::Link<kThread> {
     friend class Scheduler;
 
     friend class uThreads::io::IOHandler;
+
+    friend class uThreads::io::Connection;
 
  private:
     // First 64 bytes (CACHELINE_SIZE)
@@ -200,6 +204,8 @@ class kThread : public uThreads::generic::Link<kThread> {
     static __thread KTLocal *ktlocal;
 
     void initialSynchronization();
+
+    static inline uThreads::io::IOHandler *getIOHandler() { return currentKT->iohandler; }
 
  public:
     // TODO(saman): add a func to create multiple kThreads on a given cluster

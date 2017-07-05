@@ -162,6 +162,10 @@ class Scheduler {
             x->ktvar->bulkCounter = 0;
         }
     }
+
+    static void bulkPush(const kThread &kt) {
+        kt.scheduler->schedule(kt.ktvar->bulkQueue, kt.ktvar->bulkCounter);
+    }
 };
 }  // namespace runtime
 }  // namespace uThreads

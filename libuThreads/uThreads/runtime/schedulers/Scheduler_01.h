@@ -416,6 +416,11 @@ class Scheduler {
             cluster.clustervar->bulkCounter = 0;
         }
     }
+
+    static void bulkPush(const kThread &kt) {
+        // This only activates the cluster bulk push
+        bulkPush(kt.localCluster);
+    }
 };
 }  // namespace runtime
 }  // namespace uThreads

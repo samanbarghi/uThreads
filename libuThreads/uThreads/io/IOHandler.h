@@ -31,6 +31,7 @@
 
 namespace uThreads {
 namespace io {
+using uThreads::runtime::Cluster;
 using uThreads::runtime::kThread;
 using uThreads::runtime::uThread;
 
@@ -189,7 +190,7 @@ namespace io {
 class IOHandler {
     friend class Connection;
 
-    friend class uThreads::runtime::Cluster;
+    friend class Cluster;
 
     friend class ReadyQueue;
 
@@ -214,6 +215,13 @@ class IOHandler {
 
     IOPoller poller;
 
+#if defined(IOCLUSTER)
+    Cluster *cluster = nullptr;
+#elif defined(IOKTHREAD)
+    //TODO(saman): in IOKThread mode, the extra kernel thread for polling is not required anymore, maybe mix the two?
+    kThread *kthread = nullptr;
+#endif
+
     /* polling flags */
     enum Flag {
         UT_IOREAD = 1 << 0,     // READ
@@ -234,6 +242,7 @@ class IOHandler {
     // When there is notification update pollData and unblock the related ut
     void PollReady(PollData &pd,
                    int flag);
+
     ~IOHandler() {}
 
  public:
@@ -252,10 +261,10 @@ class IOHandler {
     //dealing with uThreads
 
     // assign an IOHandler to a kThread based on the provided policy
-    static IOHandler* getkThreadIOHandler(kThread& kt);
+    static IOHandler *getIOHandler(kThread &kt);
 
     // assign an IOHandler to a Cluster based on the provided policy
-    static IOHandler* getClusterIOHandler(uThreads::runtime::Cluster& cluster);
+    static IOHandler *getIOHandler(Cluster &cluster);
 };
 /** @endcond */
 }  // namespace io

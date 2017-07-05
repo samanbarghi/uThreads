@@ -80,7 +80,6 @@ l_retry:
     }
 };
 
-
 struct UTVar{
     NIBlockingMPSCQueue<uThread>::Node*   node;
 
@@ -205,6 +204,10 @@ private:
 
     }
     static void bulkPush(Cluster &cluster){
+        std::cerr << "BulkPush is not supported with this scheduler" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    static void bulkdPush(kThread &kt){
         std::cerr << "BulkPush is not supported with this scheduler" << std::endl;
         exit(EXIT_FAILURE);
     }

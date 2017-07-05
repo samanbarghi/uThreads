@@ -27,19 +27,23 @@ IOHandler::IOHandler() : unblockCounter(0),
                               &IOHandler::pollerFunc, (ptr_t) this),
                          poller(*this), isPolling(ATOMIC_FLAG_INIT) {}
 
-IOHandler*  IOHandler::getClusterIOHandler(uThreads::runtime::Cluster &cluster) {
+IOHandler *IOHandler::getIOHandler(uThreads::runtime::Cluster &cluster) {
 #ifdef IOCLUSTER
-    return new IOHandler();
+    auto ioh = new IOHandler();
+    ioh->cluster = &cluster;
+    return ioh;
 #else
     return &IOHandler::iohandler;
 #endif
 }
 
-IOHandler* IOHandler::getkThreadIOHandler(kThread &kt) {
+IOHandler *IOHandler::getIOHandler(kThread &kt) {
 #ifdef IOKTHREAD
-    return new IOHandler();
+    auto ioh = new IOHandler();
+    ioh->kthread = &kt;
+    return ioh;
 #elif defined IOCLUSTER
-    return IOHandler::getClusterIOHandler(*kt.localCluster);
+    return kt.localCluster->iohandler;
 #else
     return &IOHandler::iohandler;
 #endif
@@ -155,8 +159,15 @@ ssize_t IOHandler::poll(int timeout, int flag) {
     if (poller._Poll(timeout) < 0) return -1;
 #ifndef NPOLLBULKPUSH
     if (unblockCounter > 0) {
-        // Bulk push everything to the related cluster ready Queue
+        // Bulk push everything
+#if defined(IOCLUSTER)
+        Scheduler::bulkPush(*this->cluster);
+#elif defined(IOKTHREAD)
+        Scheduler::bulkPush(*this->kthread);
+#else
         Scheduler::bulkPush();
+#endif // IOCLUSTER
+
     }
 #endif  // NPOLLBULKPUSH
     return unblockCounter;
