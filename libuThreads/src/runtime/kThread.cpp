@@ -34,7 +34,7 @@ __thread funcvoid2_t kThread::postSuspendFunc = nullptr;
 kThread::kThread() :
         threadSelf(),
         ktvar(new KTVar()),
-        scheduler(Scheduler::getScheduler(Cluster::defaultCluster)){
+        scheduler(Scheduler::getScheduler(Cluster::defaultCluster)) {
     localCluster = &Cluster::defaultCluster;
     iohandler = IOHandler::getIOHandler(*this);
     initialize();
@@ -55,7 +55,7 @@ kThread::kThread() :
 }
 
 kThread::kThread(const Cluster &cluster, std::function<void(ptr_t)> func, ptr_t args) :
-        localCluster((Cluster*)&cluster), ktvar(new KTVar()),
+        localCluster((Cluster *) &cluster), ktvar(new KTVar()),
         scheduler(Scheduler::getScheduler(cluster)),
         threadSelf(&kThread::runWithFunc, this, func,
                    args) {
@@ -63,7 +63,7 @@ kThread::kThread(const Cluster &cluster, std::function<void(ptr_t)> func, ptr_t 
 }
 
 kThread::kThread(const Cluster &cluster) :
-        localCluster((Cluster*)&cluster), ktvar(new KTVar()),
+        localCluster((Cluster *) &cluster), ktvar(new KTVar()),
         scheduler(Scheduler::getScheduler(cluster)),
         iohandler(IOHandler::getIOHandler(*this)),
         threadSelf(&kThread::run, this) {

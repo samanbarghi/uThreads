@@ -44,7 +44,7 @@ struct KTLocal {
      * of pulling threads and accessing the central ReadyQueue
      * as the central ReadyQueue i protected by a mutex.
      */
-    IntrusiveQueue<uThread> lrq;
+    IntrusiveQueue <uThread> lrq;
 };
 
 /*
@@ -74,7 +74,7 @@ struct ClusterVar {
      * This list is used to schedule uThreads in bulk.
      * For now it is only used in IOHandler
      */
-    IntrusiveQueue<uThread> bulkQueue;
+    IntrusiveQueue <uThread> bulkQueue;
 
     /*
      * Count the number of items in bulkQueue
@@ -104,7 +104,7 @@ class Scheduler {
      * The main producer-consumer queue
      * to keep track of uThreads in the Cluster
      */
-    IntrusiveQueue<uThread> queue;
+    IntrusiveQueue <uThread> queue;
     /*
      * The goal is to use a LIFO ordering
      * for kThreads, so the queue can self-adjust
@@ -112,7 +112,7 @@ class Scheduler {
      * is used to keep track of kThreads blocked on
      * an empty queue.
      */
-    IntrusiveList<kThread> ktStack;
+    IntrusiveList <kThread> ktStack;
     /*
      * This variable is used to keep
      * a history of the latest number
@@ -137,7 +137,7 @@ class Scheduler {
      * to the function in bulk. This saves a lot
      * of overhead.
      */
-    ssize_t __removeMany(IntrusiveQueue<uThread> &nqueue) {
+    ssize_t __removeMany(IntrusiveQueue <uThread> &nqueue) {
         // TODO(saman): is 1 (fall back to one task per each call)
         //  is a good number or should we used size%numkt
         // To avoid emptying the queue and not leaving enough work for
@@ -228,7 +228,7 @@ class Scheduler {
      * give up immediately if cannot acquire
      * the mutex or the queue is empty.
      */
-    ssize_t __tryPopMany(IntrusiveQueue<uThread> &nqueue) {
+    ssize_t __tryPopMany(IntrusiveQueue <uThread> &nqueue) {
         std::unique_lock<std::mutex> mlock(mtx, std::try_to_lock);
         if (!mlock.owns_lock()) return -1;
         if (size == 0) return 0;
@@ -239,7 +239,7 @@ class Scheduler {
      * Pop multiple items from the queue and block
      * if the queue is empty.
      */
-    ssize_t __popMany(IntrusiveQueue<uThread> &nqueue) {
+    ssize_t __popMany(IntrusiveQueue <uThread> &nqueue) {
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         __spinLock(mlock);
         if (fastpath(size == 0)) {
@@ -307,7 +307,7 @@ class Scheduler {
      * uThreads are copied directly from the passed container
      * to the queue in bulk to avoid the overhead.
      */
-    void __push(IntrusiveQueue<uThread> &utList, size_t count) {
+    void __push(IntrusiveQueue <uThread> &utList, size_t count) {
         std::unique_lock<std::mutex> mlock(mtx, std::defer_lock);
         __spinLock(mlock);
         queue.transferAllFrom(utList);
@@ -337,7 +337,7 @@ class Scheduler {
     }
 
     // Schedule many uThreads
-    void schedule(IntrusiveQueue<uThread> &queue, size_t count) {
+    void schedule(IntrusiveQueue <uThread> &queue, size_t count) {
         assert(!queue.empty());
         __push(queue, count);
     }
@@ -345,7 +345,7 @@ class Scheduler {
     uThread *nonBlockingSwitch(const kThread &kt) {
         IOHandler::iohandler.nonblockingPoll();
         uThread *ut = nullptr; /*  First check the local queue */
-        IntrusiveQueue<uThread> &ktrq = kt.ktlocal->lrq;
+        IntrusiveQueue <uThread> &ktrq = kt.ktlocal->lrq;
         if (!ktrq.empty()) {   // If not empty, grab a uThread and run it
             ut = ktrq.front();
             ktrq.pop();

@@ -24,7 +24,7 @@ std::atomic_ushort Cluster::clusterMasterID(0);
 
 Cluster::Cluster() : numberOfkThreads(0),
                      clustervar(new ClusterVar), ktLast(0),
-                    iohandler(IOHandler::getIOHandler(*this)){
+                     iohandler(IOHandler::getIOHandler(*this)) {
     // TODO(saman): IO handler should be only applicable for IO Clusters
     // or be created with the first IO call
     initialSynchronization();

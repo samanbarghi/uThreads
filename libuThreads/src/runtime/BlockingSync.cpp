@@ -22,29 +22,29 @@ using uThreads::runtime::uThread;
 using uThreads::runtime::BlockingQueue;
 using uThreads::runtime::Mutex;
 
-bool BlockingQueue::suspend(std::mutex& lock) {
-    std::pair<std::mutex*, BlockingQueue*> bqp(&lock, this);
-	/*
-	 * It is safe to pass the pair to another function as after suspend,
-	 * this block won't reach its end and the pair will not be deallocated.
-	 */
+bool BlockingQueue::suspend(std::mutex &lock) {
+    std::pair<std::mutex *, BlockingQueue *> bqp(&lock, this);
+    /*
+     * It is safe to pass the pair to another function as after suspend,
+     * this block won't reach its end and the pair will not be deallocated.
+     */
     uThread::currentUThread()->suspend(
-            (funcvoid2_t)BlockingQueue::postSwitchFunc<std::mutex>,
-            (void*)&bqp);
+            (funcvoid2_t) BlockingQueue::postSwitchFunc<std::mutex>,
+            (void *) &bqp);
     // TODO(saman): we do not have any cancellation yet,
     // so this line will not be reached before switching
     return true;
 }
 
-bool BlockingQueue::suspend(Mutex& mutex) {
-    std::pair<Mutex*, BlockingQueue*> bqp(&mutex, this);
+bool BlockingQueue::suspend(Mutex &mutex) {
+    std::pair<Mutex *, BlockingQueue *> bqp(&mutex, this);
     uThread::currentUThread()->suspend(
-            (funcvoid2_t)BlockingQueue::postSwitchFunc<Mutex>,
-            (void*)&bqp);
+            (funcvoid2_t) BlockingQueue::postSwitchFunc<Mutex>,
+            (void *) &bqp);
     return true;
 }
 
-bool BlockingQueue::signal(std::mutex& lock, uThread*& owner) {
+bool BlockingQueue::signal(std::mutex &lock, uThread *&owner) {
     // TODO(saman): handle cancellation
     // Fetch one thread and put it back to ready queue
     if (queue.front() != queue.fence()) {
@@ -57,9 +57,9 @@ bool BlockingQueue::signal(std::mutex& lock, uThread*& owner) {
     return false;
 }
 
-bool BlockingQueue::signal(Mutex& mutex) {
+bool BlockingQueue::signal(Mutex &mutex) {
     // TODO(saman): handle cancellation
-    uThread* owner = nullptr;
+    uThread *owner = nullptr;
     // Fetch one thread and put it back to ready queue
     if (!queue.empty()) {
         owner = queue.front();  // FIFO?
@@ -71,9 +71,9 @@ bool BlockingQueue::signal(Mutex& mutex) {
     return false;
 }
 
-void BlockingQueue::signalAll(Mutex& mutex) {
+void BlockingQueue::signalAll(Mutex &mutex) {
 
-    uThread* ut = queue.front();
+    uThread *ut = queue.front();
     for (;;) {
         if (slowpath(ut == queue.fence())) break;
         queue.remove(*ut);
@@ -83,6 +83,6 @@ void BlockingQueue::signalAll(Mutex& mutex) {
     mutex.release();
 }
 
-uThread* BlockingQueue::getCurrentUThread(){
+uThread *BlockingQueue::getCurrentUThread() {
     return uThread::currentUThread();
 }

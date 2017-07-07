@@ -42,7 +42,7 @@ struct KTVar {
      * This list is used to schedule uThreads in bulk.
      * For now it is only used in IOHandler
      */
-    IntrusiveQueue<uThread> bulkQueue;
+    IntrusiveQueue <uThread> bulkQueue;
 
     KTVar() : bulkCounter(0) {}
 };
@@ -60,7 +60,7 @@ class Scheduler {
     friend class uThread;
 
  private:
-    IntrusiveQueue<uThread> runQueue;
+    IntrusiveQueue <uThread> runQueue;
 
     std::mutex mtx;
     std::condition_variable cv;
@@ -105,7 +105,7 @@ class Scheduler {
     }
 
     // Schedule many uThreads
-    void schedule(IntrusiveQueue<uThread> &queue, size_t count) {
+    void schedule(IntrusiveQueue <uThread> &queue, size_t count) {
         assert(!queue.empty());
         std::unique_lock<std::mutex> ul(mtx);
         runQueue.transferAllFrom(queue);
@@ -136,7 +136,7 @@ class Scheduler {
          * We signaled the poller thread, now it's the time
          * to signal it again that we are unblocked.
          */
-        while (!IOHandler::iohandler.sem.trywait()){}
+        while (!IOHandler::iohandler.sem.trywait()) {}
 
         return ut;
     }
