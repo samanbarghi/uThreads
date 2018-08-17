@@ -1,3 +1,7 @@
+Update: 
+======
+This library is not maintained anymore. The core concepts from this library is transfered to libfibre which provides the same functionality whith better support: https://git.uwaterloo.ca/mkarsten/KOS/tree/master/src/libfibre
+
 uThreads: Concurrent User Threads in C++(and C)
 ============
 
